@@ -26,6 +26,7 @@ export default function ApplyForm() {
   const searchParams = useSearchParams();
   const jobTitle = searchParams.get("job") || "General Application";
   const jobCountry = searchParams.get("country") || "";
+  const jobType = searchParams.get("type") || "";
 
   const formRef = useRef(null);
   const [cvFile, setCvFile] = useState(null);
@@ -113,117 +114,131 @@ export default function ApplyForm() {
   const submitted = status.state === "ok";
 
   return (
-    <div className="pass js-inquiry-form" id="apply-form-wrap">
-      <div className="pass-main">
-        {submitted ? (
-          <div className="form-msg ok" role="status" style={{ marginTop: 0, fontSize: "1rem" }}>
-            {status.message}
-          </div>
-        ) : (
-          <>
-            <form ref={formRef} id="apply-form" onSubmit={handleSubmit}>
-              <input type="hidden" name="page_source" value="Jobs Page" />
-              <input type="hidden" name="to_email" value="jobs@gogulf.co" />
-              <input type="hidden" name="service_type" value={jobTitle} />
-              <input type="hidden" name="country" value={jobCountry} />
-              <input type="hidden" name="submission_id" defaultValue="" />
-              <input type="hidden" name="documents" defaultValue="" />
+    <>
+      {/* Always visible above the fold (mobile included) so it's never ambiguous
+          which job — and which country — this application is for. */}
+      <div className="apply-target">
+        <span className="apply-target-label">{submitted ? "Applied for" : "You're applying for"}</span>
+        <span className="apply-target-value">
+          {jobTitle}
+          {jobCountry && <> — {jobCountry}</>}
+        </span>
+        {jobType && <span className="job-badge" data-type={jobType}>{jobType}</span>}
+      </div>
 
-              <div className="field-row">
-                <div className="field">
-                  <label htmlFor="a_name">Full Name</label>
-                  <input type="text" id="a_name" name="from_name" required disabled={sending} />
-                </div>
-                <div className="field">
-                  <label htmlFor="a_email">Email Address</label>
-                  <input type="email" id="a_email" name="reply_to" required disabled={sending} />
-                </div>
-              </div>
-              <div className="field-row">
-                <div className="field">
-                  <label htmlFor="a_phone">Phone / WhatsApp</label>
-                  <input type="tel" id="a_phone" name="phone" required disabled={sending} />
-                </div>
-                <div className="field">
-                  <label htmlFor="a_experience">Years of Experience</label>
-                  <input type="text" id="a_experience" name="experience" placeholder="e.g. 3 years" disabled={sending} />
-                </div>
-              </div>
-              <div className="field">
-                <label htmlFor="a_message">Message</label>
-                <textarea id="a_message" name="message" rows={3} placeholder="Anything you'd like us to know..." disabled={sending} />
-              </div>
-            </form>
-
-            <div className="apply-uploads">
-              <div className="field">
-                <label htmlFor="a_cv">CV / Resume</label>
-                <input
-                  type="file"
-                  id="a_cv"
-                  accept=".pdf,.doc,.docx"
-                  disabled={sending}
-                  onChange={(e) => setCvFile(e.target.files?.[0] || null)}
-                />
-                <span className="field-hint">PDF or Word document, up to 8MB.</span>
-              </div>
-              <div className="field">
-                <label htmlFor="a_passport">Passport Copy</label>
-                <input
-                  type="file"
-                  id="a_passport"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  disabled={sending}
-                  onChange={(e) => setPassportFile(e.target.files?.[0] || null)}
-                />
-                <span className="field-hint">PDF, JPG or PNG, up to 8MB.</span>
-              </div>
-              <div className="field">
-                <label htmlFor="a_other">Other Documents (optional)</label>
-                <input
-                  type="file"
-                  id="a_other"
-                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                  multiple
-                  disabled={sending}
-                  onChange={(e) => setOtherFiles(Array.from(e.target.files || []))}
-                />
-                <span className="field-hint">Certificates, experience letters, etc. Up to 8MB each.</span>
-              </div>
-            </div>
-
-            <button type="submit" form="apply-form" className="btn btn-gold" disabled={sending}>
-              {sending ? "Submitting…" : "Submit Application"}
-            </button>
-            <div className={`form-msg${status.state === "err" ? " err" : ""}`} role="status">
+      <div className="pass js-inquiry-form" id="apply-form-wrap">
+        <div className="pass-main">
+          {submitted ? (
+            <div className="form-msg ok" role="status" style={{ marginTop: 0, fontSize: "1rem" }}>
               {status.message}
             </div>
-          </>
-        )}
-      </div>
+          ) : (
+            <>
+              <form ref={formRef} id="apply-form" onSubmit={handleSubmit}>
+                <input type="hidden" name="page_source" value="Jobs Page" />
+                <input type="hidden" name="to_email" value="jobs@gogulf.co" />
+                <input type="hidden" name="service_type" value={jobTitle} />
+                <input type="hidden" name="country" value={jobCountry} />
+                <input type="hidden" name="submission_id" defaultValue="" />
+                <input type="hidden" name="documents" defaultValue="" />
 
-      <div className="pass-stub">
-        <div>
-          <div className="stamp">Go Gulf · Application</div>
-          <div style={{ marginTop: 26 }}>
-            <div className="pass-label">Role</div>
-            <div className="pass-value">{jobTitle}</div>
-          </div>
-          {jobCountry && (
-            <div style={{ marginTop: 20 }}>
-              <div className="pass-label">Destination</div>
-              <div className="pass-value">{jobCountry}</div>
-            </div>
+                <div className="field-row">
+                  <div className="field">
+                    <label htmlFor="a_name">Full Name</label>
+                    <input type="text" id="a_name" name="from_name" required disabled={sending} />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="a_email">Email Address</label>
+                    <input type="email" id="a_email" name="reply_to" required disabled={sending} />
+                  </div>
+                </div>
+                <div className="field-row">
+                  <div className="field">
+                    <label htmlFor="a_phone">Phone / WhatsApp</label>
+                    <input type="tel" id="a_phone" name="phone" required disabled={sending} />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="a_experience">Years of Experience</label>
+                    <input type="text" id="a_experience" name="experience" placeholder="e.g. 3 years" disabled={sending} />
+                  </div>
+                </div>
+                <div className="field">
+                  <label htmlFor="a_message">Message</label>
+                  <textarea id="a_message" name="message" rows={3} placeholder="Anything you'd like us to know..." disabled={sending} />
+                </div>
+              </form>
+
+              <div className="apply-uploads">
+                <div className="field">
+                  <label htmlFor="a_cv">CV / Resume</label>
+                  <input
+                    type="file"
+                    id="a_cv"
+                    accept=".pdf,.doc,.docx"
+                    disabled={sending}
+                    onChange={(e) => setCvFile(e.target.files?.[0] || null)}
+                  />
+                  <span className="field-hint">PDF or Word document, up to 8MB.</span>
+                </div>
+                <div className="field">
+                  <label htmlFor="a_passport">Passport Copy</label>
+                  <input
+                    type="file"
+                    id="a_passport"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    disabled={sending}
+                    onChange={(e) => setPassportFile(e.target.files?.[0] || null)}
+                  />
+                  <span className="field-hint">PDF, JPG or PNG, up to 8MB.</span>
+                </div>
+                <div className="field">
+                  <label htmlFor="a_other">Other Documents (optional)</label>
+                  <input
+                    type="file"
+                    id="a_other"
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    multiple
+                    disabled={sending}
+                    onChange={(e) => setOtherFiles(Array.from(e.target.files || []))}
+                  />
+                  <span className="field-hint">Certificates, experience letters, etc. Up to 8MB each.</span>
+                </div>
+              </div>
+
+              <button type="submit" form="apply-form" className="btn btn-gold" disabled={sending}>
+                {sending ? "Submitting…" : "Submit Application"}
+              </button>
+              <div className={`form-msg${status.state === "err" ? " err" : ""}`} role="status">
+                {status.message}
+              </div>
+            </>
           )}
-          <div style={{ marginTop: 20 }}>
-            <div className="pass-label">Response</div>
-            <div className="pass-value">Within 1–2 business days</div>
-          </div>
         </div>
-        <div>
-          <div className="pass-label">Go Gulf. Get Hired.</div>
+
+        <div className="pass-stub">
+          <div>
+            <div className="stamp">Go Gulf · Application</div>
+            <div style={{ marginTop: 26 }}>
+              <div className="pass-label">Role</div>
+              <div className="pass-value">{jobTitle}</div>
+              {jobType && <div className="pass-value-sub">{jobType}</div>}
+            </div>
+            {jobCountry && (
+              <div style={{ marginTop: 20 }}>
+                <div className="pass-label">Destination</div>
+                <div className="pass-value">{jobCountry}</div>
+              </div>
+            )}
+            <div style={{ marginTop: 20 }}>
+              <div className="pass-label">Response</div>
+              <div className="pass-value">Within 1–2 business days</div>
+            </div>
+          </div>
+          <div>
+            <div className="pass-label">Go Gulf. Get Hired.</div>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

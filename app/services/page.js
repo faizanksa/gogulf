@@ -1,8 +1,15 @@
 import ServiceInquiryForm from "@/components/ServiceInquiryForm";
+import JsonLd from "@/components/JsonLd";
+import { pageMetadata, breadcrumbJsonLd } from "@/lib/seo";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Services",
-};
+  path: "/services",
+  description:
+    "Overseas recruitment, bulk manpower sourcing, RPO, visa & MOFA documentation, medical coordination and pre-departure support — 14 recruitment services, end to end.",
+});
+
+const BREADCRUMB = breadcrumbJsonLd([{ name: "Services", path: "/services" }]);
 
 const SERVICES = [
   ["01", "Overseas Recruitment", "Full-cycle recruitment for candidates seeking verified Gulf employment."],
@@ -24,6 +31,7 @@ const SERVICES = [
 export default function ServicesPage() {
   return (
     <>
+      <JsonLd data={BREADCRUMB} />
       <section className="page-hero">
         <div className="container">
           <div className="eyebrow" style={{ color: "var(--gold)" }}>Our Services</div>

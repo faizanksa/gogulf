@@ -1,8 +1,15 @@
 import Link from "next/link";
+import JsonLd from "@/components/JsonLd";
+import { pageMetadata, breadcrumbJsonLd } from "@/lib/seo";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "For Employers",
-};
+  path: "/employers",
+  description:
+    "Qualified, job-ready manpower sourced and verified for Gulf employers — bulk manpower recruitment, RPO, candidate screening and compliance handled end to end.",
+});
+
+const BREADCRUMB = breadcrumbJsonLd([{ name: "For Employers", path: "/employers" }]);
 
 const SOLUTIONS = [
   ["01", "Bulk Manpower Recruitment", "Sourcing for large industrial, construction and facility projects."],
@@ -23,6 +30,7 @@ const WHY_US = [
 export default function EmployersPage() {
   return (
     <>
+      <JsonLd data={BREADCRUMB} />
       <section className="page-hero">
         <div className="container">
           <div className="eyebrow" style={{ color: "var(--gold)" }}>For Employers</div>

@@ -1,4 +1,11 @@
 import Link from "next/link";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata = pageMetadata({
+  path: "/",
+  description:
+    "A modern recruitment platform connecting talented professionals with genuine, verified employment opportunities across Saudi Arabia, UAE, Qatar, Oman, Kuwait and Bahrain — from first inquiry to final deployment.",
+});
 
 export default function HomePage() {
   return (

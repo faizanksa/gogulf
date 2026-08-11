@@ -1,15 +1,24 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import ApplyForm from "@/components/ApplyForm";
+import JsonLd from "@/components/JsonLd";
+import { pageMetadata, breadcrumbJsonLd } from "@/lib/seo";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Apply Now",
+  path: "/jobs/apply",
   description: "Submit your application for a Gulf job opening — reaches our recruitment team by email instantly.",
-};
+});
+
+const BREADCRUMB = breadcrumbJsonLd([
+  { name: "Jobs Available", path: "/jobs" },
+  { name: "Apply Now", path: "/jobs/apply" },
+]);
 
 export default function ApplyPage() {
   return (
     <>
+      <JsonLd data={BREADCRUMB} />
       <section className="page-hero">
         <div className="container">
           <div className="eyebrow" style={{ color: "var(--gold)" }}>Apply Now</div>

@@ -50,7 +50,7 @@ export default function Footer() {
         <div className="footer-grid">
           <div>
             <div className="footer-logo">
-              <img src="/assets/logo-circle.png" alt="Go Gulf logo" />
+              <img src="/assets/logo-circle.png" alt="Go Gulf logo" width={44} height={44} />
               <div className="brand-mark" style={{ color: "#fff" }}>
                 GO <span style={{ color: "var(--gold)" }}>GULF</span>
               </div>

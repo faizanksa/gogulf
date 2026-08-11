@@ -1,8 +1,15 @@
 import Link from "next/link";
+import JsonLd from "@/components/JsonLd";
+import { pageMetadata, breadcrumbJsonLd } from "@/lib/seo";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "For Candidates",
-};
+  path: "/candidates",
+  description:
+    "Genuine Gulf job opportunities with end-to-end support — interview coordination, documentation, visa assistance, travel arrangements and post-joining care.",
+});
+
+const BREADCRUMB = breadcrumbJsonLd([{ name: "For Candidates", path: "/candidates" }]);
 
 const SUPPORT = [
   ["01", "Genuine Opportunities", "Every employer in our network is verified before a role is offered to you."],
@@ -22,6 +29,7 @@ const INDUSTRIES = [
 export default function CandidatesPage() {
   return (
     <>
+      <JsonLd data={BREADCRUMB} />
       <section className="page-hero">
         <div className="container">
           <div className="eyebrow" style={{ color: "var(--gold)" }}>For Candidates</div>

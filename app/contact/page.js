@@ -1,13 +1,21 @@
 import Link from "next/link";
 import ContactForm from "@/components/ContactForm";
+import JsonLd from "@/components/JsonLd";
+import { pageMetadata, breadcrumbJsonLd } from "@/lib/seo";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Contact",
-};
+  path: "/contact",
+  description:
+    "Reach Go Gulf's recruitment team directly by WhatsApp, phone or email, or submit a service inquiry for a specific job or hiring request.",
+});
+
+const BREADCRUMB = breadcrumbJsonLd([{ name: "Contact", path: "/contact" }]);
 
 export default function ContactPage() {
   return (
     <>
+      <JsonLd data={BREADCRUMB} />
       <section className="page-hero">
         <div className="container">
           <div className="eyebrow" style={{ color: "var(--gold)" }}>Contact</div>

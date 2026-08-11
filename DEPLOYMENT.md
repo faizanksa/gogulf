@@ -14,29 +14,59 @@ app/                 Routes (App Router) — one folder per page
   page.js               Home
   about/page.js         About
   services/page.js      Services (with Service Inquiry form)
-  jobs/page.js           Jobs Available (listings + filters)
+  jobs/page.js           Jobs Available (listings + filters + JobPosting JSON-LD)
   jobs/apply/page.js    Apply form (own page, prefilled from the job clicked)
   candidates/page.js    For Candidates
   employers/page.js     For Employers
   contact/page.js        Contact
   globals.css           Shared stylesheet (was styles.css)
   icon.png               Favicon source (was assets/logo-circle.png)
-components/          Header, Footer, and the three EmailJS-backed forms
+  apple-icon.png         180×180 Apple touch icon (generated from icon.png)
+  robots.js               Generates /robots.txt at build time
+  sitemap.js               Generates /sitemap.xml at build time
+  manifest.js               Generates /manifest.webmanifest (PWA) at build time
+components/          Header, Footer, JsonLd, and the three EmailJS-backed forms
   ApplyForm.js          Form used by app/jobs/apply/page.js — CV/passport
                         upload (Supabase) + email notification (EmailJS)
+  JsonLd.js               Renders a <script type="application/ld+json"> tag
 lib/
   jobs-data.js          Job listings — edit this file to add/remove jobs
+  seo.js                  Site-wide SEO constants (URL, contact, social) +
+                          per-page metadata/breadcrumb JSON-LD helpers
+  job-schema.js            Turns jobs-data.js into JobPosting JSON-LD
   emailjs.js             EmailJS send helper, reads keys from env vars
   supabase.js             Supabase client + document upload helper, reads
                           keys from env vars
 supabase/migrations/  SQL to run once in the Supabase SQL Editor (see
   0001_job_applications.sql   SUPABASE-SETUP.md) — creates the applications
                         table + private storage bucket
-public/assets/        Logo files, served as-is at /assets/...
+public/assets/        Logo files + og-image.jpg (social share image), served
+                      as-is at /assets/...
+public/icons/          192×192 / 512×512 PWA icons referenced by manifest.js
+public/llms.txt         Plain-text site summary for AI assistants/crawlers
 EMAILJS-SETUP.md       How the inquiry/apply forms send email (needs API keys)
 SUPABASE-SETUP.md      How CV/passport/document uploads are stored (needs API keys)
-.env.local.example     Template for your EmailJS + Supabase keys — copy to .env.local
+.env.local.example     Template for your site URL + EmailJS + Supabase keys —
+                       copy to .env.local
 ```
+
+## SEO
+
+The site generates `robots.txt`, `sitemap.xml`, a PWA manifest, per-page Open
+Graph/Twitter cards, canonical URLs, and JSON-LD structured data
+(Organization, WebSite, BreadcrumbList, and schema.org `JobPosting` for every
+listing in `lib/jobs-data.js`) automatically at build time — nothing to
+configure. Everything reads from `lib/seo.js`, which defaults to
+`https://www.gogulf.co`; if the site is ever deployed to a different domain,
+set `NEXT_PUBLIC_SITE_URL` accordingly (see `.env.local.example`) and rebuild.
+
+To add a new page, give it its own `metadata` export via
+`pageMetadata({ title, path, description })` from `lib/seo.js` so it gets a
+canonical URL and social card consistent with the rest of the site — see any
+existing `page.js` for the pattern.
+
+Once live, submit `https://www.gogulf.co/sitemap.xml` to Google Search
+Console and Bing Webmaster Tools.
 
 ## Local development
 

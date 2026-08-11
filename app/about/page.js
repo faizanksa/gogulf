@@ -1,8 +1,15 @@
 import Link from "next/link";
+import JsonLd from "@/components/JsonLd";
+import { pageMetadata, breadcrumbJsonLd } from "@/lib/seo";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "About",
-};
+  path: "/about",
+  description:
+    "Go Gulf is a modern overseas recruitment platform connecting talented professionals with genuine, verified employers across the Gulf region. 20+ years of trust, since 2008.",
+});
+
+const BREADCRUMB = breadcrumbJsonLd([{ name: "About", path: "/about" }]);
 
 const CORE_VALUES = [
   "Integrity", "Transparency", "Professionalism", "Trust", "Commitment",
@@ -12,6 +19,7 @@ const CORE_VALUES = [
 export default function AboutPage() {
   return (
     <>
+      <JsonLd data={BREADCRUMB} />
       <section className="page-hero">
         <div className="container">
           <div className="eyebrow" style={{ color: "var(--gold)" }}>About Go Gulf</div>
