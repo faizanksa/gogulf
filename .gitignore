@@ -5,10 +5,35 @@
 /.next/
 /out/
 
-# env files (may contain secrets)
-.env*.local
+# Next build output (optional)
+/build/
+
+# local env files (may contain secrets)
+# keep example files (e.g. .env.local.example) in the repo — ignore actual secret files
+.env
+.env.local
+.env.*.local
+.envrc
 
 # misc
 .DS_Store
 *.pem
 npm-debug.log*
+
+# common credential and secret file patterns
+*.key
+*.p12
+credentials.json
+serviceAccountKey.json
+*.secret
+*.creds
+
+# deployment / host platforms
+.vercel
+.vercel/*
+.netlify
+.netlify/*
+
+# IDE/editor
+.vscode/*.secret
+.vscode/*.env
