@@ -1,3 +1,4 @@
+import Link from "next/link";
 import ServiceInquiryForm from "@/components/ServiceInquiryForm";
 import JsonLd from "@/components/JsonLd";
 import { pageMetadata, breadcrumbJsonLd } from "@/lib/seo";
@@ -60,6 +61,11 @@ export default function ServicesPage() {
             <div className="eyebrow">Service Inquiry</div>
             <h2>Tell us what you&apos;re looking for</h2>
             <p>Select your service, share a few details, and our team will follow up. Your inquiry reaches us by email as soon as you submit.</p>
+            <p style={{ fontSize: ".9rem" }}>
+              Submitting an inquiry is free. Where a service carries a fee, it is quoted to you in
+              writing before you pay — see{" "}
+              <Link href="/pricing" style={{ color: "var(--teal)", fontWeight: 600 }}>Pricing &amp; Fees</Link>.
+            </p>
           </div>
           <ServiceInquiryForm />
         </div>

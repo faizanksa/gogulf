@@ -85,6 +85,11 @@ export default function EmployersPage() {
             share your requirement — our team will follow up directly.
           </p>
           <Link href="/services#inquiry" className="btn btn-gold" style={{ marginTop: 8 }}>Submit a Service Inquiry</Link>
+          <p style={{ marginTop: 22, marginBottom: 0, color: "rgba(255,255,255,.6)", fontSize: ".9rem" }}>
+            Employer engagements are quoted against your specific requirement. See{" "}
+            <Link href="/pricing" style={{ color: "var(--gold)", fontWeight: 600 }}>Pricing &amp; Fees</Link>{" "}
+            for how commercial terms are agreed. Requesting a quotation is free.
+          </p>
         </div>
       </section>
     </>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LEGAL_ENTITY, ADDRESS_LINES, LEGAL_PAGES } from "@/lib/legal";
 
 // NOTE: all handles below are built from the "gogulf8866" username you gave —
 // double-check each URL actually resolves once live, especially LinkedIn
@@ -90,6 +91,15 @@ export default function Footer() {
               <li><a href="https://www.youtube.com/@GoGulf8866" target="_blank" rel="noopener">YouTube</a></li>
             </ul>
           </div>
+          <div>
+            <h4>Legal</h4>
+            <ul>
+              {LEGAL_PAGES.map((page) => (
+                <li key={page.path}><Link href={page.path}>{page.label}</Link></li>
+              ))}
+              <li><Link href="/contact">Contact Us</Link></li>
+            </ul>
+          </div>
         </div>
 
         <div className="footer-social">
@@ -136,8 +146,21 @@ export default function Footer() {
           </div>
         </div>
 
+        {/* Operating-company disclosure: the Go Gulf brand is a trading name, so
+            the legal entity, its GST-registered address and its GSTIN are stated
+            on every page rather than buried in the policy pages. */}
+        <div className="footer-legal-entity">
+          <span>
+            <strong>{LEGAL_ENTITY.brand}</strong> is a brand of{" "}
+            <strong>{LEGAL_ENTITY.name}</strong>, a {LEGAL_ENTITY.constitution.toLowerCase()}{" "}
+            registered in India.
+          </span>{" "}
+          <address>{ADDRESS_LINES.join(", ")}.</address>{" "}
+          <span className="footer-gstin">GSTIN: {LEGAL_ENTITY.gstin}</span>
+        </div>
+
         <div className="footer-bottom">
-          <span>© {year} Go Gulf, a Go Gulf Recruitment brand.</span>
+          <span>© {year} {LEGAL_ENTITY.name}. All rights reserved.</span>
           <span>Go Gulf. Get Hired.</span>
           <a
             href="https://mail.google.com/a/gogulf.co/"

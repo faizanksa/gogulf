@@ -2,12 +2,13 @@ import Link from "next/link";
 import ContactForm from "@/components/ContactForm";
 import JsonLd from "@/components/JsonLd";
 import { pageMetadata, breadcrumbJsonLd } from "@/lib/seo";
+import { LEGAL_ENTITY, ADDRESS_LINES } from "@/lib/legal";
 
 export const metadata = pageMetadata({
   title: "Contact",
   path: "/contact",
   description:
-    "Reach Go Gulf's recruitment team directly by WhatsApp, phone or email, or submit a service inquiry for a specific job or hiring request.",
+    "Reach Go Gulf's recruitment team directly by WhatsApp, phone or email, or submit a service inquiry for a specific job or hiring request. Registered office: Lucknow, Uttar Pradesh, India.",
 });
 
 const BREADCRUMB = breadcrumbJsonLd([{ name: "Contact", path: "/contact" }]);
@@ -53,6 +54,16 @@ export default function ContactPage() {
                 <a href="https://www.youtube.com/@GoGulf8866" target="_blank" rel="noopener" style={{ color: "var(--teal)", fontWeight: 600 }}>Watch our full video guide on YouTube</a>
               </p>
             </div>
+            <div className="card" style={{ marginBottom: 16 }}>
+              <h3>Registered Office</h3>
+              {/* <address> is flow content and must not sit inside a <p> — the
+                  parser would close the <p> and break hydration. */}
+              <p style={{ marginBottom: 6 }}><strong>{LEGAL_ENTITY.name}</strong></p>
+              <address className="legal-address card-address">
+                {ADDRESS_LINES.map((line) => <span key={line}>{line}</span>)}
+              </address>
+              <p style={{ marginTop: 10 }}>GSTIN: {LEGAL_ENTITY.gstin}</p>
+            </div>
             <div className="card">
               <h3>Website</h3>
               <p>www.gogulf.co</p>
@@ -60,6 +71,12 @@ export default function ContactPage() {
             <p style={{ marginTop: 24 }}>
               Looking for a specific service?{" "}
               <Link href="/services#inquiry" style={{ color: "var(--teal)", fontWeight: 600 }}>Use the Service Inquiry form →</Link>
+            </p>
+            <p style={{ marginTop: 12, fontSize: ".9rem" }}>
+              Before you submit anything, it is worth reading our{" "}
+              <Link href="/privacy-policy" style={{ color: "var(--teal)", fontWeight: 600 }}>Privacy Policy</Link>{" "}
+              and{" "}
+              <Link href="/terms-and-conditions" style={{ color: "var(--teal)", fontWeight: 600 }}>Terms &amp; Conditions</Link>.
             </p>
           </div>
 

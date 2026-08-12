@@ -86,7 +86,7 @@ export default function AboutPage() {
           <div className="grid-3">
             <div className="card"><h3>Direct Approval, MOFA Compliant</h3><p>Genuine and legal processing, always.</p></div>
             <div className="card"><h3>Global Reach, Local Support</h3><p>Always with you, wherever you are.</p></div>
-            <div className="card"><h3>Three Offices, One Team</h3><p>Registered Office — India · Corporate Office — Sharjah, UAE · Marketing Office — Jeddah, Saudi Arabia.</p></div>
+            <div className="card"><h3>One Office, One Team</h3><p>Registered Office — Lucknow, Uttar Pradesh, India. One accountable team for every placement.</p></div>
           </div>
         </div>
       </section>

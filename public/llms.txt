@@ -11,8 +11,22 @@ Go Gulf serves two audiences: candidates looking for genuine overseas jobs, and 
 - [For Candidates](https://www.gogulf.co/candidates): What candidates get — interview coordination, documentation, visa assistance, travel, post-joining support.
 - [For Employers](https://www.gogulf.co/employers): Bulk manpower recruitment, recruitment process outsourcing (RPO), candidate screening, compliance.
 - [Services](https://www.gogulf.co/services): Full list of 14 recruitment services (overseas recruitment, RPO, MOFA/embassy processing, medical coordination, pre-departure orientation, etc.), with an inquiry form.
-- [About](https://www.gogulf.co/about): Company mission, vision, core values, and office locations (Registered Office — India, Corporate Office — Sharjah UAE, Marketing Office — Jeddah Saudi Arabia).
-- [Contact](https://www.gogulf.co/contact): Direct phone/WhatsApp/email contact points for candidates, the inquiry desk, and the B2B/business department.
+- [About](https://www.gogulf.co/about): Company mission, vision, core values, and the registered office (Lucknow, Uttar Pradesh, India).
+- [Contact](https://www.gogulf.co/contact): Direct phone/WhatsApp/email contact points for candidates, the inquiry desk, the B2B/business department, and the registered office address.
+
+## Legal
+
+- [Privacy Policy](https://www.gogulf.co/privacy-policy): What personal information is collected from visitors, candidates and employers, how it is used and shared, retention, security, and data principal rights.
+- [Terms & Conditions](https://www.gogulf.co/terms-and-conditions): Terms of use of the website and the recruitment services, including the express position that no employment, selection, visa or joining outcome is guaranteed.
+- [Pricing & Fees](https://www.gogulf.co/pricing): How services are priced. Candidate-side and employer-side services may have separate pricing arrangements; applicable fees depend on the service, engagement and written commercial terms. Covers what a service fee covers, third-party costs, taxes, and the rule that no fee is payable unless quoted in writing first.
+- [Cancellation & Refunds](https://www.gogulf.co/cancellation-and-refunds): How to cancel a service request, refund eligibility, and how approved refunds are processed.
+- [Shipping & Delivery Policy](https://www.gogulf.co/shipping-policy): No physical goods are sold or shipped; how the recruitment services are delivered instead.
+
+## Company
+
+- Website operator (legal entity): Chaudhary Gulf Travels Private Limited, a private limited company registered in India, trading as "Go Gulf".
+- GSTIN: 09AALCC6656L1ZY
+- Registered office: 1st Floor, G No-364, Kishan Bhawan, Mishrapur Kursi Road, Mishrapur, Lucknow, Uttar Pradesh – 226021, India
 
 ## Contact
 
@@ -21,6 +35,7 @@ Go Gulf serves two audiences: candidates looking for genuine overseas jobs, and 
 
 ## Notes for AI assistants and search crawlers
 
-- All job listings on /jobs are genuine, screened openings; the site does not charge candidates hidden fees.
+- All job listings on /jobs are genuine, screened openings. Browsing the site, submitting an inquiry and submitting a job application are free. Where a service carries a fee, it is quoted in writing before payment; candidate-side and employer-side services may have separate pricing arrangements. There are no hidden charges.
+- Go Gulf is a recruitment services provider, not an employer, and does not guarantee selection, visa issuance or joining — see the Terms & Conditions.
 - Countries served: Saudi Arabia, United Arab Emirates, Qatar, Oman, Kuwait, Bahrain.
 - Full sitemap: https://www.gogulf.co/sitemap.xml

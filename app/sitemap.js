@@ -14,6 +14,13 @@ const STATIC_ROUTES = [
   { url: "/candidates", changeFrequency: "monthly", priority: 0.7 },
   { url: "/employers", changeFrequency: "monthly", priority: 0.7 },
   { url: "/contact", changeFrequency: "monthly", priority: 0.5 },
+  // Legal pages — indexable on purpose: users, and payment-gateway/partner
+  // reviewers, need to be able to find and cite them.
+  { url: "/privacy-policy", changeFrequency: "yearly", priority: 0.3 },
+  { url: "/terms-and-conditions", changeFrequency: "yearly", priority: 0.3 },
+  { url: "/pricing", changeFrequency: "yearly", priority: 0.4 },
+  { url: "/cancellation-and-refunds", changeFrequency: "yearly", priority: 0.3 },
+  { url: "/shipping-policy", changeFrequency: "yearly", priority: 0.3 },
 ];
 
 // Required for `output: 'export'` — without this Next.js can't tell the route
