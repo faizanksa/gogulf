@@ -37,7 +37,7 @@ export default function CandidatesPage() {
           <p>From registration to post-joining support, every step of your journey to a Gulf job is managed by our team — with no guesswork.</p>
           <div className="hero-actions">
             <Link href="/jobs" className="btn btn-gold">View Open Jobs</Link>
-            <a href="https://wa.me/919517108866" target="_blank" rel="noopener" className="btn btn-outline-light">Apply on WhatsApp</a>
+            <a href="https://wa.me/919936309015" target="_blank" rel="noopener" className="btn btn-outline-light">Apply on WhatsApp</a>
           </div>
         </div>
       </section>
@@ -82,8 +82,8 @@ export default function CandidatesPage() {
             WhatsApp or email.
           </p>
           <div className="hero-actions" style={{ marginTop: 8 }}>
-            <a href="https://wa.me/919517108866" target="_blank" rel="noopener" className="btn btn-gold">Apply on WhatsApp</a>
-            <a href="mailto:jobs@gogulf.co" className="btn btn-outline-light">Email jobs@gogulf.co</a>
+            <a href="https://wa.me/919936309015" target="_blank" rel="noopener" className="btn btn-gold">Apply on WhatsApp</a>
+            <a href="mailto:careers@gogulf.co" className="btn btn-outline-light">Email careers@gogulf.co</a>
           </div>
           <p style={{ marginTop: 20 }}>
             <a href="https://whatsapp.com/channel/0029Vaa7XJ4FSAt7ri2W4W2J" target="_blank" rel="noopener" style={{ color: "var(--gold)", fontWeight: 600 }}>Join our WhatsApp Channel</a> for

@@ -2,13 +2,13 @@ import Link from "next/link";
 import ContactForm from "@/components/ContactForm";
 import JsonLd from "@/components/JsonLd";
 import { pageMetadata, breadcrumbJsonLd } from "@/lib/seo";
-import { LEGAL_ENTITY, ADDRESS_LINES } from "@/lib/legal";
+import { LEGAL_ENTITY, ADDRESS_LINES, HAS_LEGAL_ENTITY, HAS_REGISTERED_ADDRESS } from "@/lib/legal";
 
 export const metadata = pageMetadata({
   title: "Contact",
   path: "/contact",
   description:
-    "Reach Go Gulf's recruitment team directly by WhatsApp, phone or email, or submit a service inquiry for a specific job or hiring request. Registered office: Lucknow, Uttar Pradesh, India.",
+    "Reach Go Gulf's recruitment team directly by WhatsApp, phone or email, or submit a service inquiry for a specific job or hiring request.",
 });
 
 const BREADCRUMB = breadcrumbJsonLd([{ name: "Contact", path: "/contact" }]);
@@ -33,14 +33,14 @@ export default function ContactPage() {
             <div className="card" style={{ marginBottom: 16 }}>
               <h3>Apply for a Job</h3>
               <p>
-                WhatsApp: <a href="https://wa.me/919517108866" target="_blank" rel="noopener" style={{ color: "var(--teal)", fontWeight: 600 }}>+91 95171 08866</a>
+                WhatsApp: <a href="https://wa.me/919936309015" target="_blank" rel="noopener" style={{ color: "var(--teal)", fontWeight: 600 }}>+91 99363 09015</a>
                 <br />
-                Email: <a href="mailto:jobs@gogulf.co" style={{ color: "var(--teal)", fontWeight: 600 }}>jobs@gogulf.co</a>
+                Email: <a href="mailto:careers@gogulf.co" style={{ color: "var(--teal)", fontWeight: 600 }}>careers@gogulf.co</a>
               </p>
             </div>
             <div className="card" style={{ marginBottom: 16 }}>
               <h3>Inquiry Desk</h3>
-              <p>Call: <a href="tel:+919935309015" style={{ color: "var(--teal)", fontWeight: 600 }}>+91 99353 09015</a></p>
+              <p>Call: <a href="tel:+919936309015" style={{ color: "var(--teal)", fontWeight: 600 }}>+91 99363 09015</a></p>
             </div>
             <div className="card" style={{ marginBottom: 16 }}>
               <h3>Business / B2B Department</h3>
@@ -54,16 +54,20 @@ export default function ContactPage() {
                 <a href="https://www.youtube.com/@GoGulf8866" target="_blank" rel="noopener" style={{ color: "var(--teal)", fontWeight: 600 }}>Watch our full video guide on YouTube</a>
               </p>
             </div>
-            <div className="card" style={{ marginBottom: 16 }}>
-              <h3>Registered Office</h3>
-              {/* <address> is flow content and must not sit inside a <p> — the
-                  parser would close the <p> and break hydration. */}
-              <p style={{ marginBottom: 6 }}><strong>{LEGAL_ENTITY.name}</strong></p>
-              <address className="legal-address card-address">
-                {ADDRESS_LINES.map((line) => <span key={line}>{line}</span>)}
-              </address>
-              <p style={{ marginTop: 10 }}>GSTIN: {LEGAL_ENTITY.gstin}</p>
-            </div>
+            {HAS_LEGAL_ENTITY && (
+              <div className="card" style={{ marginBottom: 16 }}>
+                <h3>Registered Office</h3>
+                {/* <address> is flow content and must not sit inside a <p> — the
+                    parser would close the <p> and break hydration. */}
+                <p style={{ marginBottom: 6 }}><strong>{LEGAL_ENTITY.name}</strong></p>
+                {HAS_REGISTERED_ADDRESS && (
+                  <address className="legal-address card-address">
+                    {ADDRESS_LINES.map((line) => <span key={line}>{line}</span>)}
+                  </address>
+                )}
+                {LEGAL_ENTITY.gstin && <p style={{ marginTop: 10 }}>GSTIN: {LEGAL_ENTITY.gstin}</p>}
+              </div>
+            )}
             <div className="card">
               <h3>Website</h3>
               <p>www.gogulf.co</p>

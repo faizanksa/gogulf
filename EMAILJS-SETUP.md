@@ -16,7 +16,7 @@ Go to https://www.emailjs.com and sign up (free plan = 200 emails/month, enough 
 
 ## Step 2 — Connect your inbox
 In the EmailJS dashboard: **Email Services → Add New Service**.
-Connect the inbox that receives **jobs@gogulf.co** (and ideally **business@gogulf.co**
+Connect the inbox that receives **careers@gogulf.co** (and ideally **business@gogulf.co**
 too, or forward one to the other) via Gmail/Outlook/IMAP.
 Copy the **Service ID** it gives you.
 
@@ -53,7 +53,7 @@ worth including in the template body so you can jump straight to the files.
 
 **To Email:** set this field to `{{to_email}}` (not a fixed address). The website
 already sends this value automatically:
-- Candidate services (job seeker) → **jobs@gogulf.co**
+- Candidate services (job seeker) → **careers@gogulf.co**
 - Employer / B2B services → **business@gogulf.co**
 
 This way one form and one template route inquiries to the correct department
@@ -83,7 +83,7 @@ Thanks for applying to Go Gulf ({{service_type}}). Your application has been
 received and our recruitment team will review it and contact you within
 1–2 business days.
 
-If you need to reach us sooner, WhatsApp +91 95171 08866 or reply to this email.
+If you need to reach us sooner, WhatsApp +91 99363 09015 or reply to this email.
 
 — Go Gulf Recruitment Team
 ```

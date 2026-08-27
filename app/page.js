@@ -20,7 +20,7 @@ export default function HomePage() {
             from first inquiry to final deployment.
           </p>
           <div className="hero-actions">
-            <a href="https://wa.me/919517108866" target="_blank" rel="noopener" className="btn btn-gold">
+            <a href="https://wa.me/919936309015" target="_blank" rel="noopener" className="btn btn-gold">
               Apply for Job on WhatsApp
             </a>
             <Link href="/employers" className="btn btn-outline-light">Hire Manpower</Link>

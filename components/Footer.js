@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LEGAL_ENTITY, ADDRESS_LINES, LEGAL_PAGES } from "@/lib/legal";
+import { LEGAL_ENTITY, ADDRESS_LINES, LEGAL_PAGES, HAS_LEGAL_ENTITY } from "@/lib/legal";
 
 // NOTE: all handles below are built from the "gogulf8866" username you gave —
 // double-check each URL actually resolves once live, especially LinkedIn
@@ -83,9 +83,9 @@ export default function Footer() {
           <div>
             <h4>Get In Touch</h4>
             <ul>
-              <li><a href="https://wa.me/919517108866" target="_blank" rel="noopener">Apply via WhatsApp</a></li>
-              <li><a href="tel:+919935309015">Inquiry Desk: +91 99353 09015</a></li>
-              <li><a href="mailto:jobs@gogulf.co">jobs@gogulf.co</a></li>
+              <li><a href="https://wa.me/919936309015" target="_blank" rel="noopener">Apply via WhatsApp</a></li>
+              <li><a href="tel:+919936309015">Inquiry Desk: +91 99363 09015</a></li>
+              <li><a href="mailto:careers@gogulf.co">careers@gogulf.co</a></li>
               <li><a href="mailto:business@gogulf.co">Business (B2B)</a></li>
               <li><a href="https://whatsapp.com/channel/0029Vaa7XJ4FSAt7ri2W4W2J" target="_blank" rel="noopener">WhatsApp Channel</a></li>
               <li><a href="https://www.youtube.com/@GoGulf8866" target="_blank" rel="noopener">YouTube</a></li>
@@ -148,19 +148,24 @@ export default function Footer() {
 
         {/* Operating-company disclosure: the Go Gulf brand is a trading name, so
             the legal entity, its GST-registered address and its GSTIN are stated
-            on every page rather than buried in the policy pages. */}
-        <div className="footer-legal-entity">
-          <span>
-            <strong>{LEGAL_ENTITY.brand}</strong> is a brand of{" "}
-            <strong>{LEGAL_ENTITY.name}</strong>, a {LEGAL_ENTITY.constitution.toLowerCase()}{" "}
-            registered in India.
-          </span>{" "}
-          <address>{ADDRESS_LINES.join(", ")}.</address>{" "}
-          <span className="footer-gstin">GSTIN: {LEGAL_ENTITY.gstin}</span>
-        </div>
+            on every page rather than buried in the policy pages. Omitted entirely
+            while the entity is unpublished (see lib/legal.js) rather than showing
+            a broken/blank disclosure. */}
+        {HAS_LEGAL_ENTITY && (
+          <div className="footer-legal-entity">
+            <span>
+              <strong>{LEGAL_ENTITY.brand}</strong> is a brand of{" "}
+              <strong>{LEGAL_ENTITY.name}</strong>
+              {LEGAL_ENTITY.constitution ? `, a ${LEGAL_ENTITY.constitution.toLowerCase()}` : ""}{" "}
+              registered in India.
+            </span>{" "}
+            {ADDRESS_LINES.length > 0 && <address>{ADDRESS_LINES.join(", ")}.</address>}{" "}
+            {LEGAL_ENTITY.gstin && <span className="footer-gstin">GSTIN: {LEGAL_ENTITY.gstin}</span>}
+          </div>
+        )}
 
         <div className="footer-bottom">
-          <span>© {year} {LEGAL_ENTITY.name}. All rights reserved.</span>
+          <span>© {year} {LEGAL_ENTITY.brand}. All rights reserved.</span>
           <span>Go Gulf. Get Hired.</span>
           <a
             href="https://mail.google.com/a/gogulf.co/"

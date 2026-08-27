@@ -136,6 +136,7 @@ dashboard instead of a local `.env.local` file.
   Supabase Dashboard, not this website. See `SUPABASE-SETUP.md`.
 - To add/remove job listings later, only `lib/jobs-data.js` needs editing — no
   page changes.
-- All contact numbers/emails (WhatsApp +91 95171 08866, jobs@gogulf.co,
-  business@gogulf.co) live in `components/Header.js` and `components/Footer.js`
-  — edit those two files if these change, instead of searching every page.
+- All contact numbers/emails (WhatsApp/call +91 99363 09015, careers@gogulf.co,
+  business@gogulf.co) live in `lib/seo.js` (`CONTACT`), `components/Header.js`
+  and `components/Footer.js` — edit those if these change, instead of
+  searching every page.

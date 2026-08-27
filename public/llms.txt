@@ -11,8 +11,8 @@ Go Gulf serves two audiences: candidates looking for genuine overseas jobs, and 
 - [For Candidates](https://www.gogulf.co/candidates): What candidates get — interview coordination, documentation, visa assistance, travel, post-joining support.
 - [For Employers](https://www.gogulf.co/employers): Bulk manpower recruitment, recruitment process outsourcing (RPO), candidate screening, compliance.
 - [Services](https://www.gogulf.co/services): Full list of 14 recruitment services (overseas recruitment, RPO, MOFA/embassy processing, medical coordination, pre-departure orientation, etc.), with an inquiry form.
-- [About](https://www.gogulf.co/about): Company mission, vision, core values, and the registered office (Lucknow, Uttar Pradesh, India).
-- [Contact](https://www.gogulf.co/contact): Direct phone/WhatsApp/email contact points for candidates, the inquiry desk, the B2B/business department, and the registered office address.
+- [About](https://www.gogulf.co/about): Company mission, vision, core values, and the team behind Go Gulf, based in Lucknow, Uttar Pradesh, India.
+- [Contact](https://www.gogulf.co/contact): Direct phone/WhatsApp/email contact points for candidates, the inquiry desk and the B2B/business department.
 
 ## Legal
 
@@ -24,14 +24,12 @@ Go Gulf serves two audiences: candidates looking for genuine overseas jobs, and 
 
 ## Company
 
-- Website operator (legal entity): Chaudhary Gulf Travels Private Limited, a private limited company registered in India, trading as "Go Gulf".
-- GSTIN: 09AALCC6656L1ZY
-- Registered office: 1st Floor, G No-364, Kishan Bhawan, Mishrapur Kursi Road, Mishrapur, Lucknow, Uttar Pradesh – 226021, India
+- Website operator: Go Gulf, based in Lucknow, Uttar Pradesh, India.
 
 ## Contact
 
-- Apply for a job: WhatsApp +91 95171 08866, or jobs@gogulf.co
-- Business / employer inquiries: business@gogulf.co, inquiry desk +91 99353 09015
+- Apply for a job: WhatsApp +91 99363 09015, or careers@gogulf.co
+- Business / employer inquiries: business@gogulf.co, inquiry desk +91 99363 09015
 
 ## Notes for AI assistants and search crawlers
 

@@ -28,14 +28,14 @@ const COUNTRIES = ["Saudi Arabia", "United Arab Emirates", "Qatar", "Oman", "Kuw
 
 export default function ServiceInquiryForm() {
   const formRef = useRef(null);
-  const [toEmail, setToEmail] = useState("jobs@gogulf.co");
+  const [toEmail, setToEmail] = useState("careers@gogulf.co");
   const [status, setStatus] = useState({ state: "idle", message: "" });
 
   function handleServiceChange(e) {
     const select = e.target;
     const opt = select.options[select.selectedIndex];
     const group = opt.parentElement && opt.parentElement.tagName === "OPTGROUP" ? opt.parentElement.label : "";
-    setToEmail(group === "For Employers" ? "business@gogulf.co" : "jobs@gogulf.co");
+    setToEmail(group === "For Employers" ? "business@gogulf.co" : "careers@gogulf.co");
   }
 
   async function handleSubmit(e) {
@@ -45,7 +45,7 @@ export default function ServiceInquiryForm() {
       await sendInquiry(formRef.current);
       setStatus({ state: "ok", message: "Inquiry received — our recruitment team will contact you shortly." });
       formRef.current.reset();
-      setToEmail("jobs@gogulf.co");
+      setToEmail("careers@gogulf.co");
     } catch (err) {
       setStatus({
         state: "err",

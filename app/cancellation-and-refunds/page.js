@@ -1,7 +1,7 @@
 import Link from "next/link";
 import LegalPage from "@/components/LegalPage";
 import { pageMetadata, CONTACT } from "@/lib/seo";
-import { LEGAL_ENTITY, REFUND_BANK_CREDIT_WINDOW, POLICY_EFFECTIVE_DATE } from "@/lib/legal";
+import { LEGAL_ENTITY, REFUND_BANK_CREDIT_WINDOW, POLICY_EFFECTIVE_DATE, HAS_LEGAL_ENTITY } from "@/lib/legal";
 
 export const metadata = pageMetadata({
   title: "Cancellation & Refunds",
@@ -23,8 +23,15 @@ const SECTIONS = [
       <>
         <p>
           This policy explains how to cancel a service request made to{" "}
-          <strong>{LEGAL_ENTITY.name}</strong> (trading as {LEGAL_ENTITY.brand}), when a refund may
-          be available, how to ask for one, and how long an approved refund takes to reach you.
+          {HAS_LEGAL_ENTITY ? (
+            <>
+              <strong>{LEGAL_ENTITY.name}</strong> (trading as {LEGAL_ENTITY.brand})
+            </>
+          ) : (
+            <strong>{LEGAL_ENTITY.brand}</strong>
+          )}
+          , when a refund may be available, how to ask for one, and how long an approved refund takes
+          to reach you.
         </p>
         <p>
           It applies to service fees you pay to us, whether you engage us as a candidate or as an

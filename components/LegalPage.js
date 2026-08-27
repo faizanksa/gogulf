@@ -7,6 +7,8 @@ import {
   LEGAL_PAGES,
   POLICY_EFFECTIVE_DATE,
   POLICY_EFFECTIVE_ISO,
+  HAS_LEGAL_ENTITY,
+  HAS_REGISTERED_ADDRESS,
 } from "@/lib/legal";
 
 // Shared shell for the four policy pages (/privacy-policy,
@@ -46,8 +48,8 @@ export default function LegalPage({ title, eyebrow, path, intro, sections }) {
                 <time dateTime={POLICY_EFFECTIVE_ISO}>{POLICY_EFFECTIVE_DATE}</time>
               </strong>
             </span>
-            <span>Operated by <strong>{LEGAL_ENTITY.name}</strong></span>
-            <span>GSTIN <strong>{LEGAL_ENTITY.gstin}</strong></span>
+            {HAS_LEGAL_ENTITY && <span>Operated by <strong>{LEGAL_ENTITY.name}</strong></span>}
+            {LEGAL_ENTITY.gstin && <span>GSTIN <strong>{LEGAL_ENTITY.gstin}</strong></span>}
           </div>
         </div>
       </section>
@@ -91,28 +93,37 @@ export default function LegalPage({ title, eyebrow, path, intro, sections }) {
                   contact us using any of the details below and we will respond.
                 </p>
                 <dl className="legal-dl">
-                  <div>
-                    <dt>Legal entity</dt>
-                    <dd>{LEGAL_ENTITY.name} ({LEGAL_ENTITY.constitution})</dd>
-                  </div>
+                  {HAS_LEGAL_ENTITY && (
+                    <div>
+                      <dt>Legal entity</dt>
+                      <dd>
+                        {LEGAL_ENTITY.name}
+                        {LEGAL_ENTITY.constitution ? ` (${LEGAL_ENTITY.constitution})` : ""}
+                      </dd>
+                    </div>
+                  )}
                   <div>
                     <dt>Brand / website</dt>
                     <dd>{LEGAL_ENTITY.brand} — www.gogulf.co</dd>
                   </div>
-                  <div>
-                    <dt>GSTIN</dt>
-                    <dd>{LEGAL_ENTITY.gstin}</dd>
-                  </div>
-                  <div>
-                    <dt>Registered address</dt>
-                    <dd>
-                      <address className="legal-address">
-                        {ADDRESS_LINES.map((line) => (
-                          <span key={line}>{line}</span>
-                        ))}
-                      </address>
-                    </dd>
-                  </div>
+                  {LEGAL_ENTITY.gstin && (
+                    <div>
+                      <dt>GSTIN</dt>
+                      <dd>{LEGAL_ENTITY.gstin}</dd>
+                    </div>
+                  )}
+                  {HAS_REGISTERED_ADDRESS && (
+                    <div>
+                      <dt>Registered address</dt>
+                      <dd>
+                        <address className="legal-address">
+                          {ADDRESS_LINES.map((line) => (
+                            <span key={line}>{line}</span>
+                          ))}
+                        </address>
+                      </dd>
+                    </div>
+                  )}
                   <div>
                     <dt>Candidate queries</dt>
                     <dd><a href={`mailto:${CONTACT.jobsEmail}`}>{CONTACT.jobsEmail}</a></dd>

@@ -136,7 +136,7 @@ export default function ApplyForm() {
             <>
               <form ref={formRef} id="apply-form" onSubmit={handleSubmit}>
                 <input type="hidden" name="page_source" value="Jobs Page" />
-                <input type="hidden" name="to_email" value="jobs@gogulf.co" />
+                <input type="hidden" name="to_email" value="careers@gogulf.co" />
                 <input type="hidden" name="service_type" value={jobTitle} />
                 <input type="hidden" name="country" value={jobCountry} />
                 <input type="hidden" name="submission_id" defaultValue="" />

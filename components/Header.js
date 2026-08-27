@@ -42,7 +42,7 @@ export default function Header() {
             </Link>
           ))}
           <a
-            href="https://wa.me/919517108866"
+            href="https://wa.me/919936309015"
             target="_blank"
             rel="noopener"
             className="nav-cta"

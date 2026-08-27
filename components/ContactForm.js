@@ -29,6 +29,7 @@ export default function ContactForm() {
     <form className="js-inquiry-form" id="contact-form" ref={formRef} onSubmit={handleSubmit}>
       <input type="hidden" name="page_source" value="Contact Page" />
       <input type="hidden" name="service_type" value="General Inquiry" />
+      <input type="hidden" name="to_email" value="careers@gogulf.co" />
       <div className="field">
         <label htmlFor="c_name">Full Name</label>
         <input type="text" id="c_name" name="from_name" required />
