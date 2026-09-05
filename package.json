@@ -4,16 +4,38 @@
   "private": true,
   "description": "Go Gulf — overseas recruitment platform website (Next.js, App Router).",
   "scripts": {
-    "dev": "next dev",
+    "dev": "cross-env PLATFORM_MODE=server next dev",
+    "dev:static": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "build:server": "cross-env PLATFORM_MODE=server next build",
+    "start": "cross-env PLATFORM_MODE=server next start",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit",
+    "check:secrets": "node --env-file=.env.local scripts/check-client-secrets.mjs",
+    "check:all": "npm run lint && npm run typecheck && npm run test && npm run build",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
+    "@supabase/ssr": "^0.12.6",
     "@supabase/supabase-js": "^2.112.1",
     "next": "^16.3.0",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "server-only": "^0.0.1",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.1",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitest/coverage-v8": "^5.0.0",
+    "cross-env": "^10.1.0",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.3.4",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.0"
   }
 }

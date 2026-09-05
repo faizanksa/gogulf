@@ -15,6 +15,10 @@
 .env.*.local
 .envrc
 
+# build artifacts
+*.tsbuildinfo
+next-env.d.ts
+
 # misc
 .DS_Store
 *.pem
@@ -37,3 +41,25 @@ serviceAccountKey.json
 # IDE/editor
 .vscode/*.secret
 .vscode/*.env
+
+# ---------------------------------------------------------------------------
+# Production data — NEVER commit. Added Phase 0.5.
+# The legacy Supabase project holds candidate PII (passport scans, CVs).
+# Any local export, dump or archive of it is regulated data, not source code.
+# ---------------------------------------------------------------------------
+/export/
+/exports/
+/backups/
+/dumps/
+/legacy-data/
+/document-archive/
+*.dump
+*.sql.gz
+*.bak
+legacy-data.sql
+legacy-schema.sql
+manifest.csv
+
+# env files (all variants)
+.env*
+!.env.example
