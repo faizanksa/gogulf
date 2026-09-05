@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LEGAL_ENTITY, ADDRESS_LINES, LEGAL_PAGES, HAS_LEGAL_ENTITY } from "@/lib/legal";
+import { LEGAL_ENTITY, ADDRESS_LINES, LEGAL_PAGES } from "@/lib/legal";
 
 // NOTE: all handles below are built from the "gogulf8866" username you gave —
 // double-check each URL actually resolves once live, especially LinkedIn
@@ -148,24 +148,19 @@ export default function Footer() {
 
         {/* Operating-company disclosure: the Go Gulf brand is a trading name, so
             the legal entity, its GST-registered address and its GSTIN are stated
-            on every page rather than buried in the policy pages. Omitted entirely
-            while the entity is unpublished (see lib/legal.js) rather than showing
-            a broken/blank disclosure. */}
-        {HAS_LEGAL_ENTITY && (
-          <div className="footer-legal-entity">
-            <span>
-              <strong>{LEGAL_ENTITY.brand}</strong> is a brand of{" "}
-              <strong>{LEGAL_ENTITY.name}</strong>
-              {LEGAL_ENTITY.constitution ? `, a ${LEGAL_ENTITY.constitution.toLowerCase()}` : ""}{" "}
-              registered in India.
-            </span>{" "}
-            {ADDRESS_LINES.length > 0 && <address>{ADDRESS_LINES.join(", ")}.</address>}{" "}
-            {LEGAL_ENTITY.gstin && <span className="footer-gstin">GSTIN: {LEGAL_ENTITY.gstin}</span>}
-          </div>
-        )}
+            on every page rather than buried in the policy pages. */}
+        <div className="footer-legal-entity">
+          <span>
+            <strong>{LEGAL_ENTITY.brand}</strong> is a brand of{" "}
+            <strong>{LEGAL_ENTITY.name}</strong>, a {LEGAL_ENTITY.constitution.toLowerCase()}{" "}
+            registered in India.
+          </span>{" "}
+          <address>{ADDRESS_LINES.join(", ")}.</address>{" "}
+          <span className="footer-gstin">GSTIN: {LEGAL_ENTITY.gstin}</span>
+        </div>
 
         <div className="footer-bottom">
-          <span>© {year} {LEGAL_ENTITY.brand}. All rights reserved.</span>
+          <span>© {year} {LEGAL_ENTITY.name}. All rights reserved.</span>
           <span>Go Gulf. Get Hired.</span>
           <a
             href="https://mail.google.com/a/gogulf.co/"

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import LegalPage from "@/components/LegalPage";
 import { pageMetadata, CONTACT } from "@/lib/seo";
-import { LEGAL_ENTITY, POLICY_EFFECTIVE_DATE, HAS_LEGAL_ENTITY } from "@/lib/legal";
+import { LEGAL_ENTITY, POLICY_EFFECTIVE_DATE } from "@/lib/legal";
 
 export const metadata = pageMetadata({
   title: "Pricing & Fees",
@@ -209,14 +209,9 @@ const SECTIONS = [
     body: (
       <p>
         Goods and Services Tax (GST) and any other applicable tax is charged as required by Indian
-        law and shown separately on your invoice.{" "}
-        {HAS_LEGAL_ENTITY && LEGAL_ENTITY.gstin && (
-          <>
-            {LEGAL_ENTITY.name} is registered under GST with GSTIN{" "}
-            <strong>{LEGAL_ENTITY.gstin}</strong>.{" "}
-          </>
-        )}
-        If you need a GST invoice for your records, ask us and we will issue one.
+        law and shown separately on your invoice. {LEGAL_ENTITY.name} is registered under GST with
+        GSTIN <strong>{LEGAL_ENTITY.gstin}</strong>. If you need a GST invoice for your records, ask
+        us and we will issue one.
       </p>
     ),
   },

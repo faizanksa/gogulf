@@ -1,13 +1,13 @@
 import Link from "next/link";
 import LegalPage from "@/components/LegalPage";
 import { pageMetadata, CONTACT } from "@/lib/seo";
-import { LEGAL_ENTITY, ADDRESS_ONE_LINE, POLICY_EFFECTIVE_DATE, HAS_LEGAL_ENTITY } from "@/lib/legal";
+import { LEGAL_ENTITY, ADDRESS_ONE_LINE, POLICY_EFFECTIVE_DATE } from "@/lib/legal";
 
 export const metadata = pageMetadata({
   title: "Privacy Policy",
   path: "/privacy-policy",
   description:
-    "How Go Gulf collects, uses, shares, stores and protects the personal information of website visitors, job candidates and employers.",
+    "How Go Gulf, operated by Chaudhary Gulf Travels Private Limited, collects, uses, shares, stores and protects the personal information of website visitors, job candidates and employers.",
 });
 
 // Every service named below is one that is actually wired into this site —
@@ -23,32 +23,17 @@ const SECTIONS = [
       <>
         <p>
           This website, <strong>www.gogulf.co</strong>, trades under the brand{" "}
-          <strong>{LEGAL_ENTITY.brand}</strong>
-          {HAS_LEGAL_ENTITY ? (
-            <>
-              {" "}
-              and is operated by <strong>{LEGAL_ENTITY.name}</strong>
-              {LEGAL_ENTITY.constitution && (
-                <>, a {LEGAL_ENTITY.constitution.toLowerCase()} incorporated in India</>
-              )}
-              {ADDRESS_ONE_LINE && <>, with its principal place of business at {ADDRESS_ONE_LINE}</>}.
-              {LEGAL_ENTITY.gstin && (
-                <>
-                  {" "}
-                  Our GSTIN is <strong>{LEGAL_ENTITY.gstin}</strong>.
-                </>
-              )}
-            </>
-          ) : (
-            <> and is operated by the {LEGAL_ENTITY.brand} team, based in India.</>
-          )}
+          <strong>{LEGAL_ENTITY.brand}</strong> and is operated by{" "}
+          <strong>{LEGAL_ENTITY.name}</strong>, a {LEGAL_ENTITY.constitution.toLowerCase()}{" "}
+          incorporated in India, with its principal place of business at {ADDRESS_ONE_LINE}. Our
+          GSTIN is <strong>{LEGAL_ENTITY.gstin}</strong>.
         </p>
         <p>
-          In this policy, “we”, “us” and “our” mean{" "}
-          {HAS_LEGAL_ENTITY ? LEGAL_ENTITY.name : LEGAL_ENTITY.brand}. “You” means anyone who visits
-          this website, contacts us through it, applies for a job through it, or engages us as an
-          employer or business client. We decide why and how your personal information is handled in
-          connection with this website and our recruitment services, and we are responsible for it.
+          In this policy, “we”, “us” and “our” mean {LEGAL_ENTITY.name}. “You” means anyone who
+          visits this website, contacts us through it, applies for a job through it, or engages us
+          as an employer or business client. We decide why and how your personal information is
+          handled in connection with this website and our recruitment services, and we are
+          responsible for it.
         </p>
       </>
     ),

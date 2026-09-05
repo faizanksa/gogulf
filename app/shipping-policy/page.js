@@ -1,7 +1,7 @@
 import Link from "next/link";
 import LegalPage from "@/components/LegalPage";
 import { pageMetadata, CONTACT } from "@/lib/seo";
-import { LEGAL_ENTITY, POLICY_EFFECTIVE_DATE, HAS_LEGAL_ENTITY } from "@/lib/legal";
+import { LEGAL_ENTITY, POLICY_EFFECTIVE_DATE } from "@/lib/legal";
 
 export const metadata = pageMetadata({
   title: "Shipping & Delivery Policy",
@@ -23,13 +23,8 @@ const SECTIONS = [
         <div className="legal-callout">
           <p>
             <strong>
-              {HAS_LEGAL_ENTITY ? (
-                <>{LEGAL_ENTITY.name} (trading as {LEGAL_ENTITY.brand})</>
-              ) : (
-                LEGAL_ENTITY.brand
-              )}{" "}
-              is a recruitment services company. We sell no goods, we operate no online store, and
-              we ship nothing.
+              {LEGAL_ENTITY.name} (trading as {LEGAL_ENTITY.brand}) is a recruitment services
+              company. We sell no goods, we operate no online store, and we ship nothing.
             </strong>{" "}
             There is therefore no shipping charge, no courier partner, no dispatch or tracking
             process and no delivery address to provide.

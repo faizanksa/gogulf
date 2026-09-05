@@ -6,14 +6,13 @@ import {
   ADDRESS_ONE_LINE,
   JURISDICTION_CITY,
   POLICY_EFFECTIVE_DATE,
-  HAS_LEGAL_ENTITY,
 } from "@/lib/legal";
 
 export const metadata = pageMetadata({
   title: "Terms & Conditions",
   path: "/terms-and-conditions",
   description:
-    "The terms on which Go Gulf provides its website and overseas recruitment services to candidates and employers.",
+    "The terms on which Chaudhary Gulf Travels Private Limited provides the Go Gulf website and its overseas recruitment services to candidates and employers.",
 });
 
 // Written against what Go Gulf actually does — recruitment and mobilisation
@@ -53,29 +52,13 @@ const SECTIONS = [
       <>
         <p>
           This website and the <strong>{LEGAL_ENTITY.brand}</strong> brand are operated by{" "}
-          {HAS_LEGAL_ENTITY ? (
-            <>
-              <strong>{LEGAL_ENTITY.name}</strong>
-              {LEGAL_ENTITY.constitution && (
-                <>, a {LEGAL_ENTITY.constitution.toLowerCase()} incorporated in India</>
-              )}
-              {ADDRESS_ONE_LINE && <>, with its principal place of business at {ADDRESS_ONE_LINE}</>}
-              {LEGAL_ENTITY.gstin && (
-                <>
-                  {" "}
-                  and GSTIN <strong>{LEGAL_ENTITY.gstin}</strong>
-                </>
-              )}
-              .
-            </>
-          ) : (
-            <>the {LEGAL_ENTITY.brand} team, based in India.</>
-          )}
+          <strong>{LEGAL_ENTITY.name}</strong>, a {LEGAL_ENTITY.constitution.toLowerCase()}{" "}
+          incorporated in India, with its principal place of business at {ADDRESS_ONE_LINE} and
+          GSTIN <strong>{LEGAL_ENTITY.gstin}</strong>.
         </p>
         <p>
-          In these terms, “we”, “us”, “our” and “{LEGAL_ENTITY.brand}” mean{" "}
-          {HAS_LEGAL_ENTITY ? LEGAL_ENTITY.name : LEGAL_ENTITY.brand}, and “you” means the person or
-          organisation using this website or our services.
+          In these terms, “we”, “us”, “our” and “{LEGAL_ENTITY.brand}” mean {LEGAL_ENTITY.name}, and
+          “you” means the person or organisation using this website or our services.
         </p>
       </>
     ),
