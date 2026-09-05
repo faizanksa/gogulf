@@ -623,3 +623,15 @@ section{padding:88px 0;}
   font-family:'IBM Plex Mono',monospace; font-size:.7rem; letter-spacing:.06em;
   text-transform:uppercase; color:#8A8375;
 }
+
+/* Inline validation message under a field. Server-side validation is
+   authoritative; this renders what it reports. */
+.field-hint.field-error{
+  color:#A32C1E;
+  font-weight:600;
+}
+.field input[aria-invalid="true"],
+.field textarea[aria-invalid="true"],
+.field select[aria-invalid="true"]{
+  border-color:#A32C1E;
+}

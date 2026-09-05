@@ -67,6 +67,20 @@ export function clientEnv(): ClientEnv {
 // Server — secrets
 // ---------------------------------------------------------------------------
 
+/**
+ * An email address, optionally with a display name.
+ *   no-reply@gogulf.co
+ *   Go Gulf <no-reply@gogulf.co>
+ */
+const mailbox = z.string().refine(
+  (value) => {
+    const match = value.match(/^\s*(?:.*<\s*([^<>\s]+)\s*>|([^<>\s]+))\s*$/);
+    const address = match?.[1] ?? match?.[2];
+    return Boolean(address) && z.string().email().safeParse(address).success;
+  },
+  { message: "must be an email address, optionally as \"Name <address>\"" },
+);
+
 const serverSchema = z.object({
   // Required wherever the platform runs server-side.
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(20).optional(),
@@ -74,8 +88,12 @@ const serverSchema = z.object({
 
   // Phase 1.5
   RESEND_API_KEY: z.string().optional(),
-  RESEND_FROM_EMAIL: z.string().email().optional(),
-  RESEND_REPLY_TO: z.string().email().optional(),
+  // Accepts a bare address or RFC 5322 display-name form
+  // ("Go Gulf <no-reply@gogulf.co>"), which is what Resend expects and what
+  // renders as a sender name in the recipient's inbox. z.email() alone rejects
+  // the display-name form.
+  RESEND_FROM_EMAIL: mailbox.optional(),
+  RESEND_REPLY_TO: mailbox.optional(),
   RESEND_WEBHOOK_SECRET: z.string().optional(),
 
   // Phase 7 — test mode during development; live keys only in production.
