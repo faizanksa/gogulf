@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { sendInquiry } from "@/lib/emailjs";
+import { emailProviderMode, submitViaEmailJs, submitViaServer } from "@/lib/forms/transport";
 import { submitJobApplication } from "@/lib/supabase";
 
 const MAX_FILE_SIZE = 8 * 1024 * 1024; // 8MB per file — bucket backstop is 10MB (see SUPABASE-SETUP.md)
@@ -15,13 +15,13 @@ const MAX_FILE_SIZE = 8 * 1024 * 1024; // 8MB per file — bucket backstop is 10
 //   1. CV, passport and any other documents upload to Supabase Storage, and
 //      the application is saved as a row in Supabase — this is the source
 //      of truth, and works even if step 2 below fails.
-//   2. A best-effort notification + confirmation email goes out via EmailJS
-//      (same shared template as Services/Contact — see lib/emailjs.js).
-//      The raw files are deliberately NOT part of that email: the file
-//      inputs live outside the <form ref={formRef}> element so EmailJS's
-//      FormData(form) scan never touches them (large scans would blow past
-//      EmailJS's attachment limits). The email just names what was uploaded
-//      and the ID for looking it up in Supabase.
+//   2. A best-effort notification + confirmation email goes out, via whichever
+//      provider is configured (NEXT_PUBLIC_EMAIL_PROVIDER: resend | emailjs).
+//      The raw files are deliberately NOT part of that email — documents belong
+//      in access-controlled storage, not scattered across mailboxes. The email
+//      names what was uploaded and carries the ID for looking it up.
+//      The file inputs still live outside <form ref={formRef}> so EmailJS's
+//      FormData(form) scan never touches them.
 export default function ApplyForm() {
   const searchParams = useSearchParams();
   const jobTitle = searchParams.get("job") || "General Application";
@@ -94,15 +94,34 @@ export default function ApplyForm() {
     ].join(", ");
     setHiddenField("submission_id", result.submissionId);
     setHiddenField("documents", docsNote);
-    try {
-      await sendInquiry(formRef.current);
-    } catch (emailErr) {
-      console.error("EmailJS notification failed (application was still saved to Supabase):", emailErr);
-    }
+
+    const emailResult =
+      emailProviderMode() === "resend"
+        ? await submitViaServer("job-application", {
+            from_name: els.from_name.value,
+            reply_to: els.reply_to.value,
+            phone: els.phone.value,
+            service_type: jobTitle,
+            country: jobCountry,
+            experience: els.experience.value,
+            message: els.message.value,
+            documents: docsNote,
+            submission_id: result.submissionId,
+            page_source: "Jobs Page",
+            website: els.website.value,
+          })
+        : await submitViaEmailJs(formRef.current);
+
+    // The application and its documents are already saved. A failed
+    // notification must never tell the applicant their submission did not go
+    // through — that would be untrue, and would prompt a duplicate upload.
+    const confirmationSent = emailResult.ok && emailResult.acknowledgementSent !== false;
 
     setStatus({
       state: "ok",
-      message: "Application received — our recruitment team will contact you shortly. A confirmation has also been emailed to you.",
+      message: confirmationSent
+        ? "Application received — our recruitment team will contact you shortly. A confirmation has also been emailed to you."
+        : "Application received — our recruitment team will contact you shortly. We could not email you a confirmation, but your application and documents did reach us.",
     });
     formRef.current.reset();
     setCvFile(null);
@@ -141,6 +160,12 @@ export default function ApplyForm() {
                 <input type="hidden" name="country" value={jobCountry} />
                 <input type="hidden" name="submission_id" defaultValue="" />
                 <input type="hidden" name="documents" defaultValue="" />
+
+                {/* Honeypot — hidden from people, filled by naive bots. */}
+                <div aria-hidden="true" style={{ position: "absolute", left: "-9999px", height: 0, overflow: "hidden" }}>
+                  <label htmlFor="a_website">Leave this field empty</label>
+                  <input type="text" id="a_website" name="website" tabIndex={-1} autoComplete="off" defaultValue="" />
+                </div>
 
                 <div className="field-row">
                   <div className="field">
