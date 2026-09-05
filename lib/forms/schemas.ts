@@ -55,9 +55,13 @@ export const emailField = z
  * The stored value is the normalised form — the raw is kept alongside so staff
  * can see exactly what the person typed.
  */
-export const phoneField = cleanText(32).refine(isNormalizablePhone, {
-  message: "Enter a valid phone number, including country code if outside India.",
-});
+export const phoneField = z
+  .string({ error: "Phone number is required." })
+  .transform((v) => v.replace(/\s+/g, " ").trim())
+  .pipe(z.string().max(32))
+  .refine(isNormalizablePhone, {
+    message: "Enter a valid phone number, including country code if outside India.",
+  });
 
 /**
  * Honeypot. A hidden field real users never fill and naive bots always do.
