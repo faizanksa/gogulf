@@ -11,10 +11,15 @@ export const metadata = pageMetadata({
 });
 
 // Every service named below is one that is actually wired into this site —
-// EmailJS (components/*Form.js via lib/emailjs.js), Supabase (lib/supabase.js),
+// Resend (lib/email/*, via the /api/forms/* routes), Supabase (lib/supabase.js),
 // Google Fonts (app/globals.css @import) and Google Workspace (the @gogulf.co
 // inboxes). The site runs no analytics, no advertising pixels and sets no
 // cookies of its own; the policy says so rather than reciting boilerplate.
+//
+// DEPLOY TOGETHER: this section names Resend, so it must not reach production
+// ahead of NEXT_PUBLIC_EMAIL_PROVIDER=resend. Until that switch is live, email
+// is still delivered by EmailJS and this list would misname the processor. The
+// list is prefaced "There are no others", so it has to be exactly right.
 const SECTIONS = [
   {
     id: "who-we-are",
@@ -357,11 +362,12 @@ const SECTIONS = [
         </p>
         <dl className="legal-dl">
           <div>
-            <dt>EmailJS</dt>
+            <dt>Resend</dt>
             <dd>
               Delivers the contents of the contact, service inquiry and job application forms to our
               inboxes as an email, and sends you a confirmation. The details you type into a form
-              pass through EmailJS in order to be delivered.
+              pass through Resend in order to be delivered. Documents you upload are not attached to
+              those emails.
             </dd>
           </div>
           <div>
