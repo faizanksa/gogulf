@@ -26,9 +26,9 @@ export default function HomePage() {
             <Link href="/employers" className="btn btn-outline-light">Hire Manpower</Link>
           </div>
           <div className="hero-stats">
-            <div><strong>2008</strong><span>Group Heritage</span></div>
+            <div><strong>2008</strong><span>Industry Experience Since</span></div>
             <div><strong>06</strong><span>Gulf Countries Served</span></div>
-            <div><strong>14</strong><span>Step Managed Process</span></div>
+            <div><strong>10</strong><span>Step Managed Process</span></div>
             <div><strong>End-to-End</strong><span>Deployment Support</span></div>
           </div>
         </div>
@@ -36,7 +36,7 @@ export default function HomePage() {
 
       <div className="trust-bar">
         <div className="container trust-row">
-          <div className="trust-item"><span className="dot"></span><div><strong>20+ Years of Trust</strong><span>Since 2008</span></div></div>
+          <div className="trust-item"><span className="dot"></span><div><strong>Experienced Team</strong><span>In the industry since 2008</span></div></div>
           <div className="trust-item"><span className="dot"></span><div><strong>Thousands of Placements</strong><span>Every Year</span></div></div>
           <div className="trust-item"><span className="dot"></span><div><strong>No Hidden Charges</strong><span>100% Transparent</span></div></div>
           <div className="trust-item"><span className="dot"></span><div><strong>Direct Approval, MOFA Compliant</strong><span>Genuine &amp; Legal</span></div></div>

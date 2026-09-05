@@ -7,7 +7,7 @@ export const metadata = pageMetadata({
   title: "Privacy Policy",
   path: "/privacy-policy",
   description:
-    "How Go Gulf, operated by Chaudhary Gulf Travels Private Limited, collects, uses, shares, stores and protects the personal information of website visitors, job candidates and employers.",
+    `How Go Gulf, operated by ${LEGAL_ENTITY.name}, collects, uses, shares, stores and protects the personal information of website visitors, job candidates and employers.`,
 });
 
 // Every service named below is one that is actually wired into this site —

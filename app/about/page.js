@@ -6,7 +6,7 @@ export const metadata = pageMetadata({
   title: "About",
   path: "/about",
   description:
-    "Go Gulf is a modern overseas recruitment platform connecting talented professionals with genuine, verified employers across the Gulf region. 20+ years of trust, since 2008.",
+    "Go Gulf is a modern overseas recruitment platform connecting talented professionals with genuine, verified employers across the Gulf region. Backed by industry experience since 2008.",
 });
 
 const BREADCRUMB = breadcrumbJsonLd([{ name: "About", path: "/about" }]);
@@ -75,11 +75,11 @@ export default function AboutPage() {
       <section className="section-sand">
         <div className="container">
           <div className="section-head">
-            <div className="eyebrow">Since 2008</div>
+            <div className="eyebrow">Industry Experience Since 2008</div>
             <h2>Trusted across the Gulf, built on real numbers</h2>
           </div>
           <div className="grid-3" style={{ marginBottom: 26 }}>
-            <div className="card"><h3>20+ Years of Trust</h3><p>Serving candidates and employers since 2008.</p></div>
+            <div className="card"><h3>Experience Since 2008</h3><p>Our team has worked in Gulf recruitment and travel since 2008.</p></div>
             <div className="card"><h3>Thousands of Placements</h3><p>Every year, across every industry we serve.</p></div>
             <div className="card"><h3>No Hidden Charges</h3><p>100% transparent, every step of the way.</p></div>
           </div>

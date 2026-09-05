@@ -12,7 +12,7 @@ export const metadata = pageMetadata({
   title: "Terms & Conditions",
   path: "/terms-and-conditions",
   description:
-    "The terms on which Chaudhary Gulf Travels Private Limited provides the Go Gulf website and its overseas recruitment services to candidates and employers.",
+    `The terms on which ${LEGAL_ENTITY.name} provides the Go Gulf website and its overseas recruitment services to candidates and employers.`,
 });
 
 // Written against what Go Gulf actually does — recruitment and mobilisation
