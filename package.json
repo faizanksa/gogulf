@@ -13,9 +13,11 @@
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
     "check:secrets": "node --env-file=.env.local scripts/check-client-secrets.mjs",
-    "check:all": "npm run lint && npm run typecheck && npm run test && npm run build",
+    "check:all": "npm run lint && npm run typecheck && npm run test && npm run build && npm run build:server",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "check:isolation": "node --env-file=.env.local scripts/check-staging-isolation.mjs",
+    "db:validate": "node scripts/validate-migrations.mjs"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
@@ -36,6 +38,7 @@
     "cross-env": "^10.1.0",
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.3.4",
+    "pgsql-parser": "^18.2.6",
     "typescript": "^6.0.3",
     "vitest": "^5.0.0"
   }

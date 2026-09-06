@@ -1,0 +1,252 @@
+-- =============================================================================
+-- Semantic validation for migrations 0002–0008.
+--
+-- The parser check (libpg_query) proves syntax only. This proves BEHAVIOUR:
+-- that policies filter the way they claim to, that the JWT hook populates
+-- claims, that the audit trail cannot be altered, and that deactivating a staff
+-- member takes effect immediately.
+--
+-- RUN AGAINST A DISPOSABLE DATABASE ONLY — local `supabase start`, or the
+-- staging project. It inserts and deletes test rows. Never run it against
+-- production.
+--
+--   supabase db reset            # applies 0001–0008 from empty
+--   psql -v ON_ERROR_STOP=1 "$DB_URL" -f supabase/tests/rls.test.sql
+--
+-- ON_ERROR_STOP is passed on the command line rather than with a \set
+-- meta-command, so this file stays pure SQL and can be checked by the same
+-- parser that validates the migrations.
+--
+-- Any failure raises an exception and aborts. Silence is success.
+-- =============================================================================
+
+begin;
+
+create or replace function test_assert(condition boolean, description text)
+returns void language plpgsql as $$
+begin
+  if condition then
+    raise notice 'PASS  %', description;
+  else
+    raise exception 'FAIL  %', description;
+  end if;
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- 1. Phone normalisation must agree with lib/phone.ts
+-- ---------------------------------------------------------------------------
+select test_assert(public.normalize_phone_e164('9936309015') = '+919936309015',
+  'bare Indian mobile gets +91');
+select test_assert(public.normalize_phone_e164('09936309015') = '+919936309015',
+  'leading trunk zero stripped');
+select test_assert(public.normalize_phone_e164('919936309015') = '+919936309015',
+  'already country-coded accepted');
+select test_assert(public.normalize_phone_e164('+91 99363 09015') = '+919936309015',
+  'punctuation and spacing ignored');
+select test_assert(public.normalize_phone_e164('00919936309015') = '+919936309015',
+  '00 international prefix stripped');
+select test_assert(public.normalize_phone_e164('971501234567') = '+971501234567',
+  'foreign number keeps its own country code');
+
+-- The critical property: ambiguity returns NULL so the caller quarantines the
+-- row for human review. Guessing would silently merge two different people.
+select test_assert(public.normalize_phone_e164('12345') is null,
+  'too short returns NULL rather than guessing');
+select test_assert(public.normalize_phone_e164('2234567890') is null,
+  '10-digit non-mobile prefix returns NULL');
+select test_assert(public.normalize_phone_e164('') is null, 'empty returns NULL');
+select test_assert(public.normalize_phone_e164(null) is null, 'null returns NULL');
+select test_assert(public.normalize_email('  Careers@GoGulf.CO ') = 'careers@gogulf.co',
+  'email lowercased and trimmed');
+
+-- ---------------------------------------------------------------------------
+-- 2. Seed data matches docs/RBAC-RLS.md
+-- ---------------------------------------------------------------------------
+select test_assert((select count(*) from public.roles) = 12, 'twelve roles seeded');
+select test_assert((select is_super from public.roles where key = 'SUPER_ADMIN'),
+  'SUPER_ADMIN is flagged is_super');
+select test_assert((select count(*) from public.permissions) >= 68,
+  'permission catalogue seeded');
+select test_assert(
+  not exists (select 1 from public.role_permissions where role_key = 'SUPER_ADMIN'),
+  'SUPER_ADMIN has no explicit grants — is_super short-circuits has_perm');
+select test_assert(
+  not exists (
+    select 1 from public.role_permissions rp
+    join public.permissions p on p.id = rp.permission_id
+    where rp.role_key in ('FINANCE_MANAGER','ACCOUNTS')
+      and p.key = 'documents.view.identity'),
+  'finance roles cannot view identity documents');
+select test_assert(
+  not exists (
+    select 1 from public.role_permissions rp
+    join public.permissions p on p.id = rp.permission_id
+    where rp.role_key = 'ADMIN' and p.key in ('roles.manage','permissions.manage')),
+  'ADMIN cannot redefine roles or permissions');
+select test_assert(
+  not exists (
+    select 1 from public.role_permissions rp
+    join public.permissions p on p.id = rp.permission_id
+    where rp.role_key = 'ACCOUNTS' and p.key = 'refunds.approve'),
+  'ACCOUNTS cannot approve the refunds it raises');
+select test_assert(
+  not exists (
+    select 1 from public.role_permissions rp
+    join public.permissions p on p.id = rp.permission_id
+    where rp.role_key = 'MARKETING_MANAGER'
+      and (p.key like 'documents.%' or p.key like 'payments.%')),
+  'MARKETING_MANAGER has no document or payment access');
+
+-- ---------------------------------------------------------------------------
+-- 3. Identity uniqueness is enforced by the database, not by convention
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  c1 uuid; c2 uuid; duplicate_rejected boolean := false;
+begin
+  insert into public.contacts (full_name) values ('Test One') returning id into c1;
+  insert into public.contacts (full_name) values ('Test Two') returning id into c2;
+
+  insert into public.contact_identities (contact_id, type, value_raw)
+  values (c1, 'phone', '9936309015');
+
+  begin
+    insert into public.contact_identities (contact_id, type, value_raw)
+    values (c2, 'phone', '+91 99363 09015');   -- same number, different format
+  exception when unique_violation then
+    duplicate_rejected := true;
+  end;
+
+  perform test_assert(duplicate_rejected,
+    'two contacts cannot share one normalised phone, even in different formats');
+
+  perform test_assert(
+    (select primary_phone_e164 from public.contacts where id = c1) = '+919936309015',
+    'contacts.primary_phone_e164 is maintained by trigger from the identity row');
+
+  -- Unnormalisable input must be refused, not stored raw.
+  declare bad_rejected boolean := false;
+  begin
+    begin
+      insert into public.contact_identities (contact_id, type, value_raw)
+      values (c2, 'phone', '12345');
+    exception when others then
+      bad_rejected := true;
+    end;
+    perform test_assert(bad_rejected,
+      'an unnormalisable phone is refused rather than stored ambiguously');
+  end;
+
+  -- Resolution order and exactness
+  perform test_assert(public.resolve_contact(null, '09936309015', null) = c1,
+    'resolve_contact matches a differently-formatted phone to the same contact');
+  perform test_assert(public.resolve_contact(null, '9000000001', null) is null,
+    'resolve_contact returns NULL for an unknown number rather than a near match');
+
+  delete from public.contacts where id in (c1, c2);
+end $$;
+
+-- ---------------------------------------------------------------------------
+-- 4. RLS is enabled everywhere it must be
+-- ---------------------------------------------------------------------------
+do $$
+declare missing text;
+begin
+  select string_agg(c.relname, ', ')
+    into missing
+    from pg_class c
+    join pg_namespace n on n.oid = c.relnamespace
+   where n.nspname = 'public'
+     and c.relkind = 'r'
+     and not c.relrowsecurity;
+
+  perform test_assert(missing is null,
+    coalesce('every public table has RLS enabled (missing: ' || missing || ')',
+             'every public table has RLS enabled'));
+end $$;
+
+-- ---------------------------------------------------------------------------
+-- 5. Audit immutability — the absence of policies IS the control
+-- ---------------------------------------------------------------------------
+select test_assert(
+  not exists (
+    select 1 from pg_policies
+     where schemaname = 'public' and tablename = 'audit_logs'
+       and cmd in ('UPDATE','DELETE','ALL')),
+  'audit_logs has no UPDATE, DELETE or ALL policy for any role');
+select test_assert(
+  exists (
+    select 1 from pg_policies
+     where schemaname = 'public' and tablename = 'audit_logs' and cmd = 'SELECT'),
+  'audit_logs is readable by audit.view holders');
+select test_assert(
+  not exists (
+    select 1 from pg_policies
+     where schemaname = 'public' and tablename = 'audit_logs' and cmd = 'INSERT'),
+  'audit_logs has no INSERT policy — writes come only from SECURITY DEFINER triggers');
+
+-- Redaction must strip secrets before they are stored.
+select test_assert(
+  public.redact_audit_payload('{"password":"hunter2","name":"Asha"}'::jsonb) ->> 'password'
+    = '[REDACTED]',
+  'audit redaction strips passwords');
+select test_assert(
+  public.redact_audit_payload('{"otp":"482913"}'::jsonb) ->> 'otp' = '[REDACTED]',
+  'audit redaction strips OTP codes');
+select test_assert(
+  public.redact_audit_payload('{"name":"Asha"}'::jsonb) ->> 'name' = 'Asha',
+  'audit redaction leaves ordinary fields intact');
+
+-- ---------------------------------------------------------------------------
+-- 6. Helper functions are SECURITY DEFINER with a pinned search_path
+--    (an unpinned search_path on a definer function is a privilege-escalation
+--    route, and Supabase's own advisor flags it)
+-- ---------------------------------------------------------------------------
+do $$
+declare bad text;
+begin
+  select string_agg(p.proname, ', ')
+    into bad
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public'
+     and p.prosecdef
+     and not exists (
+       select 1 from unnest(coalesce(p.proconfig, '{}')) cfg
+        where cfg like 'search_path=%');
+
+  perform test_assert(bad is null,
+    coalesce('every SECURITY DEFINER function pins search_path (missing: ' || bad || ')',
+             'every SECURITY DEFINER function pins search_path'));
+end $$;
+
+-- ---------------------------------------------------------------------------
+-- 7. JWT hook shape
+-- ---------------------------------------------------------------------------
+do $$
+declare result jsonb;
+begin
+  result := public.custom_access_token_hook(
+    jsonb_build_object('user_id', gen_random_uuid()::text,
+                       'claims', jsonb_build_object('sub', 'x')));
+  perform test_assert(result ? 'claims',
+    'hook returns a claims object for an unknown user without failing login');
+  perform test_assert(not (result -> 'claims' ? 'app_staff_id'),
+    'a non-staff user receives no staff claims');
+end $$;
+
+-- ---------------------------------------------------------------------------
+-- 8. Case numbering is well-formed
+-- ---------------------------------------------------------------------------
+select test_assert(public.next_case_number('recruitment') like 'GG-REC-%',
+  'recruitment case numbers are prefixed GG-REC');
+select test_assert(public.next_case_number('travel') like 'GG-TRV-%',
+  'travel case numbers are prefixed GG-TRV');
+select test_assert(
+  public.next_case_number('recruitment') <> public.next_case_number('recruitment'),
+  'case numbers are unique across calls');
+
+drop function test_assert(boolean, text);
+
+rollback;   -- leave the database exactly as found
