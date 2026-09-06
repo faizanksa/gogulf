@@ -331,3 +331,40 @@ assumed. I recommend:
 3. Migrate in one batch during Phase 5, with a human eye on all four phone numbers.
 4. Shorten the legacy read-only retention window from 90 days to **30 days** — there is very little
    to fall back to.
+
+---
+
+## 15. Re-inspection, 6 September 2026 — the dataset has grown
+
+A second read-only inspection during Phase 1.6 found production had changed:
+
+| | 5 Sep 2026 | 6 Sep 2026 |
+| --- | --- | --- |
+| `job_applications` rows | 4 | **5** |
+| Storage objects | 10 | **13** |
+| Storage size | 7.69 MB | **11.17 MB** |
+| Document labels | cv 4, passport 4, other 2 | cv 5, passport 5, other 3 |
+
+One new application arrived at `2026-09-06T04:12:17Z` via the Jobs Page, with
+three files. Referential integrity still holds.
+
+**This was not written by Phase 1.5 or 1.6 work.** The new `/api/forms/*` routes
+never import the Supabase client — verified by grep — and the server-mode
+validation crawl issued only GET requests. The row is consistent with a genuine
+submission through the live site, which remains fully operational.
+
+Two consequences:
+
+1. **The delta-migration step is necessary in practice, not just in theory.**
+   Production accrues applications while the platform is built, so any snapshot
+   is stale on arrival. `MIGRATION-PLAN.md` §4 step 5 already covers this; this
+   is evidence it earns its place.
+2. **Local development currently points at the production database.**
+   `.env.local` carries the production Supabase URL and keys. Submitting the
+   apply form on `localhost` would write a real row and upload real files to the
+   production bucket. Nothing in this phase did so, but the hazard is live.
+
+   `npm run check:isolation` fails against the current local configuration —
+   correctly. Point local development at the staging project as soon as it
+   exists, and treat the current arrangement as read-only-by-discipline until
+   then.
