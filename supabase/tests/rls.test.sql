@@ -66,8 +66,9 @@ select test_assert(public.normalize_email('  Careers@GoGulf.CO ') = 'careers@gog
 select test_assert((select count(*) from public.roles) = 12, 'twelve roles seeded');
 select test_assert((select is_super from public.roles where key = 'SUPER_ADMIN'),
   'SUPER_ADMIN is flagged is_super');
-select test_assert((select count(*) from public.permissions) >= 68,
-  'permission catalogue seeded');
+-- Exact, not a lower bound: an unexpected permission is catalogue drift.
+select test_assert((select count(*) from public.permissions) = 72,
+  'permission catalogue seeded with exactly 72 permissions');
 select test_assert(
   not exists (select 1 from public.role_permissions where role_key = 'SUPER_ADMIN'),
   'SUPER_ADMIN has no explicit grants — is_super short-circuits has_perm');
@@ -246,6 +247,66 @@ select test_assert(public.next_case_number('travel') like 'GG-TRV-%',
 select test_assert(
   public.next_case_number('recruitment') <> public.next_case_number('recruitment'),
   'case numbers are unique across calls');
+
+-- ---------------------------------------------------------------------------
+-- 9. No side doors reachable through the API (regression guard for 0009)
+--    job_applications is the legacy table and keeps its own 0001 posture.
+-- ---------------------------------------------------------------------------
+do $$
+declare bad text;
+begin
+  select string_agg(p.proname, ', ') into bad
+    from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public' and p.prosecdef
+     and has_function_privilege('anon', p.oid, 'EXECUTE');
+  perform test_assert(bad is null,
+    coalesce('no SECURITY DEFINER function is executable by anon (found: ' || bad || ')',
+             'no SECURITY DEFINER function is executable by anon'));
+
+  select string_agg(p.proname, ', ') into bad
+    from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public' and p.prosecdef
+     and has_function_privilege('authenticated', p.oid, 'EXECUTE')
+     and p.proname not in ('has_perm', 'scope_allows', 'is_staff', 'current_contact_id');
+  perform test_assert(bad is null,
+    coalesce('authenticated can execute no system-only SECURITY DEFINER function (found: ' || bad || ')',
+             'authenticated can execute no system-only SECURITY DEFINER function'));
+
+  -- TRUNCATE is not subject to RLS at all.
+  select string_agg(distinct c.relname, ', ') into bad
+    from pg_class c join pg_namespace n on n.oid = c.relnamespace
+    cross join (values ('anon'), ('authenticated')) r(role)
+   where n.nspname = 'public' and c.relkind in ('r', 'p') and c.relname <> 'job_applications'
+     and has_table_privilege(r.role, c.oid, 'TRUNCATE');
+  perform test_assert(bad is null,
+    coalesce('no API role can TRUNCATE a platform table (found: ' || bad || ')',
+             'no API role can TRUNCATE a platform table'));
+
+  select string_agg(c.relname, ', ') into bad
+    from pg_class c join pg_namespace n on n.oid = c.relnamespace
+   where n.nspname = 'public' and c.relkind in ('r', 'p') and c.relname <> 'job_applications'
+     and (has_table_privilege('anon', c.oid, 'SELECT') or has_table_privilege('anon', c.oid, 'INSERT')
+       or has_table_privilege('anon', c.oid, 'UPDATE') or has_table_privilege('anon', c.oid, 'DELETE'));
+  perform test_assert(bad is null,
+    coalesce('anon holds no privilege on any platform table (found: ' || bad || ')',
+             'anon holds no privilege on any platform table'));
+
+  -- Append-only is enforced by privilege too, which binds service_role as well.
+  select string_agg(c.relname || ':' || r.role, ', ') into bad
+    from pg_class c join pg_namespace n on n.oid = c.relnamespace
+    cross join (values ('anon'), ('authenticated'), ('service_role')) r(role)
+   where n.nspname = 'public' and c.relname in ('audit_logs', 'activities', 'contact_merges')
+     and (has_table_privilege(r.role, c.oid, 'UPDATE') or has_table_privilege(r.role, c.oid, 'DELETE'));
+  perform test_assert(bad is null,
+    coalesce('append-only tables grant no UPDATE or DELETE to any API role (found: ' || bad || ')',
+             'append-only tables grant no UPDATE or DELETE to any API role'));
+
+  -- The policies must be reachable: authenticated needs table privileges.
+  perform test_assert(has_table_privilege('authenticated', 'public.contacts', 'SELECT'),
+    'authenticated holds SELECT on contacts, so its RLS policies are reachable');
+  perform test_assert(has_table_privilege('service_role', 'public.contacts', 'INSERT'),
+    'service_role holds INSERT on contacts for webhooks and jobs');
+end $$;
 
 drop function test_assert(boolean, text);
 
