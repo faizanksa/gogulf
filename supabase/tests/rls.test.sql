@@ -199,6 +199,25 @@ select test_assert(
   public.redact_audit_payload('{"name":"Asha"}'::jsonb) ->> 'name' = 'Asha',
   'audit redaction leaves ordinary fields intact');
 
+-- A pooled connection can carry request.jwt.claims = '' left over from an
+-- earlier client (regression guard for 0010, found on staging). Audited writes
+-- must still succeed and be attributed to the system.
+do $$
+declare
+  prev text := current_setting('request.jwt.claims', true);
+  c uuid;
+begin
+  perform set_config('request.jwt.claims', '', true);
+  insert into public.contacts (full_name) values ('Pooled connection probe') returning id into c;
+  update public.contacts set full_name = 'Pooled connection probe (renamed)' where id = c;
+  perform test_assert(
+    exists (select 1 from public.audit_logs
+             where entity_id = c and action = 'contacts.update' and actor_type = 'system'),
+    'an audited write succeeds, attributed to the system, when claims are an empty string');
+  delete from public.contacts where id = c;
+  perform set_config('request.jwt.claims', coalesce(prev, ''), true);
+end $$;
+
 -- ---------------------------------------------------------------------------
 -- 6. Helper functions are SECURITY DEFINER with a pinned search_path
 --    (an unpinned search_path on a definer function is a privilege-escalation

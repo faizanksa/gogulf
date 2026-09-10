@@ -15,6 +15,7 @@
     "start": "cross-env PLATFORM_MODE=server next start",
     "env:local": "node scripts/use-local-supabase.mjs",
     "db:test": "node scripts/db-test-local.mjs",
+    "db:staging": "node scripts/db-staging.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
