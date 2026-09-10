@@ -142,8 +142,10 @@ long-lived environment).
 
 **It could not be created.** The Supabase CLI on this machine is signed in to
 `nestscout's Org` (`taxxuckbpicdovojwepj`), which does not contain the
-production project and is not a Go Gulf organisation. Creating Go Gulf staging
-there would repeat the account fragmentation found in Phase 0.
+production project and is not a Go Gulf organisation. The claude.ai Supabase
+connector reaches only `sparqitservices's Org` (`bneixzvrrchmgcaoktys`), which
+does not contain it either. Creating Go Gulf staging in either would repeat the
+account fragmentation found in Phase 0.
 
 **To finish:**
 
