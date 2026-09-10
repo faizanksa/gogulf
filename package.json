@@ -4,11 +4,17 @@
   "private": true,
   "description": "Go Gulf — overseas recruitment platform website (Next.js, App Router).",
   "scripts": {
+    "predev": "node scripts/check-staging-isolation.mjs --mode=development",
     "dev": "cross-env PLATFORM_MODE=server next dev",
     "dev:static": "next dev",
+    "prebuild": "node scripts/check-staging-isolation.mjs",
     "build": "next build",
+    "prebuild:server": "node scripts/check-staging-isolation.mjs",
     "build:server": "cross-env PLATFORM_MODE=server next build",
+    "prestart": "node scripts/check-staging-isolation.mjs",
     "start": "cross-env PLATFORM_MODE=server next start",
+    "env:local": "node scripts/use-local-supabase.mjs",
+    "db:test": "node scripts/db-test-local.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
@@ -16,7 +22,7 @@
     "check:all": "npm run lint && npm run typecheck && npm run test && npm run build && npm run build:server",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check:isolation": "node --env-file=.env.local scripts/check-staging-isolation.mjs",
+    "check:isolation": "node scripts/check-staging-isolation.mjs",
     "db:validate": "node scripts/validate-migrations.mjs"
   },
   "dependencies": {
