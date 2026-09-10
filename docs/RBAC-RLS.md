@@ -125,7 +125,9 @@ behaviours, instead of an unmaintainable `contacts.view.own` / `.branch` / `.all
 | `integrations.manage` | ✓ | – | – | – | – | – | – | – | – | – | – | – |
 | `audit.view` | ✓ | ✓ | – | – | – | – | ✓ | – | – | – | – | – |
 
-**68 permissions across 12 roles.**
+**72 permissions across 12 roles.** (An earlier revision of this document said 68; the matrix
+above and the seed in `0008_seed_rbac.sql` both have 72, and `rls.test.sql` now asserts the exact
+count so the two cannot drift apart silently.)
 
 ### The denials that carry weight
 

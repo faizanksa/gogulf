@@ -82,11 +82,15 @@ export function rateLimit(
 /**
  * Best-effort client IP.
  *
- * x-forwarded-for is client-controlled in general, but on Vercel the platform
- * appends the real peer address, so the FIRST entry is the least-trustworthy
- * and the last is the most. We take the first for granularity while accepting
- * it can be spoofed — which is exactly why this limiter is described above as
- * raising cost rather than imposing a ceiling.
+ * On Vercel the platform sets x-forwarded-for itself. Verified on staging
+ * (10 Sep 2026): requests carrying spoofed x-forwarded-for values were all
+ * counted against the caller's real address, and the limiter fired as expected.
+ * So on Vercel this key cannot be chosen by the client.
+ *
+ * Off Vercel — local development, or any self-hosted proxy that forwards the
+ * header untouched — x-forwarded-for IS client-controlled and can be spoofed.
+ * Either way the limiter is per-instance, which is why it is described above as
+ * raising the cost of abuse rather than imposing a ceiling.
  */
 export function clientIp(headers: Headers): string {
   const forwarded = headers.get("x-forwarded-for");
