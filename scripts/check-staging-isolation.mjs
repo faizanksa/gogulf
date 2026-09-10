@@ -69,7 +69,8 @@ function refOf(value) {
 
 function describe(url) {
   if (!url) return "not configured";
-  if (/^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?/i.test(url)) return "LOCAL Supabase";
+  // Loopback in any URL form: http://127.0.0.1:54321 or postgresql://…@127.0.0.1:54322/…
+  if (/(^[a-z]+:\/\/|@)(127\.0\.0\.1|localhost)(:\d+)?([/?]|$)/i.test(url)) return "LOCAL Supabase";
   const ref = refOf(url);
   if (ref === PRODUCTION_PROJECT_REF) return `PRODUCTION (${ref})`;
   if (ref) return `project ${ref}`;

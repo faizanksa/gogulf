@@ -389,7 +389,11 @@ deno_version = 2
 # secret_key = "env(SECRET_VALUE)"
 
 [analytics]
-enabled = true
+# Disabled: on Windows the analytics container requires the Docker daemon exposed on
+# tcp://localhost:2375, and without it the health check never passes — which makes
+# `supabase start` stop EVERY container, database included. Nothing in this project
+# uses local log analytics.
+enabled = false
 port = 54327
 # Configure one of the supported backends: `postgres`, `bigquery`.
 backend = "postgres"
