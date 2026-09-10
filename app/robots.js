@@ -26,7 +26,17 @@ const AI_CRAWLERS = [
 // is static and the build fails.
 export const dynamic = "force-static";
 
+// Staging and preview builds disallow everything, so a public staging domain
+// is never indexed as a duplicate of gogulf.co. Opt-in on an explicit marker:
+// production and local builds produce exactly the robots.txt they always have.
+const isNonProductionDeployment =
+  process.env.APP_ENV === "staging" || process.env.VERCEL_ENV === "preview";
+
 export default function robots() {
+  if (isNonProductionDeployment) {
+    return { rules: [{ userAgent: "*", disallow: "/" }] };
+  }
+
   return {
     rules: [
       { userAgent: "*", allow: "/" },

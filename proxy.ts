@@ -84,9 +84,24 @@ export async function proxy(request: NextRequest) {
   return response;
 }
 
+/**
+ * Staging and preview deployments are publicly reachable on a custom domain
+ * (Vercel Hobby cannot password-protect one), so they must never be indexed —
+ * a crawlable duplicate of the site is an SEO regression, and staging forms are
+ * not the place for real enquiries.
+ *
+ * Opt-IN on purpose: only an explicit staging/preview marker adds the header.
+ * Production and local runs are left exactly as they were.
+ */
+const isNonProductionDeployment =
+  process.env.APP_ENV === "staging" || process.env.VERCEL_ENV === "preview";
+
 function applySecurityHeaders(response: NextResponse) {
   for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
     response.headers.set(key, value);
+  }
+  if (isNonProductionDeployment) {
+    response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
   }
 }
 
