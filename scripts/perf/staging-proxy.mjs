@@ -37,6 +37,13 @@ export function startStagingProxy({ target, secret, port = 8787 }) {
       },
     );
     up.on("error", (e) => {
+      // The upstream can fail after the response has started (a TLS reset mid-body).
+      // Headers cannot be sent twice, so just cut the response; Lighthouse sees a failed
+      // request rather than the whole run dying with ERR_HTTP_HEADERS_SENT.
+      if (res.headersSent) {
+        res.destroy(e);
+        return;
+      }
       res.writeHead(502, { "content-type": "text/plain" });
       res.end(`proxy error: ${e.message}`);
     });

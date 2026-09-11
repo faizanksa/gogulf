@@ -68,11 +68,14 @@ test.describe("anonymous visitors", () => {
     }
   });
 
-  test("a forged session cookie is treated as anonymous", async ({ page, baseURL }) => {
+  test("a forged session cookie is treated as anonymous", async ({ page, context, baseURL }) => {
     const { url } = supabaseFor(baseURL);
     const cookieName = `sb-${new URL(url).hostname.split(".")[0]}-auth-token`;
     const forged = `base64-${Buffer.from(JSON.stringify({ access_token: "forged", refresh_token: "forged", user: { id: "x" } })).toString("base64url")}`;
-    const res = await page.request.get("/admin", { maxRedirects: 0, headers: { Cookie: `${cookieName}=${forged}` } });
+    // Added to the context rather than sent as a Cookie header: a header would replace
+    // every cookie, including Vercel's staging bypass cookie, and Vercel would answer.
+    await context.addCookies([{ name: cookieName, value: forged, url: baseURL! }]);
+    const res = await page.request.get("/admin", { maxRedirects: 0 });
     expect(res.status()).toBe(307);
     expect(res.headers().location).toMatch(/^\/admin\/login\?next=%2Fadmin/);
   });
@@ -117,7 +120,8 @@ test.describe("signed-in, wrong kind of session", () => {
       // 2. An ACTIVE staff record, but signed in with email + password rather than the
       //    staff sign-in method: still refused. "A session exists" is not enough, and
       //    neither is "a staff record exists".
-      await context.clearCookies();
+      // Only the Supabase session: on staging the Vercel bypass cookie must survive.
+      await context.clearCookies({ name: /^sb-/ });
       const staff = await retrying(() => admin.auth.admin.createUser({ email: `t-guard-staff-${tag}@gogulf.co`, password, email_confirm: true }));
       if (staff.error) throw staff.error;
       created.push(staff.data.user.id);
