@@ -1,0 +1,41 @@
+.list {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.row {
+  display: grid;
+  gap: 0.125rem;
+}
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--text-small);
+}
+
+.value {
+  margin: 0;
+}
+
+.value a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  color: var(--color-link);
+  font-weight: var(--weight-semibold);
+  overflow-wrap: anywhere;
+}
+
+.inverse .label {
+  color: var(--color-text-inverse-muted);
+}
+.inverse .value a {
+  color: var(--gg-paper);
+}
+.inverse .value a:hover {
+  color: var(--gg-green-400);
+}

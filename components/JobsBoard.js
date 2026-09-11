@@ -2,33 +2,32 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { jobs } from "@/lib/jobs-data";
 
-const NEW_WINDOW_MS = 7 * 24 * 60 * 60 * 1000; // badge shows for jobs posted within the last 7 days
+// Interim jobs board (Phase 2B). Listings arrive as props from the server (content/jobs.ts,
+// already filtered for this deployment), so neither the data module nor its validation
+// library is shipped to the browser. Each card links to the job's own page. The visual
+// redesign is 2C-1.
+
+const NEW_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
 function formatDate(d) {
   try {
-    return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-  } catch (e) {
+    return new Date(`${d}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+  } catch {
     return d;
   }
 }
 
 function isNewPosting(posted) {
-  const ts = new Date(posted).getTime();
+  const ts = new Date(`${posted}T00:00:00Z`).getTime();
   if (Number.isNaN(ts)) return false;
   const age = Date.now() - ts;
   return age >= 0 && age <= NEW_WINDOW_MS;
 }
 
-// Builds the /jobs/apply?job=&country=&type= link that prefills ApplyForm.
-function applyHref(title, country, type) {
-  const params = new URLSearchParams();
-  if (title) params.set("job", title);
-  if (country) params.set("country", country);
-  if (type) params.set("type", type);
-  const qs = params.toString();
-  return qs ? `/jobs/apply?${qs}` : "/jobs/apply";
+function applyHref(job) {
+  const params = new URLSearchParams({ job: job.title, country: job.country, type: job.type });
+  return `/jobs/apply?${params.toString()}`;
 }
 
 function PinIcon() {
@@ -67,13 +66,13 @@ function SearchOffIcon() {
   );
 }
 
-export default function JobsBoard() {
+export default function JobsBoard({ jobs }) {
   const [query, setQuery] = useState("");
   const [country, setCountry] = useState("");
   const [industry, setIndustry] = useState("");
 
-  const countries = useMemo(() => Array.from(new Set(jobs.map((j) => j.country))).sort(), []);
-  const industries = useMemo(() => Array.from(new Set(jobs.map((j) => j.industry))).sort(), []);
+  const countries = useMemo(() => Array.from(new Set(jobs.map((j) => j.country))).sort(), [jobs]);
+  const industries = useMemo(() => Array.from(new Set(jobs.map((j) => j.industry))).sort(), [jobs]);
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase();
@@ -83,7 +82,7 @@ export default function JobsBoard() {
       const matchesIndustry = !industry || job.industry === industry;
       return matchesQ && matchesCountry && matchesIndustry;
     });
-  }, [query, country, industry]);
+  }, [jobs, query, country, industry]);
 
   const hasFilters = Boolean(query || country || industry);
 
@@ -95,42 +94,37 @@ export default function JobsBoard() {
 
   return (
     <>
-      <div className="jobs-toolbar">
+      <div className="jobs-toolbar" role="search" aria-label="Filter jobs">
         <div className="field">
           <label htmlFor="job-search">Search</label>
-          <input
-            type="text"
-            id="job-search"
-            placeholder="Job title or industry..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
+          <input type="search" id="job-search" placeholder="Job title or industry" value={query} onChange={(e) => setQuery(e.target.value)} />
         </div>
         <div className="field">
           <label htmlFor="job-country-filter">Country</label>
           <select id="job-country-filter" value={country} onChange={(e) => setCountry(e.target.value)}>
-            <option value="">All Countries</option>
+            <option value="">All countries</option>
             {countries.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
         <div className="field">
           <label htmlFor="job-industry-filter">Industry</label>
           <select id="job-industry-filter" value={industry} onChange={(e) => setIndustry(e.target.value)}>
-            <option value="">All Industries</option>
+            <option value="">All industries</option>
             {industries.map((i) => <option key={i} value={i}>{i}</option>)}
           </select>
         </div>
       </div>
 
-      <span className="jobs-count" id="jobs-count">
+      {/* role=status announces the new count when filters change. */}
+      <p className="jobs-count" id="jobs-count" role="status">
         {filtered.length} {filtered.length === 1 ? "open position" : "open positions"}
-      </span>
+      </p>
 
       <div className="job-grid" id="job-grid">
         {filtered.length === 0 ? (
           <div className="jobs-empty">
             <SearchOffIcon />
-            <p>No open positions match your filters right now. Try clearing a filter, or submit a general inquiry.</p>
+            <p>No open positions match your filters right now. Try clearing a filter, or submit a general application.</p>
             {hasFilters && (
               <button type="button" className="jobs-empty-clear" onClick={clearFilters}>
                 Clear filters
@@ -139,27 +133,32 @@ export default function JobsBoard() {
           </div>
         ) : (
           filtered.map((job) => (
-            <div className="job-card" key={job.title + job.country}>
+            <article className="job-card" key={job.slug} aria-labelledby={`job-${job.slug}`}>
               <div className="job-card-top">
-                <h3 className="job-title">{job.title}</h3>
+                <h2 className="job-title" id={`job-${job.slug}`}>
+                  <Link href={`/jobs/${job.slug}`}>{job.title}</Link>
+                </h2>
                 <span className="job-badge" data-type={job.type}>{job.type}</span>
               </div>
+              {job.unconfirmed ? (
+                <p className="job-unconfirmed">Unconfirmed listing — not shown in production</p>
+              ) : null}
               <div className="job-meta">
                 <span><PinIcon />{job.country}</span>
                 <span><TagIcon />{job.industry}</span>
               </div>
               <p className="job-desc">{job.description}</p>
-              <div className="job-salary"><WalletIcon />{job.salary}</div>
+              <div className="job-salary"><WalletIcon />{job.salary ?? "Salary not stated"}</div>
               <div className="job-card-bottom">
                 <div className="job-card-meta-bottom">
                   <span className="job-posted">Posted {formatDate(job.posted)}</span>
                   {isNewPosting(job.posted) && <span className="job-new">New</span>}
                 </div>
-                <Link href={applyHref(job.title, job.country, job.type)} className="btn btn-gold apply-btn">
-                  Apply Now
+                <Link href={applyHref(job)} className="btn btn-gold apply-btn">
+                  Apply now<span className="visually-hidden">: {job.title}</span>
                 </Link>
               </div>
-            </div>
+            </article>
           ))
         )}
       </div>
@@ -167,9 +166,9 @@ export default function JobsBoard() {
       <div className="divider"></div>
 
       <div style={{ textAlign: "center" }}>
-        <p style={{ color: "#5C5548" }}>Don&apos;t see a matching role? We add new positions regularly.</p>
+        <p>Don&apos;t see a matching role? We add new positions regularly.</p>
         <Link href="/jobs/apply" className="btn btn-outline js-apply-general">
-          Submit a General Application
+          Submit a general application
         </Link>
       </div>
     </>

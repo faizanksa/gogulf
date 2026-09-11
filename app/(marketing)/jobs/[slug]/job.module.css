@@ -1,0 +1,108 @@
+.layout {
+  display: grid;
+  gap: var(--space-6);
+}
+@media (min-width: 1024px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 22rem;
+    gap: var(--space-8);
+    align-items: start;
+  }
+}
+
+.main {
+  display: grid;
+  gap: var(--space-4);
+  max-width: var(--container-prose);
+}
+.main > * {
+  margin: 0;
+}
+
+.h2 {
+  margin-top: var(--space-3);
+  font-size: var(--text-h2);
+  font-weight: 620;
+  line-height: var(--leading-heading);
+}
+
+.h3 {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-h3);
+  line-height: var(--leading-heading);
+}
+
+.summary {
+  font-size: var(--text-lead);
+  line-height: var(--leading-snug);
+}
+
+.aside {
+  padding: var(--space-5);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+  background: var(--color-bg-subtle);
+}
+
+.facts {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.fact {
+  display: grid;
+  gap: 0.125rem;
+}
+.fact dt {
+  color: var(--color-text-muted);
+  font-size: var(--text-small);
+}
+.fact dd {
+  margin: 0;
+  font-weight: var(--weight-semibold);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-data);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Apply actions: pinned to the bottom of the viewport on phones, inline on desktop. */
+.applyBar {
+  position: sticky;
+  bottom: 0;
+  z-index: var(--z-header);
+  border-top: 1px solid var(--color-divider);
+  background: var(--color-bg);
+  box-shadow: 0 -8px 24px -16px rgb(14 26 19 / 0.25);
+}
+@media (min-width: 1024px) {
+  .applyBar {
+    position: static;
+    border-top: 0;
+    box-shadow: none;
+  }
+}
+
+.applyInner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  max-width: calc(var(--container-page) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding: var(--space-3) var(--gutter);
+}
+@media (min-width: 1024px) {
+  .applyInner {
+    display: flex;
+    gap: var(--space-3);
+    padding-bottom: var(--space-8);
+  }
+}
+@media (max-width: 379px) {
+  .applyInner {
+    grid-template-columns: 1fr;
+  }
+}

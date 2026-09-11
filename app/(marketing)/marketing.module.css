@@ -1,0 +1,9 @@
+.main {
+  display: block;
+  min-height: 50vh;
+}
+
+/* Focus arrives here only programmatically, from the skip link. */
+.main:focus {
+  outline: none;
+}

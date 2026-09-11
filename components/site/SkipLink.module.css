@@ -1,0 +1,24 @@
+.skip {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: var(--z-skip);
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-control);
+  background: var(--gg-ink-900);
+  color: var(--gg-paper);
+  font-weight: var(--weight-semibold);
+  text-decoration: underline;
+  transform: translateY(-200%);
+}
+
+.skip:focus,
+.skip:focus-visible {
+  transform: none;
+  color: var(--gg-paper);
+  outline: var(--focus-width) solid var(--gg-green-400);
+  outline-offset: 2px;
+}
