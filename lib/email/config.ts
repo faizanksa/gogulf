@@ -29,7 +29,7 @@ export function supportReplyTo(): string {
 
 /**
  * Reply-To on internal notifications: the person who submitted the form, so
- * staff can reply directly. This reproduces the existing EmailJS behaviour
+ * staff can reply directly. This reproduces the previous EmailJS behaviour
  * (template Reply-To was {{reply_to}}).
  */
 export function replyToForSubmitter(email: string): string {

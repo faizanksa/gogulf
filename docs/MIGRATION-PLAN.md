@@ -162,19 +162,22 @@ verified, and who ran it, when, and where the archive lives is recorded.
 
 ### EmailJS → Resend (Phase 1.5)
 
-- [ ] Remove `@emailjs/browser` from `package.json`
-- [ ] Delete `lib/emailjs.js`
-- [ ] `components/ApplyForm.js` — replace `sendInquiry()` with a Server Action
-- [ ] `components/ContactForm.js` — same, and persist the lead to CRM
-- [ ] `components/ServiceInquiryForm.js` — same, keeping the candidate/employer routing logic
-- [ ] Remove the three `NEXT_PUBLIC_EMAILJS_*` variables from every environment
-- [ ] Delete `EMAILJS-SETUP.md`
-- [ ] Rewrite the email and deployment sections of `DEPLOYMENT.md`
-- [ ] **`app/privacy-policy/page.js` — replace the EmailJS entry with Resend** *(legal disclosure —
-      the list is prefaced "There are no others")*
+Done in the code on 11 Sep 2026 (Phase 2B, at the business's instruction). Production still
+runs its EmailJS build from `main` until the approved cutover.
+
+- [x] Remove `@emailjs/browser` from `package.json`
+- [x] Delete `lib/emailjs.js`
+- [x] `components/ApplyForm.js` — email through `/api/forms/job-application` (Resend) only
+- [x] `components/ContactForm.js` — `/api/forms/contact` only (persisting the lead to the CRM is Phase 5)
+- [x] `components/ServiceInquiryForm.js` — `/api/forms/service-inquiry` only; the server routes to the desk
+- [ ] Remove the three `NEXT_PUBLIC_EMAILJS_*` variables from **Production** — at the cutover, not before
+- [x] Delete `EMAILJS-SETUP.md`
+- [x] Rewrite the email and deployment sections of `DEPLOYMENT.md`
+- [x] **`/privacy-policy` — EmailJS replaced with Resend** *(legal disclosure — the list is prefaced
+      "There are no others")*
 - [ ] Add Vercel and Sentry to the same processor list
 - [ ] Revoke the EmailJS account keys after cutover
-- [ ] Verify: contact form, service inquiry, job application, confirmation email
+- [x] Verify on staging: contact form, service inquiry, job application, confirmation email (Phase 1.6)
 
 ### Razorpay (Phase 7)
 

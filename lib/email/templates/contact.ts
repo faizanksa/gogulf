@@ -1,7 +1,7 @@
 /**
  * Contact form emails.
  *
- * Two messages, matching the existing EmailJS behaviour: an internal
+ * Two messages, matching the previous EmailJS behaviour: an internal
  * notification to the candidate desk, and an acknowledgement to the sender
  * (EmailJS's Auto-Reply).
  *

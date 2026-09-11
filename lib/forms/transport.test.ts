@@ -1,39 +1,8 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
+import { submitViaServer } from "./transport";
 
-// The EmailJS path pulls in a browser SDK. Stubbed so provider *selection* can
-// be tested in isolation from either provider's implementation.
-//
-// vi.mock is hoisted above the imports, so the factory must not close over a
-// top-level variable — hence vi.hoisted for the shared spy.
-const { sendInquiry } = vi.hoisted(() => ({ sendInquiry: vi.fn() }));
-vi.mock("@/lib/emailjs", () => ({ sendInquiry }));
-
-import { emailProviderMode, submitViaServer, submitViaEmailJs } from "./transport";
-
-const original = process.env.NEXT_PUBLIC_EMAIL_PROVIDER;
 afterEach(() => {
-  process.env.NEXT_PUBLIC_EMAIL_PROVIDER = original;
   vi.unstubAllGlobals();
-  sendInquiry.mockReset();
-});
-
-describe("provider selection", () => {
-  it("defaults to EmailJS when the flag is unset", () => {
-    // The live static export has no /api routes, so the safe default must be
-    // the path that currently works in production.
-    delete process.env.NEXT_PUBLIC_EMAIL_PROVIDER;
-    expect(emailProviderMode()).toBe("emailjs");
-  });
-
-  it("uses EmailJS for any unrecognised value", () => {
-    process.env.NEXT_PUBLIC_EMAIL_PROVIDER = "typo";
-    expect(emailProviderMode()).toBe("emailjs");
-  });
-
-  it("selects Resend only on an exact match", () => {
-    process.env.NEXT_PUBLIC_EMAIL_PROVIDER = "resend";
-    expect(emailProviderMode()).toBe("resend");
-  });
 });
 
 describe("submitViaServer", () => {
@@ -93,28 +62,5 @@ describe("submitViaServer", () => {
     const result = await submitViaServer("contact", {});
     expect(result.ok).toBe(true);
     expect(result.acknowledgementSent).toBe(false);
-  });
-});
-
-describe("submitViaEmailJs", () => {
-  it("reports success when the SDK resolves", async () => {
-    sendInquiry.mockResolvedValue({ status: 200 });
-    const result = await submitViaEmailJs({} as HTMLFormElement);
-    expect(result.ok).toBe(true);
-    expect(sendInquiry).toHaveBeenCalledOnce();
-  });
-
-  it("returns the SDK's message when it rejects", async () => {
-    sendInquiry.mockRejectedValue(new Error("EmailJS is not configured"));
-    const result = await submitViaEmailJs({} as HTMLFormElement);
-    expect(result.ok).toBe(false);
-    expect(result.error).toBe("EmailJS is not configured");
-  });
-
-  it("never throws, so the form always renders an error state", async () => {
-    sendInquiry.mockRejectedValue("a string, not an Error");
-    const result = await submitViaEmailJs({} as HTMLFormElement);
-    expect(result.ok).toBe(false);
-    expect(result.error).toBeTruthy();
   });
 });

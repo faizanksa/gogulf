@@ -98,12 +98,15 @@ without touching application code.
 
 | Variable | Status |
 | --- | --- |
-| `NEXT_PUBLIC_EMAILJS_PUBLIC_KEY` | Removed in Phase 1.5 |
-| `NEXT_PUBLIC_EMAILJS_SERVICE_ID` | Removed in Phase 1.5 |
-| `NEXT_PUBLIC_EMAILJS_TEMPLATE_ID` | Removed in Phase 1.5 |
+| `NEXT_PUBLIC_EMAILJS_PUBLIC_KEY` | No longer read by the code (removed 11 Sep 2026). Still set on **Production** — delete at the cutover |
+| `NEXT_PUBLIC_EMAILJS_SERVICE_ID` | Same |
+| `NEXT_PUBLIC_EMAILJS_TEMPLATE_ID` | Same |
+| `NEXT_PUBLIC_EMAIL_PROVIDER` | No longer read — email has one path (Resend). Set only on the `staging` branch; safe to delete |
 
-Removing these also requires updating the third-party processor list on `/privacy-policy`, which
-names EmailJS as a processor of form data. The env change and the legal change ship together.
+EmailJS was removed from the code at the business's instruction; every form now sends
+through Resend on the server. Production still runs its EmailJS build from `main`, so its
+three variables stay until the cutover, when they are deleted and the EmailJS account keys
+revoked. The privacy-policy processor list already names Resend and ships with that cutover.
 
 ---
 

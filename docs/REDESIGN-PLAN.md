@@ -41,7 +41,7 @@
 | `foundingDate` in JSON-LD | `"2008"` | `2024-02-22` (MCA) |
 | Heritage copy | "20+ Years of Trust · Since 2008", "Group Heritage" | "Industry experience since 2008" |
 | Process | "14 Step Managed Process" beside a 10-step diagram | 10 steps |
-| Forms | EmailJS (browser) | Resend (server), EmailJS still switchable |
+| Forms | EmailJS (browser) | Resend (server) only — EmailJS removed from the code on 11 Sep 2026 |
 | Supabase | production `julbqkeyvzwluayokcdi` | staging `wxolbnhyzktfjdvcnixc` |
 
 The redesign's **content** baseline is local `main`; its **SEO** baseline is the 13 live URLs. Until cutover, the live site keeps publishing the superseded identity and claims — production stays untouched by instruction, so the only fix is the cutover itself (§21).
@@ -452,7 +452,7 @@ Actions, each measured before and after:
 2. **Self-host fonts** with `next/font`; drop Sora/Public Sans; subset.
 3. **Server components by default**; client islands only for the mobile menu, job filters and forms.
 4. **Keep Zod on the server**: service lists move to a Zod-free module; the browser uses native constraint validation and shows the server's field errors.
-5. **Remove EmailJS** at the production email switch (Phase 8 in the original plan), dropping its code from every form.
+5. **EmailJS removed from the code** on 11 Sep 2026 (Phase 2B, at the business's instruction). Its Production variables and account keys are retired at the cutover.
 6. **Narrow the proxy** to `/admin` and `/portal`; set security headers in config so marketing pages are pure CDN hits.
 7. **Images** via `next/image` (AVIF/WebP, responsive `sizes`) in server mode; explicit dimensions everywhere.
 8. **Bundle analysis** in 2B to find out what the 173 KB shared baseline actually contains, before promising a lower number.

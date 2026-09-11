@@ -53,7 +53,7 @@ or project-wide Preview variable being modified**:
 | --- | --- | --- |
 | `PLATFORM_MODE` | `server` | Drops static export |
 | `APP_ENV` | `staging` | Enables noindex; labels the isolation guard |
-| `NEXT_PUBLIC_EMAIL_PROVIDER` | `resend` | **Build-time** — see §5 |
+| `NEXT_PUBLIC_EMAIL_PROVIDER` | `resend` | No longer read — EmailJS is removed and the forms have one path. Safe to delete |
 | `NEXT_PUBLIC_SITE_URL` | `https://staging.gogulf.co` | Canonicals point at staging |
 | `RESEND_FROM_EMAIL` | `Go Gulf <no-reply@gogulf.co>` | Verified domain |
 | `RESEND_REPLY_TO` | `careers@gogulf.co` | |
@@ -130,13 +130,13 @@ Supabase overrides when it needs a deployment.
 
 ---
 
-## 5. `NEXT_PUBLIC_EMAIL_PROVIDER` is a build-time switch
+## 5. Email has one path: Resend, on the server
 
-The compiled bundle contains `emailProviderMode … function(){return"resend"}` —
-the value is inlined and the variable name eliminated. Changing the provider
-requires a **redeploy**; editing the variable and restarting does nothing. The
-server half (`RESEND_API_KEY`, `/api/forms/*`) is read at runtime. The same holds
-for the Supabase URL and anon key: a change needs a redeploy.
+EmailJS was removed from the code on 11 Sep 2026 (Phase 2B, at the business's
+instruction). Every form posts to `/api/forms/*`, which sends through Resend with a
+server-only key read at run time. There is no provider switch any more, so
+`NEXT_PUBLIC_EMAIL_PROVIDER` is ignored. The Supabase URL and anon key are still
+inlined at build time: changing them needs a redeploy.
 
 ---
 
@@ -378,12 +378,13 @@ Production cutover, when approved:
    form latency is the preview of production's. Either accept it, pin functions
    to `hnd1` (Tokyo), or plan a database move.
 2. Apply `0002`–`0010` to production — a separate, approved change with a backup.
-3. Set Production variables `PLATFORM_MODE=server`, `NEXT_PUBLIC_EMAIL_PROVIDER=resend`,
-   `NEXT_PUBLIC_SITE_URL=https://www.gogulf.co`, `RESEND_*` — **values set in the
-   dashboard, never committed**.
-4. Push `main` and **redeploy** — the provider is build-time.
+3. Set Production variables `PLATFORM_MODE=server`, `NEXT_PUBLIC_SITE_URL=https://www.gogulf.co`,
+   `RESEND_*` — **values set in the dashboard, never committed**.
+4. Merge the redesign into `main` and deploy.
 5. Verify all three forms on production; confirm the privacy policy names Resend.
-6. Only then remove EmailJS (package, variables, code, docs).
+6. Then delete the three `NEXT_PUBLIC_EMAILJS_*` Production variables and revoke the EmailJS
+   account keys. The code stopped using them on 11 Sep 2026.
 
-Rollback: set `NEXT_PUBLIC_EMAIL_PROVIDER=emailjs`, unset `PLATFORM_MODE`, redeploy
-— or Vercel "Promote" the previous production deployment, which is instant.
+Rollback: Vercel "Promote" the previous production deployment — the EmailJS static build —
+which is instant. The new code has no EmailJS path to switch back to, so keep the EmailJS
+variables until the cutover has held.

@@ -1,56 +1,53 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { emailProviderMode, submitViaEmailJs, submitViaServer } from "@/lib/forms/transport";
-import { CANDIDATE_SERVICES, EMPLOYER_SERVICES } from "@/lib/forms/schemas";
+import { ErrorSummary } from "@/components/form/ErrorSummary";
+import { fromServerErrors } from "@/lib/forms/native-validation";
+import { CANDIDATE_SERVICES, EMPLOYER_SERVICES } from "@/lib/forms/service-options";
+import { submitViaServer } from "@/lib/forms/transport";
 
 const COUNTRIES = ["Saudi Arabia", "United Arab Emirates", "Qatar", "Oman", "Kuwait", "Bahrain"];
 
-// The service lists live in lib/forms/schemas.js so the server can decide which
-// desk an inquiry reaches. Previously the browser made that call and passed the
-// answer in a hidden to_email field — editable by anyone with dev tools.
+// Interim service inquiry form (Phase 2B accessibility pass; redesigned in 2C-3).
+//   - submits to /api/forms/service-inquiry, which re-validates, derives the desk from
+//     the service name and sends through Resend
+//   - service lists come from a dependency-free module, so Zod is not shipped here
+//   - server field errors are tied to their fields (aria-describedby) and listed in an
+//     error summary that takes focus
+//   - fields stay enabled while sending
+//   - no response-time promise (none has been committed to)
 export default function ServiceInquiryForm() {
   const formRef = useRef(null);
-  const [toEmail, setToEmail] = useState("careers@gogulf.co");
   const [status, setStatus] = useState({ state: "idle", message: "" });
-  const [fieldErrors, setFieldErrors] = useState({});
-
-  // Still maintained for the EmailJS path, which reads to_email from the form.
-  // The Resend path ignores it entirely and re-derives the recipient server-side.
-  function handleServiceChange(e) {
-    const select = e.target;
-    const opt = select.options[select.selectedIndex];
-    const group = opt.parentElement && opt.parentElement.tagName === "OPTGROUP" ? opt.parentElement.label : "";
-    setToEmail(group === "For Employers" ? "business@gogulf.co" : "careers@gogulf.co");
-  }
+  const [errors, setErrors] = useState([]);
+  const [attempt, setAttempt] = useState(0);
+  const sending = status.state === "sending";
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (sending) return;
     setStatus({ state: "sending", message: "" });
-    setFieldErrors({});
+    setErrors([]);
 
     const form = formRef.current;
-    const result =
-      emailProviderMode() === "resend"
-        ? await submitViaServer("service-inquiry", {
-            service_type: form.elements.service_type.value,
-            from_name: form.elements.from_name.value,
-            reply_to: form.elements.reply_to.value,
-            phone: form.elements.phone.value,
-            country: form.elements.country.value,
-            message: form.elements.message.value,
-            page_source: "Services Page",
-            website: form.elements.website.value,
-          })
-        : await submitViaEmailJs(form);
+    const result = await submitViaServer("service-inquiry", {
+      service_type: form.elements.service_type.value,
+      from_name: form.elements.from_name.value,
+      reply_to: form.elements.reply_to.value,
+      phone: form.elements.phone.value,
+      country: form.elements.country.value,
+      message: form.elements.message.value,
+      page_source: "Services Page",
+      website: form.elements.website.value,
+    });
 
     if (!result.ok) {
-      setFieldErrors(result.fieldErrors || {});
+      const list = fromServerErrors(result.fieldErrors, (name) => name);
+      setErrors(list);
+      if (list.length) setAttempt((n) => n + 1);
       setStatus({
         state: "err",
-        message:
-          result.error ||
-          "Something went wrong sending your inquiry. Please try again or call us directly.",
+        message: result.error || "Something went wrong sending your inquiry. Please try again or call us directly.",
       });
       return;
     }
@@ -58,24 +55,17 @@ export default function ServiceInquiryForm() {
     setStatus({
       state: "ok",
       message:
-        "Inquiry received — our recruitment team will contact you shortly." +
-        (result.acknowledgementSent === false
-          ? " (We could not email you a copy, but your inquiry did reach us.)"
-          : ""),
+        "Inquiry received — our team will contact you." +
+        (result.acknowledgementSent === false ? " (We could not email you a copy, but your inquiry did reach us.)" : ""),
     });
     form.reset();
-    setToEmail("careers@gogulf.co");
   }
 
-  const sending = status.state === "sending";
-  const errorFor = (field) => fieldErrors[field]?.[0];
+  const errorFor = (field) => errors.find((e) => e.name === field)?.message;
+  const describe = (field) => (errorFor(field) ? `${field}-error` : undefined);
 
   return (
-    <form className="pass js-inquiry-form" id="inquiry-form" ref={formRef} onSubmit={handleSubmit} noValidate>
-      <input type="hidden" name="page_source" value="Services Page" />
-      {/* EmailJS path only. Ignored by the server route. */}
-      <input type="hidden" name="to_email" id="to_email" value={toEmail} readOnly />
-
+    <form className="pass js-inquiry-form" id="inquiry-form" ref={formRef} onSubmit={handleSubmit} noValidate aria-busy={sending || undefined}>
       {/* Honeypot — hidden from people, filled by naive bots. */}
       <div aria-hidden="true" style={{ position: "absolute", left: "-9999px", height: 0, overflow: "hidden" }}>
         <label htmlFor="s_website">Leave this field empty</label>
@@ -83,9 +73,10 @@ export default function ServiceInquiryForm() {
       </div>
 
       <div className="pass-main">
-        <div className="field">
-          <label htmlFor="service_type">Service Type</label>
-          <select id="service_type" name="service_type" required defaultValue="" onChange={handleServiceChange} disabled={sending} aria-invalid={Boolean(errorFor("service_type"))}>
+        <ErrorSummary errors={errors} attempt={attempt} />
+        <div className="field" style={{ marginTop: errors.length ? 20 : 0 }}>
+          <label htmlFor="service_type">Service type</label>
+          <select id="service_type" name="service_type" required defaultValue="" aria-invalid={Boolean(errorFor("service_type"))} aria-describedby={describe("service_type")}>
             <option value="" disabled>Select the service you need</option>
             <optgroup label="For Candidates">
               {CANDIDATE_SERVICES.map((s) => <option key={s}>{s}</option>)}
@@ -95,29 +86,29 @@ export default function ServiceInquiryForm() {
             </optgroup>
             <option>Other / Not Sure</option>
           </select>
-          {errorFor("service_type") && <span className="field-hint field-error">{errorFor("service_type")}</span>}
+          {errorFor("service_type") && <span id="service_type-error" className="field-hint field-error">{errorFor("service_type")}</span>}
         </div>
         <div className="field-row">
           <div className="field">
-            <label htmlFor="from_name">Full Name</label>
-            <input type="text" id="from_name" name="from_name" required disabled={sending} aria-invalid={Boolean(errorFor("from_name"))} />
-            {errorFor("from_name") && <span className="field-hint field-error">{errorFor("from_name")}</span>}
+            <label htmlFor="from_name">Full name</label>
+            <input type="text" id="from_name" name="from_name" autoComplete="name" required aria-invalid={Boolean(errorFor("from_name"))} aria-describedby={describe("from_name")} />
+            {errorFor("from_name") && <span id="from_name-error" className="field-hint field-error">{errorFor("from_name")}</span>}
           </div>
           <div className="field">
-            <label htmlFor="reply_to">Email Address</label>
-            <input type="email" id="reply_to" name="reply_to" required disabled={sending} aria-invalid={Boolean(errorFor("reply_to"))} />
-            {errorFor("reply_to") && <span className="field-hint field-error">{errorFor("reply_to")}</span>}
+            <label htmlFor="reply_to">Email address</label>
+            <input type="email" id="reply_to" name="reply_to" autoComplete="email" required aria-invalid={Boolean(errorFor("reply_to"))} aria-describedby={describe("reply_to")} />
+            {errorFor("reply_to") && <span id="reply_to-error" className="field-hint field-error">{errorFor("reply_to")}</span>}
           </div>
         </div>
         <div className="field-row">
           <div className="field">
-            <label htmlFor="phone">Phone / WhatsApp</label>
-            <input type="tel" id="phone" name="phone" required disabled={sending} aria-invalid={Boolean(errorFor("phone"))} />
-            {errorFor("phone") && <span className="field-hint field-error">{errorFor("phone")}</span>}
+            <label htmlFor="phone">Phone or WhatsApp number</label>
+            <input type="tel" id="phone" name="phone" autoComplete="tel" required aria-invalid={Boolean(errorFor("phone"))} aria-describedby={describe("phone")} />
+            {errorFor("phone") && <span id="phone-error" className="field-hint field-error">{errorFor("phone")}</span>}
           </div>
           <div className="field">
-            <label htmlFor="country">Preferred Country</label>
-            <select id="country" name="country" defaultValue="" disabled={sending}>
+            <label htmlFor="country">Preferred country</label>
+            <select id="country" name="country" defaultValue="">
               <option value="">Any / Not sure</option>
               {COUNTRIES.map((c) => <option key={c}>{c}</option>)}
             </select>
@@ -125,10 +116,10 @@ export default function ServiceInquiryForm() {
         </div>
         <div className="field">
           <label htmlFor="message">Message</label>
-          <textarea id="message" name="message" rows={4} placeholder="Tell us a bit more — role, industry, timeline..." disabled={sending} />
+          <textarea id="message" name="message" rows={4} placeholder="Tell us a bit more — role, industry, timeline..." />
         </div>
-        <button type="submit" className="btn btn-gold" disabled={sending}>
-          {sending ? "Sending…" : "Submit Inquiry"}
+        <button type="submit" className="btn btn-gold" aria-disabled={sending || undefined}>
+          {sending ? "Sending…" : "Submit inquiry"}
         </button>
         <div className={`form-msg${status.state === "ok" ? " ok" : status.state === "err" ? " err" : ""}`} role="status">
           {status.message}
@@ -143,8 +134,8 @@ export default function ServiceInquiryForm() {
             <div className="pass-value">Candidate → Recruiter</div>
           </div>
           <div style={{ marginTop: 20 }}>
-            <div className="pass-label">Response</div>
-            <div className="pass-value">Within 1–2 business days</div>
+            <div className="pass-label">Next step</div>
+            <div className="pass-value">Our team contacts you</div>
           </div>
         </div>
         <div>

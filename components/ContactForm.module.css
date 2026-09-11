@@ -1,0 +1,13 @@
+.form {
+  display: grid;
+  gap: var(--space-5);
+  max-width: var(--container-narrow);
+}
+
+.honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}

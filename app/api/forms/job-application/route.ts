@@ -1,7 +1,7 @@
 /**
  * POST /api/forms/job-application
  *
- * Server-side replacement for the browser-side EmailJS call on /jobs/apply.
+ * The notification half of the /jobs/apply form, sent through Resend.
  *
  * This route handles the NOTIFICATION half only. Document upload still runs
  * first, from the browser, straight to Supabase Storage — unchanged in this

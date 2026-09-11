@@ -6,9 +6,9 @@
  * re-parses the payload with the same schema before doing anything with it,
  * because anything the browser sends can be forged.
  *
- * Field names match the existing EmailJS template variables exactly
- * (from_name, reply_to, …) so the migration preserves business meaning rather
- * than quietly reshaping it.
+ * Field names keep the previous EmailJS template variables (from_name,
+ * reply_to, …) so the move to Resend preserved business meaning rather than
+ * quietly reshaping it. EmailJS itself has been removed.
  */
 
 import { z } from "zod";
@@ -101,27 +101,11 @@ export type ContactInput = z.infer<typeof contactSchema>;
  * Which desk an inquiry reaches. The existing form derives this from the
  * optgroup the selected service sits in; the server re-derives it from the
  * service name so a tampered payload cannot reroute an inquiry.
+ *
+ * The lists live in a dependency-free module so the browser form can import them
+ * without pulling Zod into the page bundle. Re-exported here for server code.
  */
-export const EMPLOYER_SERVICES = [
-  "Employer Hiring Solutions",
-  "Bulk Manpower Recruitment",
-  "Recruitment Process Outsourcing (RPO)",
-  "Candidate Screening",
-  "HR & Recruitment Support",
-] as const;
-
-export const CANDIDATE_SERVICES = [
-  "Overseas Recruitment",
-  "Gulf Job Placement",
-  "Interview Coordination",
-  "Visa & Documentation Assistance",
-  "Medical Coordination",
-  "MOFA & Embassy Processing",
-  "Immigration Support",
-  "Air Ticket & Travel Assistance",
-  "Pre-Departure Orientation",
-  "Post-Joining Support",
-] as const;
+export { CANDIDATE_SERVICES, EMPLOYER_SERVICES } from "./service-options";
 
 export const serviceInquirySchema = z.object({
   service_type: requiredText(120, "Service type"),

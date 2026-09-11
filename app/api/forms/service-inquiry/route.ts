@@ -1,8 +1,7 @@
 /**
  * POST /api/forms/service-inquiry
  *
- * Server-side replacement for the browser-side EmailJS call on the Services
- * page. The recipient desk (careers@ vs business@) is derived from the selected
+ * The Services page's inquiry form, sent through Resend. The recipient desk (careers@ vs business@) is derived from the selected
  * service inside lib/email/config.ts — it is NOT taken from the payload, so a
  * tampered request cannot reroute an inquiry.
  *

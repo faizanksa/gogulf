@@ -1,10 +1,9 @@
 /**
  * POST /api/forms/contact
  *
- * Server-side replacement for the browser-side EmailJS call on the Contact
- * page. Only reachable when the app runs server-capable (PLATFORM_MODE=server);
- * under the legacy static export this route is not emitted and the client falls
- * back to EmailJS. See lib/forms/transport.ts.
+ * The Contact page's form. Validates, applies the honeypot and rate limit, and
+ * sends through Resend. Requires the server build (PLATFORM_MODE=server); this is
+ * the only email path — EmailJS has been removed. See lib/forms/transport.ts.
  */
 
 import { contactSchema } from "@/lib/forms/schemas";

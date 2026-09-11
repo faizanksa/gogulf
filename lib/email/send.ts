@@ -2,7 +2,7 @@
  * High-level send functions — the only email API the routes use.
  *
  * Each flow sends two messages: an internal notification and an
- * acknowledgement to the person who submitted, matching the existing EmailJS
+ * acknowledgement to the person who submitted, matching the previous EmailJS
  * behaviour (notification + Auto-Reply).
  *
  * DELIVERY SEMANTICS, deliberately asymmetric:
