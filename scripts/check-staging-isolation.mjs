@@ -31,7 +31,7 @@ const mode = (process.argv.find((a) => a.startsWith("--mode=")) ?? "--mode=produ
 // Locally, read env exactly as Next.js will — same files, same precedence
 // (.env.<mode>.local > .env.local > .env.<mode> > .env, never overriding a
 // variable already set in the shell). Checking raw process.env alone would miss
-// the production values sitting in .env.local, which is the whole point.
+// production values sitting in an env file, which is the whole point.
 // On Vercel the platform injects env directly and there are no env files.
 if (!process.env.VERCEL) {
   // @next/env is CommonJS: under ESM dynamic import its exports sit on `default`.

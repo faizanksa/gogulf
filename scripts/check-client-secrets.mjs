@@ -1,22 +1,34 @@
 // Fails the build if a server-only secret reached the browser bundle.
 //
 // ESLint cannot do this — it sees variable names, not values. This reads the
-// real secret values from the environment and searches the compiled client
-// output for them. If a secret is found there, it has been shipped to every
-// visitor and must be rotated, not just removed.
+// real secret values and searches the compiled client output for them. If a
+// secret is found there, it has been shipped to every visitor and must be
+// rotated, not just removed.
 //
-// Usage:  node --env-file=.env.local scripts/check-client-secrets.mjs
+// Which values: the union of
+//   1. the environment exactly as `next build` sees it — @next/env in production
+//      mode, so .env.production.local wins over .env.local just as it does in the
+//      build (on Vercel, the platform environment); and
+//   2. every server-only value found in ANY local .env* file, loaded or not
+//      (.env.staging.local, .env.prod-supabase.local, …) — a secret is caught
+//      whichever file it lives in.
+// An earlier version read only .env.local, so once .env.production.local
+// overrode the Supabase keys it was checking values the build never saw.
+//
+// Usage:  npm run check:secrets        (after a build)
 // Exit 0 = clean, exit 1 = a secret is in the bundle.
 
 import { readdir, readFile } from "node:fs/promises";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { existsSync } from "node:fs";
 
 // Every variable whose value must never appear in client-side output.
 // Add to this list whenever a new server-only secret is introduced.
 const SERVER_ONLY = [
   "SUPABASE_SERVICE_ROLE_KEY",
   "SUPABASE_DB_URL",
+  "STAGING_SERVICE_ROLE_KEY",
+  "STAGING_DB_PASSWORD",
   "RAZORPAY_KEY_SECRET",
   "RAZORPAY_WEBHOOK_SECRET",
   "RESEND_API_KEY",
@@ -34,8 +46,8 @@ const SERVER_ONLY = [
   "GOOGLE_OAUTH_CLIENT_SECRET",
 ];
 
-// Directories that ship to the browser. `out/` for the current static export,
-// `.next/static/` once the app moves to server rendering.
+// Directories that ship to the browser. `out/` for the static export,
+// `.next/static/` for the server build.
 const CLIENT_DIRS = ["out", ".next/static"].filter((d) => existsSync(d));
 
 if (CLIENT_DIRS.length === 0) {
@@ -43,18 +55,39 @@ if (CLIENT_DIRS.length === 0) {
   process.exit(1);
 }
 
-// Only check secrets that are actually set — an unset variable cannot leak,
-// and matching on an empty string would flag every file.
-const secrets = SERVER_ONLY
-  .map((name) => ({ name, value: process.env[name] }))
-  .filter((s) => s.value && s.value.length >= 12);
+// 1. The build's own view of the environment. Never overrides a value already
+//    in process.env, so on Vercel the platform's values stand.
+if (!process.env.VERCEL) {
+  const nextEnv = await import("@next/env");
+  const loadEnvConfig = nextEnv.loadEnvConfig ?? nextEnv.default?.loadEnvConfig;
+  loadEnvConfig(process.cwd(), false, { info: () => {}, error: console.error });
+}
 
-if (secrets.length === 0) {
+/** value -> set of labels (variable name, and the file it came from). */
+const values = new Map();
+const add = (value, label) => {
+  // Only real secrets — an empty or tiny value would match everywhere.
+  if (!value || value.length < 12) return;
+  if (!values.has(value)) values.set(value, new Set());
+  values.get(value).add(label);
+};
+for (const name of SERVER_ONLY) add(process.env[name], name);
+
+// 2. Every local env file, whether or not the build loads it.
+for (const file of readdirSync(".").filter((f) => f.startsWith(".env") && !f.endsWith(".example"))) {
+  for (const line of readFileSync(file, "utf8").split(/\r?\n/)) {
+    const m = line.match(/^\s*(?:export\s+)?([A-Z0-9_]+)\s*=\s*(.*)$/);
+    if (!m || !SERVER_ONLY.includes(m[1])) continue;
+    add(m[2].trim().replace(/^(['"])(.*)\1$/, "$2"), `${m[1]} (${file})`);
+  }
+}
+
+if (values.size === 0) {
   console.log("No server-only secrets present in this environment — nothing to check.");
   process.exit(0);
 }
 
-console.log(`Scanning ${CLIENT_DIRS.join(", ")} for ${secrets.length} server-only secret(s)…`);
+console.log(`Scanning ${CLIENT_DIRS.join(", ")} for ${values.size} distinct server-only secret value(s)…`);
 
 async function* walk(dir) {
   for (const entry of await readdir(dir, { withFileTypes: true })) {
@@ -73,8 +106,8 @@ for (const dir of CLIENT_DIRS) {
     if (!TEXTUAL.test(file)) continue;
     scanned++;
     const content = await readFile(file, "utf8");
-    for (const { name, value } of secrets) {
-      if (content.includes(value)) findings.push({ file, name });
+    for (const [value, labels] of values) {
+      if (content.includes(value)) findings.push({ file, name: [...labels].join(", ") });
     }
   }
 }

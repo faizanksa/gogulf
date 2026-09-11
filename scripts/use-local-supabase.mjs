@@ -4,10 +4,11 @@
  * Writes .env.development.local and .env.production.local from the running
  * local stack (`npx supabase start`). Next.js loads those ahead of .env.local
  * for `next dev` and `next build`/`next start` respectively, so their Supabase
- * values win and the production values in .env.local are never used by the app.
+ * values win over anything in .env.local.
  *
- * .env.local is deliberately left alone: it still holds real credentials used
- * by explicit, read-only tooling that must target production on purpose.
+ * .env.local is deliberately left alone. It no longer holds production Supabase
+ * keys — those live in .env.prod-supabase.local, which nothing loads implicitly
+ * (see docs/STAGING.md §8).
  *
  *   npx supabase start
  *   npm run env:local
