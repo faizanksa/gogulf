@@ -419,3 +419,22 @@ enabled = true
 # declarative_schema_path = "./database"
 # JSON string passed through to pg-delta SQL formatting.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":80,\"commaStyle\":\"trailing\"}"
+
+# -----------------------------------------------------------------------------
+# Hosted STAGING (gogulf-staging). Everything above describes the local stack;
+# `npx supabase config push --project-ref wxolbnhyzktfjdvcnixc` applies it to
+# staging with the overrides below. There is deliberately no block for
+# production, and config push must never be run against julbqkeyvzwluayokcdi.
+# -----------------------------------------------------------------------------
+[remotes.staging]
+project_id = "wxolbnhyzktfjdvcnixc"
+
+[remotes.staging.auth]
+site_url = "https://staging.gogulf.co"
+additional_redirect_urls = ["https://staging.gogulf.co/**"]
+# Nobody signs in to staging until Phase 2 builds staff login.
+enable_signup = false
+
+[remotes.staging.auth.email]
+# Hosted default; the local stack turns confirmations off for convenience.
+enable_confirmations = true

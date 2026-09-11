@@ -1,13 +1,14 @@
 # Staging Environment
 
-**Status (10 Sep 2026): provisioned and validated.** Staging runs server-mode on
+**Status (11 Sep 2026): provisioned and validated.** Staging runs server-mode on
 the existing Vercel project at **https://staging.gogulf.co**, sends email through
-Resend, and cannot reach the production database. Staging Supabase is **not yet
-provisioned** — see §6. Production is unchanged.
+Resend, and stores applications and documents in its own Supabase project,
+**`gogulf-staging`**. It cannot reach the production database. Production is
+unchanged.
 
 ```
-main       → Vercel Production → www.gogulf.co     → static build → EmailJS     (unchanged)
-staging    → Vercel Preview    → staging.gogulf.co → server build → Resend      (branch-scoped config)
+main       → Vercel Production → www.gogulf.co     → static build → EmailJS → Supabase gogulf         (unchanged)
+staging    → Vercel Preview    → staging.gogulf.co → server build → Resend  → Supabase gogulf-staging
 feature/*  → Vercel Preview    → *.vercel.app      → fails closed unless isolated (see §4)
 ```
 
@@ -23,8 +24,10 @@ feature/*  → Vercel Preview    → *.vercel.app      → fails closed unless i
 | Staging branch | `staging` (tracks `origin/staging`) |
 | Staging URL | `https://staging.gogulf.co` (also `gogulf-git-staging-faizan-chaudhary.vercel.app`) |
 | Access | **Private.** Vercel Authentication — see §3 |
-| Functions region | `bom1` (Mumbai), pinned in `vercel.json`. The project default stays `iad1` |
+| Functions region | `bom1` (Mumbai), pinned in `vercel.json` |
 | DNS | No record added. `gogulf.co` is on Vercel DNS with a wildcard `*` ALIAS, so attaching the subdomain to the project was enough |
+| Supabase (staging) | **`gogulf-staging`**, ref `wxolbnhyzktfjdvcnixc`, in `faizanksa's Org` — the organisation that owns production |
+| Supabase (production) | `gogulf`, ref `julbqkeyvzwluayokcdi`, same organisation — **not touched** |
 
 **No second Vercel project was created.** One project means one place for
 configuration and nowhere to forget a variable.
@@ -55,16 +58,16 @@ or project-wide Preview variable being modified**:
 | `RESEND_FROM_EMAIL` | `Go Gulf <no-reply@gogulf.co>` | Verified domain |
 | `RESEND_REPLY_TO` | `careers@gogulf.co` | |
 | `RESEND_API_KEY` | *sensitive* | A dedicated **sending-only** key, `gogulf_staging`, restricted to `gogulf.co`. Revocable without touching the website key |
-| `NEXT_PUBLIC_SUPABASE_URL` | *empty* | **Overrides the inherited production value** |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | *empty* | **Overrides the inherited production value** |
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://wxolbnhyzktfjdvcnixc.supabase.co` | **Overrides the inherited production value** |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | staging anon key | **Overrides the inherited production value** |
+
+`SUPABASE_SERVICE_ROLE_KEY` is deliberately **not** set on Vercel: no code path
+uses it yet. Add it, branch-scoped and sensitive, when a feature needs it.
 
 Project-wide variables, unchanged: `NEXT_PUBLIC_SUPABASE_URL`,
 `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_EMAILJS_PUBLIC_KEY`,
 `NEXT_PUBLIC_EMAILJS_SERVICE_ID`, `NEXT_PUBLIC_EMAILJS_TEMPLATE_ID` — all
 `Production, Preview`.
-
-With Supabase empty, document upload on staging's apply form reports that storage
-is not connected. That is the intended, fail-closed behaviour until §6 is done.
 
 ---
 
@@ -115,8 +118,10 @@ FAIL — preview is configured against PRODUCTION:
 Error: Command "npm run build" exited with 1          → deployment state: Error
 ```
 
-After the overrides were applied the redeploy succeeded, and the deployed client
-bundle contains no reference to the production project.
+With the staging values the guard reports `Environment: staging / Supabase API:
+project wxolbnhyzktfjdvcnixc / PASS`. The end-to-end test (§7) reads the
+Supabase URL and key out of the **deployed** bundle and refuses to continue unless
+they are staging's; the staging anon key is rejected by production with 401.
 
 **Consequence for feature branches:** every Preview inherits production Supabase,
 so every feature-branch Preview now fails closed at build time. That is correct —
@@ -130,61 +135,119 @@ Supabase overrides when it needs a deployment.
 The compiled bundle contains `emailProviderMode … function(){return"resend"}` —
 the value is inlined and the variable name eliminated. Changing the provider
 requires a **redeploy**; editing the variable and restarting does nothing. The
-server half (`RESEND_API_KEY`, `/api/forms/*`) is read at runtime.
+server half (`RESEND_API_KEY`, `/api/forms/*`) is read at runtime. The same holds
+for the Supabase URL and anon key: a change needs a redeploy.
 
 ---
 
-## 6. Supabase staging — blocked on account access
+## 6. Supabase staging
 
-A separate staging project remains the right design (branching would modify the
-production project, and branches are built for short-lived PR databases, not a
-long-lived environment).
+| | |
+| --- | --- |
+| Project | `gogulf-staging`, ref **`wxolbnhyzktfjdvcnixc`** |
+| Organisation | `faizanksa's Org` (`rtnkssqmprwivcyvnvxl`) — Free plan, confirmed by the owner. Staging uses the org's second free active-project slot, so the paused `fc-gulf-travels's Project` cannot be restored without pausing another |
+| Region | `ap-northeast-1` (Tokyo) — **the same as production**, so staging reproduces the post-cutover topology: functions in Mumbai, database in Tokyo. See §9 |
+| Postgres | 17.6, like production |
+| Keys used | legacy `anon` / `service_role` JWTs, as production uses — the isolation guard can read the project ref inside them. Moving to publishable/secret keys is a later, separate change |
+| Data | synthetic only. Nothing was copied from production |
 
-**It could not be created.** The Supabase CLI on this machine is signed in to
-`nestscout's Org` (`taxxuckbpicdovojwepj`), which does not contain the
-production project and is not a Go Gulf organisation. The claude.ai Supabase
-connector reaches only `sparqitservices's Org` (`bneixzvrrchmgcaoktys`), which
-does not contain it either. Creating Go Gulf staging in either would repeat the
-account fragmentation found in Phase 0.
+Why a separate project and not a branch of production: a branch lives inside
+the production project, shares its billing and settings, and is built for
+short-lived PR databases. A separate project shares nothing with production but
+the organisation.
 
-**To finish:**
+### Credentials
 
-1. Sign the CLI in to the organisation that owns `julbqkeyvzwluayokcdi`
-   (`npx supabase login`), or have its owner create the staging project.
-2. Create `gogulf-staging` in **ap-south-1** in that organisation.
-3. Enable the custom access token hook (Dashboard → Auth → Hooks →
-   `public.custom_access_token_hook`).
-4. Apply `supabase/migrations/0001`–`0009` to staging **only**. Never to
-   production in this phase.
-5. Set three branch-scoped variables on `staging`:
-   `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
-   `SUPABASE_SERVICE_ROLE_KEY` — and redeploy. The guard confirms the ref is not
-   production.
-6. Synthetic data only.
+`.env.staging.local` at the repo root holds `STAGING_SUPABASE_REF`,
+`STAGING_DB_HOST`, `STAGING_DB_PASSWORD`, `STAGING_SUPABASE_URL`,
+`STAGING_ANON_KEY` and `STAGING_SERVICE_ROLE_KEY`. It is gitignored (`.env*`) and
+**Next.js never loads it** — Next reads only the development, production and test
+env files — so it cannot leak into a local build. The database password was
+generated at creation and has never been displayed. If the file is lost, reset
+the password in the dashboard and re-copy the keys.
 
-**Known interaction:** on any new Supabase project, API roles no longer receive
-table privileges automatically. `0001` predates that, so the legacy apply form's
-direct anonymous insert into `job_applications` will not work on a fresh
-project — it works in production only because production's table was created
-under the old defaults. Phase 5 replaces that flow with a server route, so this is
-recorded rather than patched.
+### Migrations and tests on staging
+
+```bash
+npm run db:staging -- push --dry-run   # what staging has not applied yet
+npm run db:staging -- push             # apply supabase/migrations to staging
+npm run db:staging -- test             # both SQL suites on staging (each rolls back)
+```
+
+`scripts/db-staging.mjs` refuses the production ref, and connects as
+`postgres.wxolbnhyzktfjdvcnixc` through the session pooler — the pooler routes on
+that user name, so it cannot land on any other project. psql is borrowed from the
+local Supabase container, so `npx supabase start` must be running.
+
+### Auth settings — one step outstanding
+
+`supabase/config.toml` carries a `[remotes.staging]` block with staging's auth
+settings: site URL `https://staging.gogulf.co`, sign-ups **off** until Phase 2
+builds staff login, email confirmations on, and the custom access token hook.
+Applying it needs the Supabase CLI signed in to `faizanksa's Org`:
+
+```bash
+npx supabase login        # as the faizanksa's Org account
+npx supabase config push --project-ref wxolbnhyzktfjdvcnixc
+```
+
+On 11 Sep the CLI had been switched back to another organisation and the push was
+refused (403) before changing anything. Nothing in Phase 1.6 depends on these
+settings. Until they are applied, staging auth runs on Supabase defaults; its anon
+key exists only inside the private staging deployment and `.env.staging.local`.
+Never run `config push` against production — there is deliberately no block for
+it.
+
+### Default privileges differ between hosted and local
+
+A hosted project created on 10 Sep 2026 still receives Supabase's **old** default
+privileges: on staging, as on production, `anon`, `authenticated` and
+`service_role` hold ALL on `job_applications`, so the apply form's anonymous
+insert works. The **local** stack (CLI 2.109) uses the new defaults and grants
+only `REFERENCES`, `TRIGGER` and `TRUNCATE`, so on a local database the apply
+form's insert is refused. (An earlier revision of this file predicted the
+opposite for new hosted projects. Staging disproved it.)
+
+0009 made every platform table's privileges explicit, so the platform behaves the
+same everywhere. `job_applications` still depends on the defaults of whichever
+project it lands in, and on hosted projects `anon` holds `TRUNCATE` on it — not
+reachable through the Data API, but not needed either. An explicit
+`anon: INSERT only` grant is the fix; it is **not** applied in Phase 1.6 because it
+would change the live production table at cutover and belongs with the Phase 5
+move of this form to a server route.
 
 ---
 
-## 7. Database validation — done locally
+## 7. Validation results
 
-Local Supabase (Docker) is the validation environment. Nothing was applied to any
-hosted database.
+| Check | Local | Staging |
+| --- | --- | --- |
+| `0001`–`0010` apply in order from an empty database | ✅ | ✅ |
+| `rls.test.sql` — catalogue, identity, audit, grants, side doors | ✅ 46 | ✅ 46 |
+| `rbac-behaviour.test.sql` — queries as each role, with positive controls | ✅ 83 | ✅ 83 |
+| **Total** | **129** | **129** |
+| 23 public tables, all with RLS; 55 policies; 72 permissions; 12 roles | ✅ | ✅ |
+| Private `job-applications` bucket, 10 MB limit, anon insert-only policy | ✅ | ✅ |
+
+**End to end on the deployed site** (synthetic applicant, mail to
+`careers@gogulf.co`), using the Supabase URL and anon key read out of the
+deployed bundle — exactly what a browser gets:
 
 | Check | Result |
 | --- | --- |
-| `0001`–`0009` apply in order from an empty database | ✅ `supabase db reset` |
-| `rls.test.sql` (catalogue, identity, audit, grants, side doors) | ✅ 45 assertions |
-| `rbac-behaviour.test.sql` (queries executed as each role, with positive controls) | ✅ 83 assertions |
-| **Total** | **128 assertions, all passing** |
+| Bundle targets exactly one Supabase project, staging's; no production ref, no production key, no service-role key | ✅ |
+| CV (PDF), passport (PNG) and one extra document upload; the application row saves | ✅ |
+| `/api/forms/job-application` sends the Resend notification and the applicant acknowledgement | ✅ |
+| With the public key: list, download, signed URL, public URL, overwrite, remove, move — all refused | ✅ |
+| With the public key: reading applications back, updating or deleting the row — no effect | ✅ |
+| 11 MB upload rejected by the 10 MB bucket limit (413); writes to any other bucket refused | ✅ |
+| The staging anon key sent to production is rejected (401) | ✅ |
+| Service-role check: all three objects stored, bytes match their SHA-256 | ✅ |
 
-Semantic validation found eight defects that parse-only validation could not.
-All are fixed in `0009_security_hardening.sql`:
+One synthetic application is left on staging for inspection in the dashboard.
+
+Semantic validation found eight defects in `0002`–`0008` that parse-only
+validation could not. All are fixed in `0009_security_hardening.sql`:
 
 1. A hardened trigger could not resolve `citext`, so **every** insert into
    `contact_identities` failed — identity resolution was broken.
@@ -202,6 +265,17 @@ All are fixed in `0009_security_hardening.sql`:
 8. Own-scope staff could never edit their own records — caught by a positive
    control.
 
+**Staging found a ninth, fixed in `0010_audit_claims_guard.sql`.** The suites run
+on staging through the connection pooler. After a transaction that sets
+`request.jwt.claims` ends, Postgres leaves the setting as `''` on that server
+connection, and the pooler hands the connection to the next client. The audit
+trigger cast that `''` to `jsonb` before applying `nullif`, so every audited write
+on such a connection failed — the kind of connection server jobs and webhooks
+use. A regression assertion reproduces it; it failed before 0010 and passes after,
+on both databases. (0010 was committed inside `d7f1352`, whose message describes
+only the `db:staging` tooling; a quoting error in the commit command merged the
+two commits, and the pushed history is left as it is.)
+
 The suite also caught a flaw in itself: wrapping a `STABLE` function call inside
 `count(*)` let the planner skip the call, so a privilege probe passed without
 testing anything. Function probes now execute the call directly.
@@ -215,6 +289,7 @@ testing anything. Function probes now execute the call directly.
 npx supabase start -x logflare,vector,studio,postgres-meta,realtime,edge-runtime,imgproxy
 npm run env:local          # point local Next.js at local Supabase (.env.local untouched)
 npm run db:test            # both SQL suites, via docker exec — cannot reach a hosted DB
+npx supabase migration up --local   # apply new migrations to the local DB
 npx supabase db reset      # LOCAL only; the project is deliberately not linked
 
 # App
@@ -230,6 +305,11 @@ npm run check:secrets && npm run check:isolation && npm run db:validate
 `npm run dev` and every build refuse to start while local configuration points
 at production. `npm run env:local` writes `.env.development.local` and
 `.env.production.local`, which Next.js loads ahead of `.env.local`.
+
+`.env.local` still holds the **production** Supabase keys, for read-only checks.
+With `env:local` in place they are shadowed, and if the shadowing files are ever
+deleted the isolation guard stops `dev` and every build. Moving the production
+keys out of `.env.local` altogether would remove even that dependency.
 
 ---
 
@@ -247,13 +327,17 @@ which must ship **together with** the production provider switch.
 
 Production cutover, when approved:
 
-1. Staging Supabase provisioned and validated (§6).
-2. Set Production variables `PLATFORM_MODE=server`, `NEXT_PUBLIC_EMAIL_PROVIDER=resend`,
+1. Decide the function region. `vercel.json` pins functions to `bom1` (Mumbai);
+   the production database is in Tokyo. Staging reproduces exactly that, so its
+   form latency is the preview of production's. Either accept it, pin functions
+   to `hnd1` (Tokyo), or plan a database move.
+2. Apply `0002`–`0010` to production — a separate, approved change with a backup.
+3. Set Production variables `PLATFORM_MODE=server`, `NEXT_PUBLIC_EMAIL_PROVIDER=resend`,
    `NEXT_PUBLIC_SITE_URL=https://www.gogulf.co`, `RESEND_*` — **values set in the
    dashboard, never committed**.
-3. Push `main` and **redeploy** — the provider is build-time.
-4. Verify all three forms on production; confirm the privacy policy names Resend.
-5. Only then remove EmailJS (package, variables, code, docs).
+4. Push `main` and **redeploy** — the provider is build-time.
+5. Verify all three forms on production; confirm the privacy policy names Resend.
+6. Only then remove EmailJS (package, variables, code, docs).
 
 Rollback: set `NEXT_PUBLIC_EMAIL_PROVIDER=emailjs`, unset `PLATFORM_MODE`, redeploy
 — or Vercel "Promote" the previous production deployment, which is instant.
