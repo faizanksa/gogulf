@@ -179,24 +179,63 @@ npm run db:staging -- test             # both SQL suites on staging (each rolls 
 that user name, so it cannot land on any other project. psql is borrowed from the
 local Supabase container, so `npx supabase start` must be running.
 
-### Auth settings — one step outstanding
+### Auth settings — applied 11 Sep 2026
 
-`supabase/config.toml` carries a `[remotes.staging]` block with staging's auth
-settings: site URL `https://staging.gogulf.co`, sign-ups **off** until Phase 2
-builds staff login, email confirmations on, and the custom access token hook.
-Applying it needs the Supabase CLI signed in to `faizanksa's Org`:
+`supabase/config.toml` is the source of truth: the base file describes the local
+stack, and its `[remotes.staging]` block overrides it for staging. Live on
+`gogulf-staging`:
+
+| Setting | Value |
+| --- | --- |
+| Custom access token hook | **on** — `pg-functions://postgres/public/custom_access_token_hook` |
+| Site URL | `https://staging.gogulf.co`; redirects allowed only to `https://staging.gogulf.co/**` |
+| Sign-ups | **off** — staff accounts are created by an administrator; Phase 2 builds staff login |
+| Email + password | on, email confirmation required |
+| MFA (TOTP) | available — staff login is "email + password (+ optional MFA)" |
+| Anonymous and phone sign-in | off |
+| Email OTP / resend throttle | 8 digits / 60 s — the hosted defaults |
 
 ```bash
-npx supabase login        # as the faizanksa's Org account
+npx supabase orgs list          # must show faizanksa's Org
 npx supabase config push --project-ref wxolbnhyzktfjdvcnixc
 ```
 
-On 11 Sep the CLI had been switched back to another organisation and the push was
-refused (403) before changing anything. Nothing in Phase 1.6 depends on these
-settings. Until they are applied, staging auth runs on Supabase defaults; its anon
-key exists only inside the private staging deployment and `.env.staging.local`.
-Never run `config push` against production — there is deliberately no block for
-it.
+**`config push` has no preview.** It applies at once — a piped "n" does not stop
+it — and it sends every setting in the file, not only the ones that changed. The
+first push on 11 Sep therefore also carried three relaxations meant for the local
+stack (TOTP off, 6-digit email OTP, 1-second resend throttle). The staging block
+now states the hosted defaults explicitly, a second push restored them, and a
+third reported every service "up to date": the live project matches the file.
+Never run `config push` against production — there is deliberately no block for it.
+
+Verified with real sign-ins by synthetic users, created with the staging service
+role and deleted afterwards:
+
+- A public sign-up is refused (422 "Signups not allowed for this instance") and
+  creates no account.
+- Auth links return to the staging site URL; a redirect outside the allow-list
+  falls back to it; an allow-listed staging path is honoured.
+- A non-staff user's token carries **no** staff claims; `is_staff()` is false and
+  RLS returns no roles and no staff records.
+- An active HR_MANAGER's token carries `app_role`, `app_staff_id` and `app_branch`
+  and no permission list (permissions resolve live). It reads the 12 roles and
+  its own record, and cannot promote itself to SUPER_ADMIN.
+- Deactivating the staff row ends access on the **next query**: the old token
+  still carries its claims, but `is_staff()` is false and RLS returns nothing.
+  Refreshed and newly issued tokens carry no staff claims.
+
+### Route guard
+
+`proxy.ts` sends a signed-out visitor from `/admin…` to `/admin/login?next=…` and
+from `/portal…` to `/portal/login?next=…`; forged cookies and self-signed tokens
+are rejected by the auth server. A genuine session passes this coarse gate —
+which KIND of session may see a page is decided by the pages Phase 2 builds, and
+RLS stays the real boundary.
+
+The login pages themselves were inside the gated prefixes, so the proxy
+redirected each one to itself: once Phase 2 built them, nobody could have signed
+in. The rule now lives in `lib/auth/route-guard.ts`, exempts the two login pages,
+and is unit-tested.
 
 ### Default privileges differ between hosted and local
 
@@ -306,10 +345,17 @@ npm run check:secrets && npm run check:isolation && npm run db:validate
 at production. `npm run env:local` writes `.env.development.local` and
 `.env.production.local`, which Next.js loads ahead of `.env.local`.
 
-`.env.local` still holds the **production** Supabase keys, for read-only checks.
-With `env:local` in place they are shadowed, and if the shadowing files are ever
-deleted the isolation guard stops `dev` and every build. Moving the production
-keys out of `.env.local` altogether would remove even that dependency.
+`.env.local` no longer holds production Supabase keys. On 11 Sep 2026 they moved
+to `.env.prod-supabase.local` — gitignored, and loaded by neither Next.js nor any
+npm script — for explicit read-only checks only
+(`node --env-file=.env.prod-supabase.local <script>`). A local run without the
+`env:local` files now has no Supabase at all, rather than production's; the
+isolation guard remains as the backstop.
+
+`npm run check:secrets` loads the environment exactly as `next build` does and
+also scans every local `.env*` file, so a secret is caught whichever file holds
+it. (It used to read `.env.local` alone, and so checked Supabase values the build
+never saw once `.env.production.local` overrode them.)
 
 ---
 

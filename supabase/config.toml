@@ -436,5 +436,22 @@ additional_redirect_urls = ["https://staging.gogulf.co/**"]
 enable_signup = false
 
 [remotes.staging.auth.email]
-# Hosted default; the local stack turns confirmations off for convenience.
+# Hosted defaults. The local stack relaxes these for convenience, and config push
+# sends every setting in this file — so staging states them explicitly.
 enable_confirmations = true
+max_frequency = "1m0s"
+otp_length = 8
+
+# Staff login is "email + password (+ optional MFA)" (ARCHITECTURE-AUDIT.md), so
+# TOTP stays available, as on every hosted project by default.
+[remotes.staging.auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+# The local file escapes these templates for the local stack; hosted auth takes
+# the plain Go template. Both channels are disabled; this keeps them correct.
+[remotes.staging.auth.sms]
+template = "Your code is {{ .Code }}"
+
+[remotes.staging.auth.mfa.phone]
+template = "Your code is {{ .Code }}"
