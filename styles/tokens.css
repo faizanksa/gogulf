@@ -1,0 +1,132 @@
+/*
+ * Go Gulf design tokens — the single source for colour, type, space, shape and motion.
+ *
+ * Components consume these through CSS Modules. Nothing else defines a colour, a
+ * font stack, a spacing step or a radius. Contrast ratios (WCAG 2.2) are recorded
+ * beside every text colour; see docs/REDESIGN-PLAN.md §8.
+ *
+ * Breakpoints, mobile first. Custom properties cannot appear inside media queries,
+ * so these four values are fixed by convention and mirrored in lib/design/breakpoints.ts:
+ *   sm 480px · md 768px · lg 1024px · xl 1280px
+ */
+
+:root {
+  /* ---------------------------------------------------------------- palette */
+  --gg-green-400: #1fb854; /* brand bright — on ink only (6.84:1) */
+  --gg-green-600: #157a3c; /* primary action and links — 5.41:1 on white; white on it 5.41:1 */
+  --gg-green-700: #0f5e2e; /* hover, pressed — 7.89:1 */
+  --gg-green-50: #e3f1e8;
+  --gg-blue-600: #1d5fa3; /* travel line, information — 6.53:1 */
+  --gg-blue-50: #e4eef8;
+
+  --gg-ink-900: #0e1a13; /* text — 17.86:1 */
+  --gg-text-700: #3c4a42; /* secondary text — 9.33:1 */
+  --gg-muted-500: #5e6b63; /* hints, meta — 5.59:1 on white, 5.13:1 on surface */
+  --gg-border-400: #7d8b83; /* control borders — 3.56:1 (UI minimum 3:1) */
+  --gg-line-200: #d5ded8; /* decorative dividers only — never a control boundary */
+  --gg-surface-50: #f3f6f4;
+  --gg-paper: #ffffff;
+  --gg-ink-muted-on-dark: #c4d0c9; /* secondary text on ink — 11.0:1 */
+
+  --gg-error-600: #b42318; /* 6.57:1 */
+  --gg-error-50: #fdecea;
+  --gg-warning-700: #8a5300; /* 5.81:1 on its surface */
+  --gg-warning-50: #fff4e0;
+  --gg-success-700: #0f5e2e;
+  --gg-success-50: #e3f1e8;
+  --gg-whatsapp-700: #075e54; /* white on it 7.67:1 (WhatsApp's own #25D366 is 1.98:1) */
+
+  /* ---------------------------------------------------------------- roles */
+  --color-bg: var(--gg-paper);
+  --color-bg-subtle: var(--gg-surface-50);
+  --color-bg-inverse: var(--gg-ink-900);
+  --color-text: var(--gg-ink-900);
+  --color-text-secondary: var(--gg-text-700);
+  --color-text-muted: var(--gg-muted-500);
+  --color-text-inverse: var(--gg-paper);
+  --color-text-inverse-muted: var(--gg-ink-muted-on-dark);
+  --color-link: var(--gg-green-600);
+  --color-link-hover: var(--gg-green-700);
+  --color-link-inverse: var(--gg-green-400);
+  --color-action: var(--gg-green-600);
+  --color-action-hover: var(--gg-green-700);
+  --color-action-text: var(--gg-paper);
+  --color-border: var(--gg-border-400);
+  --color-divider: var(--gg-line-200);
+  --color-focus: var(--gg-ink-900);
+  --color-focus-inverse: var(--gg-paper);
+
+  /* ---------------------------------------------------------------- type */
+  --font-display: var(--font-anek), var(--font-anek-deva), var(--font-mukta), system-ui, sans-serif;
+  --font-body: var(--font-mukta), var(--font-mukta-deva), system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --display-wdth: 88; /* Anek width axis: compact headings without a condensed look */
+
+  --text-display: clamp(2.25rem, 1.55rem + 3vw, 3.5rem);
+  --text-h1: clamp(2rem, 1.6rem + 1.8vw, 2.75rem);
+  --text-h2: clamp(1.5rem, 1.3rem + 1vw, 2rem);
+  --text-h3: 1.25rem;
+  --text-lead: 1.1875rem;
+  --text-body: 1.0625rem; /* 17px — Mukta runs small; legibility matters for this audience */
+  --text-label: 0.9375rem;
+  --text-small: 0.875rem;
+  --text-data: 0.875rem;
+
+  --leading-display: 1.05;
+  --leading-heading: 1.15;
+  --leading-snug: 1.35;
+  --leading-body: 1.6;
+
+  --weight-regular: 400;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ---------------------------------------------------------------- space (4px base) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --space-9: 6rem;
+
+  /* ---------------------------------------------------------------- layout */
+  --container-page: 75rem;
+  --container-prose: 68ch;
+  --container-narrow: 45rem;
+  --gutter: clamp(1rem, 4vw, 2rem);
+  --header-height: 4.25rem;
+
+  /* ---------------------------------------------------------------- shape */
+  --radius-control: 6px;
+  --radius-card: 10px;
+  --radius-pill: 999px;
+  --focus-width: 2px;
+
+  /* ---------------------------------------------------------------- elevation (used by role) */
+  --shadow-raised: 0 1px 2px rgb(14 26 19 / 0.06), 0 6px 20px -8px rgb(14 26 19 / 0.18);
+  --shadow-overlay: 0 16px 40px -12px rgb(14 26 19 / 0.3);
+
+  /* ---------------------------------------------------------------- motion */
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  /* ---------------------------------------------------------------- touch */
+  --target-min: 44px;
+  --control-height: 48px;
+
+  /* ---------------------------------------------------------------- layers */
+  --z-header: 50;
+  --z-menu: 60;
+  --z-skip: 100;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0.01ms;
+    --duration-base: 0.01ms;
+  }
+}

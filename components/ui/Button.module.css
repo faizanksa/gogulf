@@ -1,0 +1,110 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--control-height);
+  padding: 0 var(--space-5);
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: var(--weight-semibold);
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.button:hover {
+  text-decoration: none;
+}
+
+.button:focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.primary {
+  background: var(--color-action);
+  color: var(--color-action-text);
+}
+.primary:hover {
+  background: var(--color-action-hover);
+  color: var(--color-action-text);
+}
+
+.secondary {
+  background: var(--color-bg);
+  color: var(--color-text);
+  border-color: var(--color-text);
+}
+.secondary:hover {
+  background: var(--color-bg-subtle);
+  color: var(--color-text);
+}
+
+.text {
+  min-height: var(--target-min);
+  padding-inline: var(--space-1);
+  background: transparent;
+  color: var(--color-link);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.text:hover {
+  color: var(--color-link-hover);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+}
+
+.whatsapp {
+  background: var(--gg-whatsapp-700);
+  color: var(--gg-paper);
+}
+.whatsapp:hover {
+  background: var(--gg-ink-900);
+  color: var(--gg-paper);
+}
+
+.inverse {
+  background: var(--gg-paper);
+  color: var(--gg-ink-900);
+}
+.inverse:hover {
+  background: var(--gg-green-50);
+  color: var(--gg-ink-900);
+}
+.inverse:focus-visible {
+  outline-color: var(--color-focus-inverse);
+}
+
+.sm {
+  min-height: var(--target-min);
+  padding-inline: var(--space-4);
+  font-size: var(--text-label);
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.loading {
+  cursor: progress;
+}
+
+.button[aria-disabled="true"]:not(.loading) {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (forced-colors: active) {
+  .button {
+    border-color: ButtonText;
+  }
+}

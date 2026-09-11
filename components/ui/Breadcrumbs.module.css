@@ -1,0 +1,36 @@
+.nav {
+  font-size: var(--text-small);
+}
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+}
+
+.separator {
+  margin-inline: var(--space-1);
+  color: var(--color-text-muted);
+}
+
+/* Links keep a 44px-tall hit area without changing the visual line height. */
+.link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  color: var(--color-link);
+}
+
+.current {
+  color: var(--color-text-secondary);
+  font-weight: var(--weight-semibold);
+}

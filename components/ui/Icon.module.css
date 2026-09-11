@@ -1,0 +1,21 @@
+.icon {
+  flex: none;
+  display: inline-block;
+  vertical-align: -0.2em;
+}
+
+.spin {
+  animation: spin 900ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
+}

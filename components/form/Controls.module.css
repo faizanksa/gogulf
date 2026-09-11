@@ -1,0 +1,102 @@
+.control {
+  width: 100%;
+  min-height: var(--control-height);
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 1rem; /* 16px minimum stops iOS zooming into the field */
+  line-height: 1.4;
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+
+.control::placeholder {
+  color: var(--color-text-muted);
+  opacity: 1;
+}
+
+.control:hover {
+  border-color: var(--color-text-secondary);
+}
+
+.control:focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: 2px;
+  border-color: var(--color-text);
+}
+
+.control[aria-invalid="true"] {
+  border: 2px solid var(--gg-error-600);
+}
+
+.control:disabled {
+  background: var(--color-bg-subtle);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.textarea {
+  min-height: 8rem;
+  resize: vertical;
+}
+
+.select {
+  appearance: none;
+  padding-right: 2.5rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230e1a13' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1.25rem;
+}
+
+.file {
+  padding: 0.5rem;
+  cursor: pointer;
+}
+.file::file-selector-button {
+  margin-right: var(--space-3);
+  min-height: 2.25rem;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--color-text);
+  border-radius: var(--radius-control);
+  background: var(--color-bg-subtle);
+  color: var(--color-text);
+  font: inherit;
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
+.checkboxRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-3);
+}
+
+/* 24px box inside a 44px hit area (the label extends the target). */
+.checkbox {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: 0.125rem 0 0;
+  accent-color: var(--color-action);
+}
+
+.checkboxLabel {
+  display: grid;
+  gap: var(--space-1);
+  min-height: var(--target-min);
+  line-height: var(--leading-snug);
+  cursor: pointer;
+}
+
+.checkboxHint {
+  font-size: var(--text-small);
+  color: var(--color-text-muted);
+}
+
+@media (forced-colors: active) {
+  .control {
+    border-color: ButtonText;
+  }
+}
