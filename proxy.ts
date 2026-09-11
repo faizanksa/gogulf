@@ -1,113 +1,69 @@
 /**
- * proxy.ts — Next.js 16 replaced the `middleware` convention with `proxy`.
- * Node.js runtime only; the `edge` runtime is not supported here.
+ * proxy.ts — Next.js 16's name for middleware. Node.js runtime only.
  *
- * Responsibilities, in order:
- *   1. Refresh the Supabase auth session cookie. Server Components cannot set
- *      cookies, so this is the only place the refresh can happen.
- *   2. Gate /admin and /portal behind a session.
- *   3. Apply security headers to every response.
+ * Runs ONLY for /admin and /portal (see `config.matcher`). Marketing pages are served
+ * without a function invocation; their security headers come from next.config.mjs.
  *
- * IMPORTANT: this is a coarse gate, not the security boundary. It answers
- * "is there a session?", never "may this person see this record?" — that is
- * decided by permission checks in Server Actions and by RLS in the database.
- * A proxy check can be bypassed by anything that talks to the database
- * directly; RLS cannot.
+ * Layer 1 of 3 (docs/REDESIGN-PLAN.md §19): verify the session, classify it with
+ * sessionKind(), and route it with routeDecision(). "A session exists" is never enough.
+ * The area layouts re-check against the database (layer 2); RLS is layer 3.
  */
 
+import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { createServerClient } from "@supabase/ssr";
-import { LOGIN_PATHS, protectedAreaFor } from "@/lib/auth/route-guard";
+import { protectedAreaFor, routeDecision, sessionKind, type AccessTokenClaims } from "@/lib/auth/route-guard";
+import { NOINDEX_HEADER, SECURITY_HEADERS } from "@/lib/security-headers.mjs";
 
-const SECURITY_HEADERS: Record<string, string> = {
-  "X-Content-Type-Options": "nosniff",
-  "X-Frame-Options": "DENY",
-  "Referrer-Policy": "strict-origin-when-cross-origin",
-  "X-DNS-Prefetch-Control": "off",
-  "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(self)",
-  "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
-};
+function withHeaders(response: NextResponse): NextResponse {
+  for (const { key, value } of SECURITY_HEADERS) response.headers.set(key, value);
+  // Staff and customer areas are never indexed, on any deployment.
+  response.headers.set(NOINDEX_HEADER.key, NOINDEX_HEADER.value);
+  return response;
+}
 
 export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
   let response = NextResponse.next({ request });
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const area = protectedAreaFor(pathname);
+  if (!area) return withHeaders(response); // the login pages
 
-  // The public marketing site must keep rendering even if Supabase is
-  // misconfigured — it does not depend on it.
-  if (supabaseUrl && supabaseKey) {
-    const supabase = createServerClient(supabaseUrl, supabaseKey, {
+  let claims: AccessTokenClaims | null = null;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (url && key) {
+    const supabase = createServerClient(url, key, {
       cookies: {
         getAll() {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          for (const { name, value } of cookiesToSet) {
-            request.cookies.set(name, value);
-          }
+          for (const { name, value } of cookiesToSet) request.cookies.set(name, value);
           response = NextResponse.next({ request });
-          for (const { name, value, options } of cookiesToSet) {
-            response.cookies.set(name, value, options);
-          }
+          for (const { name, value, options } of cookiesToSet) response.cookies.set(name, value, options);
         },
       },
     });
-
-    // getUser() revalidates against the auth server. getSession() only reads a
-    // cookie the client can tamper with, and must never gate access.
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    // Which paths need a session — and which KIND is decided downstream — lives
-    // in lib/auth/route-guard.ts. The login pages are exempt.
-    const { pathname } = request.nextUrl;
-    const area = protectedAreaFor(pathname);
-
-    if (area && !user) {
-      const loginUrl = request.nextUrl.clone();
-      loginUrl.pathname = LOGIN_PATHS[area];
-      // Relative path only — never echo an absolute URL back into a redirect
-      // parameter, which is how open-redirect bugs start.
-      loginUrl.searchParams.set("next", pathname);
-      const redirect = NextResponse.redirect(loginUrl);
-      applySecurityHeaders(redirect);
-      return redirect;
-    }
+    // getClaims() verifies the token (with the auth server for symmetric keys). A cookie
+    // decoded by hand could be forged; this cannot.
+    const { data } = await supabase.auth.getClaims();
+    claims = (data?.claims as AccessTokenClaims | undefined) ?? null;
   }
+  // No Supabase configuration → no verifiable session → treated as anonymous (fail closed).
 
-  applySecurityHeaders(response);
-  return response;
-}
+  const decision = routeDecision(area, sessionKind(claims), pathname);
+  if (decision.action === "allow") return withHeaders(response);
 
-/**
- * Staging and preview deployments must never be indexed — a crawlable duplicate
- * of the site is an SEO regression, and staging forms are not the place for real
- * enquiries. Vercel Authentication keeps staging.gogulf.co private today (preview
- * custom domains are protected on Hobby too); this header is defence in depth in
- * case that protection is ever relaxed.
- *
- * Opt-IN on purpose: only an explicit staging/preview marker adds the header.
- * Production and local runs are left exactly as they were.
- */
-const isNonProductionDeployment =
-  process.env.APP_ENV === "staging" || process.env.VERCEL_ENV === "preview";
-
-function applySecurityHeaders(response: NextResponse) {
-  for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
-    response.headers.set(key, value);
-  }
-  if (isNonProductionDeployment) {
-    response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
-  }
+  const next =
+    decision.action === "redirect"
+      ? NextResponse.redirect(new URL(decision.to, request.url))
+      : NextResponse.rewrite(new URL("/__not-found", request.url));
+  // Keep any refreshed session cookies on the response we actually send.
+  for (const cookie of response.cookies.getAll()) next.cookies.set(cookie);
+  return withHeaders(next);
 }
 
 export const config = {
-  // Without a matcher, proxy runs on every request including static assets,
-  // which would make auth logic block CSS and images.
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|icons/|assets/|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|txt|xml|webmanifest)$).*)",
-  ],
+  matcher: ["/admin/:path*", "/portal/:path*"],
 };
