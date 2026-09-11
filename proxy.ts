@@ -18,6 +18,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { LOGIN_PATHS, protectedAreaFor } from "@/lib/auth/route-guard";
 
 const SECURITY_HEADERS: Record<string, string> = {
   "X-Content-Type-Options": "nosniff",
@@ -27,9 +28,6 @@ const SECURITY_HEADERS: Record<string, string> = {
   "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(self)",
   "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
 };
-
-/** Routes that require a session. Which KIND of session is decided downstream. */
-const PROTECTED_PREFIXES = ["/admin", "/portal"];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -63,14 +61,14 @@ export async function proxy(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
+    // Which paths need a session — and which KIND is decided downstream — lives
+    // in lib/auth/route-guard.ts. The login pages are exempt.
     const { pathname } = request.nextUrl;
-    const needsSession = PROTECTED_PREFIXES.some(
-      (p) => pathname === p || pathname.startsWith(`${p}/`),
-    );
+    const area = protectedAreaFor(pathname);
 
-    if (needsSession && !user) {
+    if (area && !user) {
       const loginUrl = request.nextUrl.clone();
-      loginUrl.pathname = pathname.startsWith("/admin") ? "/admin/login" : "/portal/login";
+      loginUrl.pathname = LOGIN_PATHS[area];
       // Relative path only — never echo an absolute URL back into a redirect
       // parameter, which is how open-redirect bugs start.
       loginUrl.searchParams.set("next", pathname);
@@ -85,10 +83,11 @@ export async function proxy(request: NextRequest) {
 }
 
 /**
- * Staging and preview deployments are publicly reachable on a custom domain
- * (Vercel Hobby cannot password-protect one), so they must never be indexed —
- * a crawlable duplicate of the site is an SEO regression, and staging forms are
- * not the place for real enquiries.
+ * Staging and preview deployments must never be indexed — a crawlable duplicate
+ * of the site is an SEO regression, and staging forms are not the place for real
+ * enquiries. Vercel Authentication keeps staging.gogulf.co private today (preview
+ * custom domains are protected on Hobby too); this header is defence in depth in
+ * case that protection is ever relaxed.
  *
  * Opt-IN on purpose: only an explicit staging/preview marker adds the header.
  * Production and local runs are left exactly as they were.
