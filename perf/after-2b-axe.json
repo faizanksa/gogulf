@@ -1,0 +1,338 @@
+{
+  "label": "after-2b",
+  "measuredAt": "2026-09-11T16:37:56.999Z",
+  "tags": [
+    "wcag2a",
+    "wcag2aa",
+    "wcag21a",
+    "wcag21aa",
+    "wcag22aa"
+  ],
+  "byRoute": [
+    {
+      "route": "/",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/about",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/about",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/admin/login",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/admin/login",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/cancellation-and-refunds",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/cancellation-and-refunds",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/candidates",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/candidates",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/contact",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/contact",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/employers",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/employers",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/jobs",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/jobs",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/jobs/apply",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/jobs/apply",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/jobs/site-supervisor-saudi-arabia",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/jobs/site-supervisor-saudi-arabia",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/portal/login",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/portal/login",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/pricing",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/pricing",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/privacy-policy",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/privacy-policy",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/services",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/services",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/shipping-policy",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/shipping-policy",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/terms-and-conditions",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/terms-and-conditions",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/this-page-does-not-exist",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/this-page-does-not-exist",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/verify",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    },
+    {
+      "route": "/verify",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "rules": []
+    }
+  ],
+  "byRule": {}
+}

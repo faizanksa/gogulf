@@ -1,0 +1,42 @@
+{
+  "label": "after-2b",
+  "target": "staging",
+  "measuredAt": "2026-09-11T17:13:22.358Z",
+  "method": "Playwright + Chrome, Pixel 7 emulation, 4× CPU throttle, web-vitals onINP (lab proxy, not field data). LCP element from PerformanceObserver, unthrottled network.",
+  "results": [
+    {
+      "scenario": "open and close the mobile menu (home)",
+      "path": "/",
+      "inpMs": 80,
+      "samples": [
+        200,
+        80,
+        56
+      ],
+      "lcpElement": {
+        "ms": 3160,
+        "size": 38400,
+        "tag": "p",
+        "src": null,
+        "text": "We help job seekers from India apply for jobs in the Gulf, a"
+      }
+    },
+    {
+      "scenario": "search and filter jobs (/jobs)",
+      "path": "/jobs",
+      "inpMs": 88,
+      "samples": [
+        88,
+        184,
+        48
+      ],
+      "lcpElement": {
+        "ms": 956,
+        "size": 19250,
+        "tag": "p",
+        "src": null,
+        "text": "Read the details of each role, then apply online or ask us a"
+      }
+    }
+  ]
+}
