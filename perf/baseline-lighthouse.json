@@ -1,0 +1,466 @@
+{
+  "label": "baseline",
+  "preset": "mobile",
+  "target": "staging",
+  "measuredAt": "2026-09-11T04:20:10.416Z",
+  "runsPerRoute": 3,
+  "method": "Local Lighthouse via a localhost proxy to staging (bypass header added only toward staging; browser→proxy HTTP/1.1)",
+  "lighthouseVersion": "13.4.1",
+  "results": [
+    {
+      "route": "/",
+      "runs": 3,
+      "spread": {
+        "performance": [
+          65,
+          88
+        ]
+      },
+      "performance": 66,
+      "accessibility": 93,
+      "bestPractices": 100,
+      "seo": 69,
+      "lcpMs": 23716,
+      "fcpMs": 3222,
+      "tbtMs": 119,
+      "cls": 0,
+      "speedIndexMs": 4501,
+      "bytes": {
+        "total": 4134214,
+        "document": 14654,
+        "script": 144507,
+        "stylesheet": 7176,
+        "image": 1912839,
+        "font": 72100,
+        "thirdParty": 73206
+      },
+      "requests": {
+        "total": 23,
+        "script": 7,
+        "font": 4,
+        "thirdParty": 6
+      },
+      "lcpElement": null
+    },
+    {
+      "route": "/about",
+      "runs": 3,
+      "spread": {
+        "performance": [
+          67,
+          92
+        ]
+      },
+      "performance": 67,
+      "accessibility": 93,
+      "bestPractices": 100,
+      "seo": 69,
+      "lcpMs": 23312,
+      "fcpMs": 3031,
+      "tbtMs": 59,
+      "cls": 0,
+      "speedIndexMs": 4463,
+      "bytes": {
+        "total": 4128073,
+        "document": 13771,
+        "script": 144507,
+        "stylesheet": 7176,
+        "image": 1912839,
+        "font": 72100,
+        "thirdParty": 73206
+      },
+      "requests": {
+        "total": 21,
+        "script": 7,
+        "font": 4,
+        "thirdParty": 6
+      },
+      "lcpElement": null
+    },
+    {
+      "route": "/services",
+      "runs": 3,
+      "spread": {
+        "performance": [
+          28,
+          66
+        ]
+      },
+      "performance": 64,
+      "accessibility": 94,
+      "bestPractices": 100,
+      "seo": 69,
+      "lcpMs": 23759,
+      "fcpMs": 3189,
+      "tbtMs": 177,
+      "cls": 0,
+      "speedIndexMs": 4760,
+      "bytes": {
+        "total": 4222225,
+        "document": 14210,
+        "script": 238224,
+        "stylesheet": 7173,
+        "image": 1912839,
+        "font": 72099,
+        "thirdParty": 73205
+      },
+      "requests": {
+        "total": 23,
+        "script": 9,
+        "font": 4,
+        "thirdParty": 6
+      },
+      "lcpElement": null
+    },
+    {
+      "route": "/jobs",
+      "runs": 3,
+      "spread": {
+        "performance": [
+          51,
+          65
+        ]
+      },
+      "performance": 64,
+      "accessibility": 93,
+      "bestPractices": 100,
+      "seo": 69,
+      "lcpMs": 23439,
+      "fcpMs": 3296,
+      "tbtMs": 148,
+      "cls": 0,
+      "speedIndexMs": 5046,
+      "bytes": {
+        "total": 4131915,
+        "document": 14443,
+        "script": 147656,
+        "stylesheet": 7173,
+        "image": 1912840,
+        "font": 72120,
+        "thirdParty": 73225
+      },
+      "requests": {
+        "total": 22,
+        "script": 8,
+        "font": 4,
+        "thirdParty": 6
+      },
+      "lcpElement": null
+    },
+    {
+      "route": "/jobs/apply",
+      "runs": 3,
+      "spread": {
+        "performance": [
+          65,
+          67
+        ]
+      },
+      "performance": 66,
+      "accessibility": 93,
+      "bestPractices": 100,
+      "seo": 69,
+      "lcpMs": 23738,
+      "fcpMs": 3094,
+      "tbtMs": 92,
+      "cls": 0,
+      "speedIndexMs": 4822,
+      "bytes": {
+        "total": 4204261,
+        "document": 12038,
+        "script": 217228,
+        "stylesheet": 7150,
+        "image": 1912840,
+        "font": 72142,
+        "thirdParty": 73225
+      },
+      "requests": {
+        "total": 26,
+        "script": 10,
+        "font": 4,
+        "thirdParty": 6
+      },
+      "lcpElement": null
+    },
+    {
+      "route": "/candidates",
+      "runs": 3,
+      "spread": {
+        "performance": [
+          67,
+          68
+        ]
+      },
+      "performance": 67,
+      "accessibility": 93,
+      "bestPractices": 100,
+      "seo": 69,
+      "lcpMs": 23431,
+      "fcpMs": 3045,
+      "tbtMs": 30,
+      "cls": 0,
+      "speedIndexMs": 4539,
+      "bytes": {
+        "total": 4136076,
+        "document": 13420,
+        "script": 147657,
+        "stylesheet": 7151,
+        "image": 1912840,
+        "font": 72145,
+        "thirdParty": 73228
+      },
+      "requests": {
+        "total": 24,
+        "script": 8,
+        "font": 4,
+        "thirdParty": 6
+      },
+      "lcpElement": null
+    },
+    {
+      "route": "/employers",
+      "runs": 3,
+      "spread": {
+        "performance": [
+          66,
+          67
+        ]
+      },
+      "performance": 67,
+      "accessibility": 93,
+      "bestPractices": 100,
+      "seo": 69,
+      "lcpMs": 23773,
+      "fcpMs": 3054,
+      "tbtMs": 68,
+      "cls": 0,
+      "speedIndexMs": 4455,
+      "bytes": {
+        "total": 4226664,
+        "document": 13365,
+        "script": 238225,
+        "stylesheet": 7151,
+        "image": 1912840,
+        "font": 72148,
+        "thirdParty": 73230
+      },
+      "requests": {
+        "total": 25,
+        "script": 9,
+        "font": 4,
+        "thirdParty": 6
+      },
+      "lcpElement": null
+    },
+    {
+      "route": "/contact",
+      "runs": 3,
+      "spread": {
+        "performance": [
+          64,
+          66
+        ]
+      },
+      "performance": 65,
+      "accessibility": 93,
+      "bestPractices": 100,
+      "seo": 69,
+      "lcpMs": 23274,
+      "fcpMs": 3086,
+      "tbtMs": 129,
+      "cls": 0,
+      "speedIndexMs": 4796,
+      "bytes": {
+        "total": 4131032,
+        "document": 13182,
+        "script": 148030,
+        "stylesheet": 7151,
+        "image": 1912840,
+        "font": 72146,
+        "thirdParty": 73229
+      },
+      "requests": {
+        "total": 22,
+        "script": 8,
+        "font": 4,
+        "thirdParty": 6
+      },
+      "lcpElement": null
+    },
+    {
+      "route": "/pricing",
+      "runs": 3,
+      "spread": {
+        "performance": [
+          66,
+          67
+        ]
+      },
+      "performance": 67,
+      "accessibility": 93,
+      "bestPractices": 100,
+      "seo": 69,
+      "lcpMs": 23284,
+      "fcpMs": 3199,
+      "tbtMs": 48,
+      "cls": 0,
+      "speedIndexMs": 4515,
+      "bytes": {
+        "total": 4132476,
+        "document": 18147,
+        "script": 144509,
+        "stylesheet": 7151,
+        "image": 1912840,
+        "font": 72146,
+        "thirdParty": 73229
+      },
+      "requests": {
+        "total": 21,
+        "script": 7,
+        "font": 4,
+        "thirdParty": 6
+      },
+      "lcpElement": null
+    },
+    {
+      "route": "/privacy-policy",
+      "runs": 3,
+      "spread": {
+        "performance": [
+          66,
+          67
+        ]
+      },
+      "performance": 66,
+      "accessibility": 93,
+      "bestPractices": 100,
+      "seo": 69,
+      "lcpMs": 23307,
+      "fcpMs": 3278,
+      "tbtMs": 35,
+      "cls": 0,
+      "speedIndexMs": 4568,
+      "bytes": {
+        "total": 4139157,
+        "document": 24736,
+        "script": 144577,
+        "stylesheet": 7175,
+        "image": 1912840,
+        "font": 72146,
+        "thirdParty": 73321
+      },
+      "requests": {
+        "total": 21,
+        "script": 7,
+        "font": 4,
+        "thirdParty": 6
+      },
+      "lcpElement": null
+    },
+    {
+      "route": "/terms-and-conditions",
+      "runs": 3,
+      "spread": {
+        "performance": [
+          66,
+          67
+        ]
+      },
+      "performance": 67,
+      "accessibility": 93,
+      "bestPractices": 100,
+      "seo": 69,
+      "lcpMs": 23548,
+      "fcpMs": 3167,
+      "tbtMs": 48,
+      "cls": 0,
+      "speedIndexMs": 4551,
+      "bytes": {
+        "total": 4138677,
+        "document": 24328,
+        "script": 144509,
+        "stylesheet": 7174,
+        "image": 1912840,
+        "font": 72143,
+        "thirdParty": 73249
+      },
+      "requests": {
+        "total": 21,
+        "script": 7,
+        "font": 4,
+        "thirdParty": 6
+      },
+      "lcpElement": null
+    },
+    {
+      "route": "/cancellation-and-refunds",
+      "runs": 3,
+      "spread": {
+        "performance": [
+          66,
+          67
+        ]
+      },
+      "performance": 66,
+      "accessibility": 93,
+      "bestPractices": 100,
+      "seo": 69,
+      "lcpMs": 23419,
+      "fcpMs": 3227,
+      "tbtMs": 69,
+      "cls": 0,
+      "speedIndexMs": 4508,
+      "bytes": {
+        "total": 4133215,
+        "document": 18878,
+        "script": 144509,
+        "stylesheet": 7157,
+        "image": 1912840,
+        "font": 72148,
+        "thirdParty": 73237
+      },
+      "requests": {
+        "total": 21,
+        "script": 7,
+        "font": 4,
+        "thirdParty": 6
+      },
+      "lcpElement": null
+    },
+    {
+      "route": "/shipping-policy",
+      "runs": 3,
+      "spread": {
+        "performance": [
+          61,
+          67
+        ]
+      },
+      "performance": 67,
+      "accessibility": 93,
+      "bestPractices": 100,
+      "seo": 69,
+      "lcpMs": 13513,
+      "fcpMs": 3076,
+      "tbtMs": 52,
+      "cls": 0,
+      "speedIndexMs": 4458,
+      "bytes": {
+        "total": 4131291,
+        "document": 16961,
+        "script": 144509,
+        "stylesheet": 7159,
+        "image": 1912840,
+        "font": 72139,
+        "thirdParty": 73230
+      },
+      "requests": {
+        "total": 21,
+        "script": 7,
+        "font": 4,
+        "thirdParty": 6
+      },
+      "lcpElement": null
+    }
+  ]
+}

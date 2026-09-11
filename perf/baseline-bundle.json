@@ -1,0 +1,171 @@
+{
+  "label": "baseline",
+  "measuredAt": "2026-09-11T09:30:21.113Z",
+  "method": "Prerendered HTML in .next/server/app; referenced /_next/static assets; gzip -9",
+  "routes": [
+    {
+      "route": "/about",
+      "jsChunks": 6,
+      "jsRaw": 462858,
+      "jsGzip": 137189,
+      "noModuleGzip": 39520,
+      "cssRaw": 22024,
+      "cssGzip": 4964,
+      "htmlRaw": 58850,
+      "htmlGzip": 12768,
+      "libs": []
+    },
+    {
+      "route": "/cancellation-and-refunds",
+      "jsChunks": 6,
+      "jsRaw": 462858,
+      "jsGzip": 137189,
+      "noModuleGzip": 39520,
+      "cssRaw": 22024,
+      "cssGzip": 4964,
+      "htmlRaw": 85904,
+      "htmlGzip": 20565,
+      "libs": []
+    },
+    {
+      "route": "/candidates",
+      "jsChunks": 6,
+      "jsRaw": 462858,
+      "jsGzip": 137189,
+      "noModuleGzip": 39520,
+      "cssRaw": 22024,
+      "cssGzip": 4964,
+      "htmlRaw": 56517,
+      "htmlGzip": 12257,
+      "libs": []
+    },
+    {
+      "route": "/contact",
+      "jsChunks": 7,
+      "jsRaw": 469932,
+      "jsGzip": 139996,
+      "noModuleGzip": 39520,
+      "cssRaw": 22024,
+      "cssGzip": 4964,
+      "htmlRaw": 55543,
+      "htmlGzip": 11917,
+      "libs": [
+        "emailjs"
+      ]
+    },
+    {
+      "route": "/employers",
+      "jsChunks": 6,
+      "jsRaw": 462858,
+      "jsGzip": 137189,
+      "noModuleGzip": 39520,
+      "cssRaw": 22024,
+      "cssGzip": 4964,
+      "htmlRaw": 55786,
+      "htmlGzip": 12153,
+      "libs": []
+    },
+    {
+      "route": "/",
+      "jsChunks": 6,
+      "jsRaw": 462858,
+      "jsGzip": 137189,
+      "noModuleGzip": 39520,
+      "cssRaw": 22024,
+      "cssGzip": 4964,
+      "htmlRaw": 68362,
+      "htmlGzip": 14025,
+      "libs": []
+    },
+    {
+      "route": "/jobs",
+      "jsChunks": 7,
+      "jsRaw": 469386,
+      "jsGzip": 139626,
+      "noModuleGzip": 39520,
+      "cssRaw": 22024,
+      "cssGzip": 4964,
+      "htmlRaw": 67665,
+      "htmlGzip": 13559,
+      "libs": []
+    },
+    {
+      "route": "/jobs/apply",
+      "jsChunks": 8,
+      "jsRaw": 713806,
+      "jsGzip": 203649,
+      "noModuleGzip": 39520,
+      "cssRaw": 22024,
+      "cssGzip": 4964,
+      "htmlRaw": 49049,
+      "htmlGzip": 10871,
+      "libs": [
+        "emailjs",
+        "supabase-js"
+      ]
+    },
+    {
+      "route": "/pricing",
+      "jsChunks": 6,
+      "jsRaw": 462858,
+      "jsGzip": 137189,
+      "noModuleGzip": 39520,
+      "cssRaw": 22024,
+      "cssGzip": 4964,
+      "htmlRaw": 83081,
+      "htmlGzip": 19567,
+      "libs": []
+    },
+    {
+      "route": "/privacy-policy",
+      "jsChunks": 6,
+      "jsRaw": 462858,
+      "jsGzip": 137189,
+      "noModuleGzip": 39520,
+      "cssRaw": 22024,
+      "cssGzip": 4964,
+      "htmlRaw": 120257,
+      "htmlGzip": 29613,
+      "libs": []
+    },
+    {
+      "route": "/services",
+      "jsChunks": 8,
+      "jsRaw": 848785,
+      "jsGzip": 226679,
+      "noModuleGzip": 39520,
+      "cssRaw": 22024,
+      "cssGzip": 4964,
+      "htmlRaw": 59115,
+      "htmlGzip": 13385,
+      "libs": [
+        "emailjs",
+        "zod"
+      ]
+    },
+    {
+      "route": "/shipping-policy",
+      "jsChunks": 6,
+      "jsRaw": 462858,
+      "jsGzip": 137189,
+      "noModuleGzip": 39520,
+      "cssRaw": 22024,
+      "cssGzip": 4964,
+      "htmlRaw": 76047,
+      "htmlGzip": 17582,
+      "libs": []
+    },
+    {
+      "route": "/terms-and-conditions",
+      "jsChunks": 6,
+      "jsRaw": 462858,
+      "jsGzip": 137189,
+      "noModuleGzip": 39520,
+      "cssRaw": 22024,
+      "cssGzip": 4964,
+      "htmlRaw": 118511,
+      "htmlGzip": 29007,
+      "libs": []
+    }
+  ]
+}

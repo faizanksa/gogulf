@@ -8,6 +8,10 @@
 # Next build output (optional)
 /build/
 
+# Test runner output. Measurement summaries worth keeping live in perf/ (tracked).
+/test-results/
+/playwright-report/
+
 # local env files (may contain secrets)
 # keep example files (e.g. .env.local.example) in the repo — ignore actual secret files
 .env

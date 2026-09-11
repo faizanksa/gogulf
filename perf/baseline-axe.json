@@ -1,0 +1,345 @@
+{
+  "label": "baseline",
+  "measuredAt": "2026-09-11T09:13:21.182Z",
+  "tags": [
+    "wcag2a",
+    "wcag2aa",
+    "wcag21a",
+    "wcag21aa",
+    "wcag22aa"
+  ],
+  "byRoute": [
+    {
+      "route": "/",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 22,
+      "moderate": 0,
+      "minor": 0,
+      "rules": [
+        "color-contrast",
+        "scrollable-region-focusable"
+      ]
+    },
+    {
+      "route": "/",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 16,
+      "moderate": 0,
+      "minor": 0,
+      "rules": [
+        "color-contrast",
+        "scrollable-region-focusable"
+      ]
+    },
+    {
+      "route": "/about",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 16,
+      "moderate": 0,
+      "minor": 0,
+      "rules": [
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "/about",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 15,
+      "moderate": 0,
+      "minor": 0,
+      "rules": [
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "/cancellation-and-refunds",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 27,
+      "moderate": 0,
+      "minor": 0,
+      "rules": [
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "/cancellation-and-refunds",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 27,
+      "moderate": 0,
+      "minor": 0,
+      "rules": [
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "/candidates",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 15,
+      "moderate": 0,
+      "minor": 0,
+      "rules": [
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "/candidates",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 14,
+      "moderate": 0,
+      "minor": 0,
+      "rules": [
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "/contact",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 17,
+      "moderate": 0,
+      "minor": 0,
+      "rules": [
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "/contact",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 16,
+      "moderate": 0,
+      "minor": 0,
+      "rules": [
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "/employers",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 15,
+      "moderate": 0,
+      "minor": 0,
+      "rules": [
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "/employers",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 14,
+      "moderate": 0,
+      "minor": 0,
+      "rules": [
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "/jobs",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 24,
+      "moderate": 0,
+      "minor": 0,
+      "rules": [
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "/jobs",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 23,
+      "moderate": 0,
+      "minor": 0,
+      "rules": [
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "/jobs/apply",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 10,
+      "moderate": 0,
+      "minor": 0,
+      "rules": [
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "/jobs/apply",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 10,
+      "moderate": 0,
+      "minor": 0,
+      "rules": [
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "/pricing",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 27,
+      "moderate": 0,
+      "minor": 0,
+      "rules": [
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "/pricing",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 27,
+      "moderate": 0,
+      "minor": 0,
+      "rules": [
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "/privacy-policy",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 41,
+      "moderate": 0,
+      "minor": 0,
+      "rules": [
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "/privacy-policy",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 41,
+      "moderate": 0,
+      "minor": 0,
+      "rules": [
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "/services",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 22,
+      "moderate": 0,
+      "minor": 0,
+      "rules": [
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "/services",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 21,
+      "moderate": 0,
+      "minor": 0,
+      "rules": [
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "/shipping-policy",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 25,
+      "moderate": 0,
+      "minor": 0,
+      "rules": [
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "/shipping-policy",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 25,
+      "moderate": 0,
+      "minor": 0,
+      "rules": [
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "/terms-and-conditions",
+      "project": "desktop",
+      "critical": 0,
+      "serious": 41,
+      "moderate": 0,
+      "minor": 0,
+      "rules": [
+        "color-contrast"
+      ]
+    },
+    {
+      "route": "/terms-and-conditions",
+      "project": "mobile",
+      "critical": 0,
+      "serious": 41,
+      "moderate": 0,
+      "minor": 0,
+      "rules": [
+        "color-contrast"
+      ]
+    }
+  ],
+  "byRule": {
+    "color-contrast": {
+      "impact": "serious",
+      "help": "Elements must meet minimum color contrast ratio thresholds",
+      "routes": [
+        "desktop:/",
+        "mobile:/",
+        "desktop:/about",
+        "mobile:/about",
+        "desktop:/cancellation-and-refunds",
+        "mobile:/cancellation-and-refunds",
+        "desktop:/candidates",
+        "mobile:/candidates",
+        "desktop:/contact",
+        "mobile:/contact",
+        "desktop:/employers",
+        "mobile:/employers",
+        "desktop:/jobs",
+        "mobile:/jobs",
+        "desktop:/jobs/apply",
+        "mobile:/jobs/apply",
+        "desktop:/pricing",
+        "mobile:/pricing",
+        "desktop:/privacy-policy",
+        "mobile:/privacy-policy",
+        "desktop:/services",
+        "mobile:/services",
+        "desktop:/shipping-policy",
+        "mobile:/shipping-policy",
+        "desktop:/terms-and-conditions",
+        "mobile:/terms-and-conditions"
+      ],
+      "nodes": 590
+    },
+    "scrollable-region-focusable": {
+      "impact": "serious",
+      "help": "Scrollable region must have keyboard access",
+      "routes": [
+        "desktop:/",
+        "mobile:/"
+      ],
+      "nodes": 2
+    }
+  }
+}

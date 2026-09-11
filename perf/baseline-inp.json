@@ -1,0 +1,42 @@
+{
+  "label": "baseline",
+  "target": "staging",
+  "measuredAt": "2026-09-11T09:07:03.563Z",
+  "method": "Playwright + Chrome, Pixel 7 emulation, 4× CPU throttle, web-vitals onINP (lab proxy, not field data). LCP element from PerformanceObserver, unthrottled network.",
+  "results": [
+    {
+      "scenario": "open and close the mobile menu (home)",
+      "path": "/",
+      "inpMs": 88,
+      "samples": [
+        208,
+        72,
+        88
+      ],
+      "lcpElement": {
+        "ms": 3120,
+        "size": 57967,
+        "tag": "p",
+        "src": null,
+        "text": "A modern recruitment platform connecting talented profession"
+      }
+    },
+    {
+      "scenario": "search and filter jobs (/jobs)",
+      "path": "/jobs",
+      "inpMs": 88,
+      "samples": [
+        72,
+        104,
+        88
+      ],
+      "lcpElement": {
+        "ms": 756,
+        "size": 25185,
+        "tag": "p",
+        "src": null,
+        "text": "Every role below is genuine and verified. Click Apply Now, f"
+      }
+    }
+  ]
+}
