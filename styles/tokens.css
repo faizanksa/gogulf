@@ -14,9 +14,11 @@
   /* ---------------------------------------------------------------- palette */
   --gg-green-400: #1fb854; /* brand bright — on ink only (6.84:1) */
   --gg-green-600: #157a3c; /* primary action and links — 5.41:1 on white; white on it 5.41:1 */
-  --gg-green-700: #0f5e2e; /* hover, pressed — 7.89:1 */
-  --gg-green-50: #e3f1e8;
+  --gg-green-700: #0f5e2e; /* hover, pressed, brand bands — 7.89:1; white on it 7.89:1 */
+  --gg-green-100: #cde6d6; /* decorative fills; text on green-700 bands — 5.9:1 there */
+  --gg-green-50: #e3f1e8; /* tinted surfaces; text on green-700 — 6.6:1 */
   --gg-blue-600: #1d5fa3; /* travel line, information — 6.53:1 */
+  --gg-blue-100: #d3e3f3;
   --gg-blue-50: #e4eef8;
 
   --gg-ink-900: #0e1a13; /* text — 17.86:1 */
@@ -40,6 +42,7 @@
   --color-bg: var(--gg-paper);
   --color-bg-subtle: var(--gg-surface-50);
   --color-bg-inverse: var(--gg-ink-900);
+  --color-bg-brand: var(--gg-green-700);
   --color-text: var(--gg-ink-900);
   --color-text-secondary: var(--gg-text-700);
   --color-text-muted: var(--gg-muted-500);
@@ -60,7 +63,6 @@
   --font-display: var(--font-anek), var(--font-anek-deva), var(--font-mukta), system-ui, sans-serif;
   --font-body: var(--font-mukta), var(--font-mukta-deva), system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", Consolas, monospace;
-  --display-wdth: 88; /* Anek width axis: compact headings without a condensed look */
 
   --text-display: clamp(2.25rem, 1.55rem + 3vw, 3.5rem);
   --text-h1: clamp(2rem, 1.6rem + 1.8vw, 2.75rem);
@@ -69,6 +71,7 @@
   --text-lead: 1.1875rem;
   --text-body: 1.0625rem; /* 17px — Mukta runs small; legibility matters for this audience */
   --text-label: 0.9375rem;
+  --text-kicker: 0.875rem;
   --text-small: 0.875rem;
   --text-data: 0.875rem;
 
@@ -79,7 +82,8 @@
 
   --weight-regular: 400;
   --weight-semibold: 600;
-  --weight-bold: 700;
+  /* Mukta ships 400 and 600 only (app/fonts.ts): "bold" is 600, never a synthesised 700. */
+  --weight-bold: 600;
 
   /* ---------------------------------------------------------------- space (4px base) */
   --space-1: 0.25rem;
@@ -91,11 +95,13 @@
   --space-7: 3rem;
   --space-8: 4rem;
   --space-9: 6rem;
+  /* One vertical rhythm for page sections: 56px on phones to 96px on wide screens. */
+  --section-space: clamp(3.5rem, 2.5rem + 3.5vw, 6rem);
 
   /* ---------------------------------------------------------------- layout */
-  --container-page: 75rem;
+  --container-page: 75rem; /* 1200px */
   --container-prose: 68ch;
-  --container-narrow: 45rem;
+  --container-narrow: 45rem; /* 720px — forms */
   --gutter: clamp(1rem, 4vw, 2rem);
   --header-height: 4.25rem;
 
@@ -106,6 +112,7 @@
   --focus-width: 2px;
 
   /* ---------------------------------------------------------------- elevation (used by role) */
+  --shadow-card: 0 1px 2px rgb(14 26 19 / 0.05);
   --shadow-raised: 0 1px 2px rgb(14 26 19 / 0.06), 0 6px 20px -8px rgb(14 26 19 / 0.18);
   --shadow-overlay: 0 16px 40px -12px rgb(14 26 19 / 0.3);
 
@@ -128,13 +135,7 @@
  * Script stacks. A language's face and its :lang() stack arrive together with its first
  * reviewed catalogue (app/fonts.ts explains why not sooner). Until then Arabic and
  * Malayalam text renders in the system's font for that script.
- *
- * Arabic has no narrow cut, so right-to-left headings drop the width axis back to
- * normal. :lang(ar) also matches the ar-XB pseudo-locale, so RTL testing sees it too.
  */
-:lang(ar) {
-  --display-wdth: 100;
-}
 
 @media (prefers-reduced-motion: reduce) {
   :root {

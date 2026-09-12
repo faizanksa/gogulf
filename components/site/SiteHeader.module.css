@@ -1,3 +1,67 @@
+/* Utility bar — the company record, "Verify Go Gulf" and the language menu. Desktop only;
+   phones reach Verify and the languages from the menu panel. */
+.utility {
+  display: none;
+  border-bottom: 1px solid var(--color-divider);
+  background: var(--color-bg-subtle);
+  font-size: var(--text-small);
+}
+@media (min-width: 1024px) {
+  .utility {
+    display: block;
+  }
+}
+
+.utilityInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  max-width: calc(var(--container-page) + 2 * var(--gutter));
+  min-height: var(--target-min);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.record {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--gg-border-400);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-data);
+  letter-spacing: 0.02em;
+  color: var(--color-text);
+}
+
+.utilityActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.verify {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--target-min);
+  color: var(--color-link);
+  font-weight: var(--weight-semibold);
+}
+
+/* Main bar — sticks to the top while the utility bar scrolls away. */
 .header {
   position: sticky;
   top: 0;
@@ -44,10 +108,9 @@
 
 .wordmark {
   font-family: var(--font-display);
-  font-variation-settings: "wdth" var(--display-wdth);
   font-size: 1.375rem;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
   white-space: nowrap;
 }
 

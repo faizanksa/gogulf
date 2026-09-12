@@ -1,0 +1,24 @@
+.band {
+  display: grid;
+  gap: var(--space-5);
+}
+
+/* Heading and facts share the width; the heading's own bottom margin is replaced by the gap. */
+.band > :first-child {
+  margin-bottom: 0;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-6);
+  margin: 0;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--target-min);
+  font-weight: var(--weight-semibold);
+}

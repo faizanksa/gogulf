@@ -16,7 +16,8 @@ import styles from "./Button.module.css";
  * The form still guards against double submission.
  */
 
-type Variant = "primary" | "secondary" | "text" | "whatsapp" | "inverse";
+/** `inverse` (white) and `ghostInverse` (outlined white) sit on brand-green or ink bands. */
+type Variant = "primary" | "secondary" | "text" | "whatsapp" | "inverse" | "ghostInverse";
 
 interface Common {
   variant?: Variant;

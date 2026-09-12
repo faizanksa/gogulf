@@ -1,0 +1,38 @@
+.inner {
+  display: grid;
+  gap: var(--space-5);
+}
+@media (min-width: 1024px) {
+  .inner {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-8);
+  }
+}
+
+.text {
+  display: grid;
+  gap: var(--space-3);
+  max-width: 44rem;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--text-h2);
+  font-weight: 650;
+  line-height: var(--leading-heading);
+  letter-spacing: -0.016em;
+}
+
+.lead {
+  margin: 0;
+  color: var(--gg-green-50);
+  font-size: var(--text-lead);
+  line-height: var(--leading-snug);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}

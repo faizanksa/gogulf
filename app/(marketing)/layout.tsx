@@ -9,8 +9,8 @@ import { rootMetadata, ROOT_VIEWPORT } from "@/lib/root-metadata";
  * Other languages have their own root layout in app/[locale], so each page's
  * <html lang dir> is right for its language.
  *
- * Pages not yet rebuilt sit in the (legacy) and (legal) groups, whose layouts load the
- * scoped pre-redesign stylesheet.
+ * Every page is on the design system. The policy pages sit in the (legal) group only to
+ * keep them together; they are English-only and have no app/[locale] route.
  */
 export const metadata: Metadata = rootMetadata();
 export const viewport: Viewport = ROOT_VIEWPORT;

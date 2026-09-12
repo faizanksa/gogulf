@@ -9,12 +9,16 @@ import { OfficialChannels } from "./OfficialChannels";
 import styles from "./SiteFooter.module.css";
 
 /**
- * Server-rendered footer. Social profiles are omitted until the business confirms they
- * are its own (content/channels.ts). The operating-company line and GSTIN stay, as on
- * the current site.
+ * Server-rendered footer, on a daylight surface.
  *
- * Identifiers are never translated: the legal name, CIN, GSTIN and registered address
- * appear exactly as registered, in every language (the address marked as English).
+ * Three parts: where to go (navigation groups beside the brand and the official
+ * channels), the company record (legal name, CIN, GSTIN, registered office — laid out
+ * like a document so it reads as something to check), and the closing line.
+ *
+ * Social profiles are omitted until the business confirms they are its own
+ * (content/channels.ts). Identifiers are never translated: the legal name, CIN, GSTIN
+ * and registered address appear exactly as registered, in every language (marked as
+ * English). The GSTIN stays on the page and out of structured data (decision D8).
  */
 export async function SiteFooter() {
   const t = await getTranslator();
@@ -57,12 +61,44 @@ export async function SiteFooter() {
 
           <div className={styles.channels}>
             <h2 className={styles.groupHeading}>{t("footer.officialContact")}</h2>
-            <OfficialChannels tone="inverse" />
+            <OfficialChannels />
           </div>
         </div>
 
-        <div className={styles.company}>
-          <p>
+        <section className={styles.record} aria-labelledby="footer-record">
+          <div className={styles.recordIntro}>
+            <h2 id="footer-record" className={styles.groupHeading}>
+              {t("footer.record.heading")}
+            </h2>
+            <p className={styles.recordLead}>
+              {t.rich("footer.record.lead", { verify: (chunks) => <Link href={href("/verify")}>{chunks}</Link> })}
+            </p>
+          </div>
+          <dl className={styles.recordList}>
+            <div>
+              <dt>{t("footer.record.legalName")}</dt>
+              <dd lang={englishText}>{COMPANY.legalName}</dd>
+            </div>
+            <div>
+              <dt>{t("footer.record.cin")}</dt>
+              <dd className={styles.mono}>
+                <LtrText>{COMPANY.cin}</LtrText>
+              </dd>
+            </div>
+            <div>
+              <dt>{t("footer.record.gstin")}</dt>
+              <dd className={styles.mono}>
+                <LtrText>{COMPANY.gstin}</LtrText>
+              </dd>
+            </div>
+            <div>
+              <dt>{t("footer.record.office")}</dt>
+              <dd>
+                <address lang={englishText}>{COMPANY.addressLines.join(", ")}</address>
+              </dd>
+            </div>
+          </dl>
+          <p className={styles.brandOf}>
             {t.rich("footer.brandOf", {
               b: (chunks) => <strong>{chunks}</strong>,
               brand: COMPANY.brand,
@@ -71,9 +107,7 @@ export async function SiteFooter() {
               cin: <LtrText>{COMPANY.cin}</LtrText>,
             })}
           </p>
-          <address lang={englishText}>{COMPANY.addressLines.join(", ")}.</address>
-          <p className={styles.gstin}>{t.rich("footer.gstin", { gstin: <LtrText>{COMPANY.gstin}</LtrText> })}</p>
-        </div>
+        </section>
 
         <div className={styles.bottom}>
           <p>{t("footer.rights", { year, legalName: COMPANY.legalName })}</p>

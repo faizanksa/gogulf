@@ -84,6 +84,19 @@
   outline-color: var(--color-focus-inverse);
 }
 
+.ghostInverse {
+  background: transparent;
+  color: var(--gg-paper);
+  border-color: var(--gg-paper);
+}
+.ghostInverse:hover {
+  background: var(--gg-paper);
+  color: var(--gg-green-700);
+}
+.ghostInverse:focus-visible {
+  outline-color: var(--color-focus-inverse);
+}
+
 .sm {
   min-height: var(--target-min);
   padding-inline: var(--space-4);

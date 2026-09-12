@@ -18,6 +18,7 @@ export interface NavIcons {
   chevron: ReactNode;
   whatsapp: ReactNode;
   phone: ReactNode;
+  shield: ReactNode;
 }
 
 /** The island's own words, translated on the server. */
@@ -43,8 +44,8 @@ export function SiteNav({
   label,
   items,
   cta,
-  languageMenu,
   languageList,
+  verify,
   icons,
   text,
   whatsapp,
@@ -53,10 +54,10 @@ export function SiteNav({
   label: string;
   items: Item[];
   cta: ReactNode;
-  /** The desktop language disclosure; shown from 1024px. */
-  languageMenu: ReactNode;
-  /** The same choice as links, inside the mobile menu panel. */
+  /** The language choice as links, inside the mobile menu panel (desktop: the utility bar). */
   languageList: ReactNode;
+  /** "Verify Go Gulf" — in the utility bar on desktop, in the panel on phones. */
+  verify: { href: string; label: string };
   icons: NavIcons;
   text: NavText;
   whatsapp: { href: string; label: ReactNode };
@@ -97,7 +98,6 @@ export function SiteNav({
       </nav>
 
       <div className={styles.actions}>
-        {languageMenu ? <div className={styles.languageDesktop}>{languageMenu}</div> : null}
         {cta}
         <button
           ref={buttonRef}
@@ -133,6 +133,10 @@ export function SiteNav({
         {languageList}
         <div className={styles.contact}>
           <p className={styles.contactHeading}>{text.talkToUs}</p>
+          <Link href={verify.href} className={styles.contactLink} onClick={close}>
+            {icons.shield}
+            {verify.label}
+          </Link>
           <a href={whatsapp.href} target="_blank" rel="noopener noreferrer" className={styles.contactLink} onClick={close}>
             {icons.whatsapp}
             {whatsapp.label}

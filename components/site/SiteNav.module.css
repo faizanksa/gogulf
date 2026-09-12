@@ -61,16 +61,6 @@
   }
 }
 
-/* The language disclosure has room only in the desktop header; phones get it in the panel. */
-.languageDesktop {
-  display: none;
-}
-@media (min-width: 1024px) {
-  .languageDesktop {
-    display: block;
-  }
-}
-
 .menuButton {
   display: inline-flex;
   align-items: center;

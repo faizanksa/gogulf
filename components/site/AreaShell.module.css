@@ -21,7 +21,6 @@
   min-height: var(--target-min);
   color: var(--gg-paper);
   font-family: var(--font-display);
-  font-variation-settings: "wdth" var(--display-wdth);
   font-size: 1.25rem;
   font-weight: 700;
   text-decoration: none;

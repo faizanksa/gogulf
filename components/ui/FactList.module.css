@@ -1,0 +1,56 @@
+.list {
+  margin: 0;
+}
+
+.label {
+  color: var(--color-text-muted);
+  font-size: var(--text-small);
+  line-height: var(--leading-snug);
+}
+
+.value {
+  margin: 0;
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+  overflow-wrap: anywhere;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-data);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+/* rows: a record, label | value */
+.rows {
+  border-top: 1px solid var(--color-divider);
+}
+.rows .row {
+  display: grid;
+  gap: 0.125rem;
+  padding-block: var(--space-3);
+  border-bottom: 1px solid var(--color-divider);
+}
+@media (min-width: 640px) {
+  .rows .row {
+    grid-template-columns: minmax(9rem, 13rem) minmax(0, 1fr);
+    gap: var(--space-4);
+    align-items: baseline;
+  }
+}
+
+/* grid: short facts, label above value */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: var(--space-4) var(--space-5);
+}
+.grid .row {
+  display: grid;
+  align-content: start;
+  gap: var(--space-1);
+  padding-top: var(--space-3);
+  border-top: 2px solid var(--gg-green-100);
+}

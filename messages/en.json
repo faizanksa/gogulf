@@ -22,6 +22,9 @@
     "unconfirmed": "Unconfirmed — not shown in production",
     "unconfirmedDecision": "Unconfirmed — not shown in production (decision {decision})"
   },
+  "header": {
+    "verify": "Verify Go Gulf"
+  },
   "nav": {
     "label": "Main",
     "jobs": "Jobs",
@@ -67,7 +70,29 @@
     "brandOf": "<b>{brand}</b> is a brand of <b>{legalName}</b>, a {companyType} registered in India (CIN {cin}).",
     "gstin": "GSTIN: {gstin}",
     "rights": "© {year} {legalName}. All rights reserved.",
-    "staffWebmail": "Staff webmail"
+    "staffWebmail": "Staff webmail",
+    "record": {
+      "heading": "Company record",
+      "lead": "Check any of these before you share documents or pay. <verify>How to verify Go Gulf</verify>",
+      "legalName": "Legal name",
+      "cin": "CIN",
+      "gstin": "GSTIN",
+      "office": "Registered office"
+    }
+  },
+  "companyFacts": {
+    "kicker": "Check us first",
+    "heading": "A registered company you can look up",
+    "lead": "Go Gulf is a brand of a company registered in India. You can check each of these yourself, without asking us.",
+    "company": "Operating company",
+    "cin": "Corporate Identity Number (CIN)",
+    "incorporated": "Incorporated",
+    "office": "Registered office",
+    "officeValue": "{city}, {region}, India",
+    "fees": "Fees",
+    "feesValue": "Quoted in writing before you pay",
+    "verifyLink": "How to verify Go Gulf",
+    "mcaLink": "Look up the CIN on the MCA website"
   },
   "channels": {
     "phone": "Phone",
@@ -133,6 +158,526 @@
       "sent": "Message received — our team will contact you.",
       "sentNoCopy": "Message received — our team will contact you. We could not email you a copy, but your message did reach us.",
       "failed": "We could not send your message. Please try again, or call or WhatsApp us."
+    },
+    "inquiry": {
+      "service": "What do you need?",
+      "servicePlaceholder": "Choose a service",
+      "seekers": "For job seekers",
+      "employers": "For employers",
+      "other": "Something else, or not sure",
+      "country": "Preferred country",
+      "anyCountry": "Any, or not sure",
+      "messageHint": "Tell us a little more — the role, the industry, when you need it.",
+      "submit": "Send enquiry",
+      "serviceMissing": "Choose the service you need.",
+      "sent": "Enquiry received — our team will contact you.",
+      "sentNoCopy": "Enquiry received — our team will contact you. We could not email you a copy, but your enquiry did reach us.",
+      "failed": "We could not send your enquiry. Please try again, or call or WhatsApp us."
+    },
+    "employer": {
+      "groups": {
+        "company": "Your company",
+        "need": "What you need",
+        "contact": "Who we should contact"
+      },
+      "company": "Company name",
+      "service": "Type of help",
+      "country": "Country where the jobs are",
+      "countryPlaceholder": "Choose a country",
+      "countryOther": "Another country",
+      "city": "City",
+      "roles": "Roles and trades you need",
+      "rolesHint": "For example: 20 electricians, 5 site supervisors, 2 heavy drivers.",
+      "headcount": "Total number of people",
+      "timeline": "When do you need them?",
+      "timelineAsap": "As soon as possible",
+      "timelineMonth": "Within a month",
+      "timelineQuarter": "In 1 to 3 months",
+      "timelineLater": "Later, or not sure",
+      "accommodation": "Accommodation",
+      "transport": "Transport",
+      "provided": "Provided by us",
+      "notProvided": "Not provided",
+      "undecided": "Not decided yet",
+      "notes": "Anything else we should know",
+      "name": "Your name",
+      "email": "Work email",
+      "submit": "Send requirement",
+      "companyMissing": "Enter your company’s name.",
+      "countryMissing": "Choose the country where the jobs are.",
+      "rolesMissing": "Tell us the roles and trades you need.",
+      "nameMissing": "Enter your name.",
+      "sent": "Requirement received — our business team will contact you.",
+      "sentNoCopy": "Requirement received — our business team will contact you. We could not email you a copy, but your requirement did reach us.",
+      "failed": "We could not send your requirement. Please try again, or email or call our business desk."
+    }
+  },
+  "home": {
+    "kicker": "Gulf jobs from India",
+    "title": "Work in the Gulf, with a company you can check.",
+    "lead": "We help job seekers from India apply for jobs in the Gulf, and help employers there hire from India. Every fee is quoted in writing before you pay.",
+    "findJob": "Find a job",
+    "hire": "Hire from India",
+    "askFirst": "Have a question first? <wa>Ask us on WhatsApp</wa>",
+    "whatsappGreeting": "Hello Go Gulf, I have a question about working in the Gulf.",
+    "jobs": {
+      "kicker": "Open jobs",
+      "title": "Jobs you can apply for now",
+      "lead": "Each job has its own page with the salary, the place and how to apply.",
+      "all": "See all jobs",
+      "emptyTitle": "No jobs are listed right now",
+      "emptyBody": "New jobs appear here once they are confirmed. You can still send a general application, or ask us a question on WhatsApp.",
+      "general": "Send a general application",
+      "ask": "Ask on WhatsApp"
+    },
+    "doors": {
+      "kicker": "Two ways we help",
+      "title": "Start where you are",
+      "seekers": {
+        "title": "Looking for work in the Gulf?",
+        "lead": "Apply for a listed job online, or send a general application.",
+        "point1": "See the salary, the place and the contract before you apply.",
+        "point2": "Ask about any job on WhatsApp — its reference goes with your message.",
+        "point3": "Every fee is quoted to you in writing before you pay.",
+        "cta": "Find a job",
+        "more": "How it works for job seekers"
+      },
+      "employers": {
+        "title": "Hiring for a Gulf operation?",
+        "lead": "Tell us the trades, headcount and timeline you need.",
+        "point1": "Candidates are shortlisted against the requirement you share.",
+        "point2": "One point of contact through the process.",
+        "point3": "Commercial terms are agreed with you in writing.",
+        "cta": "Tell us your requirement",
+        "more": "Services for employers"
+      }
+    },
+    "process": {
+      "kicker": "How it works",
+      "title": "From your first enquiry to joining, in ten steps",
+      "lead": "The same ten steps for every candidate, from the first enquiry to joining the employer.",
+      "phase1": "Apply",
+      "phase2": "Selection",
+      "phase3": "Documents and visa",
+      "phase4": "Departure",
+      "s1": { "title": "Job enquiry", "body": "You apply for a job or send us an enquiry." },
+      "s2": { "title": "Registration", "body": "Your profile and documents are registered." },
+      "s3": { "title": "Consultation", "body": "A recruiter looks at the role, the country and your fit." },
+      "s4": { "title": "Shortlisting", "body": "Your profile is matched and shortlisted for the employer." },
+      "s5": { "title": "Employer interview", "body": "The interview is arranged between you and the employer." },
+      "s6": { "title": "Selection and offer", "body": "If you are selected, the employer issues an offer letter." },
+      "s7": { "title": "Medical and documents", "body": "Your medical test is done and your documents are checked." },
+      "s8": { "title": "Visa and MOFA", "body": "Agreement, attestation and visa processing." },
+      "s9": { "title": "Departure", "body": "Immigration clearance and your flight ticket." },
+      "s10": { "title": "Joining and support", "body": "You join the employer abroad, with support after joining." },
+      "more": "More about how it works"
+    },
+    "money": {
+      "kicker": "Fees and safety",
+      "title": "How we handle money",
+      "lead": "Rules you can hold us to.",
+      "rule1Title": "A written quote first",
+      "rule1": "Every fee is quoted to you in writing before you pay. If a fee is not in writing, do not pay it.",
+      "rule2Title": "Only accounts we confirm",
+      "rule2": "Pay only into an account we have confirmed to you in writing. If anyone asks you to pay somewhere else, stop and contact us.",
+      "rule3Title": "No guaranteed outcomes",
+      "rule3": "We do not guarantee selection, employment, a visa or a joining date. <terms>See our Terms & conditions</terms>.",
+      "pricing": "Pricing and fees",
+      "verify": "How to verify Go Gulf"
+    },
+    "services": {
+      "kicker": "Services",
+      "title": "What we help with",
+      "seekers": "For job seekers",
+      "employers": "For employers",
+      "all": "See all services"
+    },
+    "cta": {
+      "title": "Start with a job — or a question",
+      "lead": "Apply online, or talk to us first on WhatsApp, phone or email.",
+      "findJob": "Find a job",
+      "contact": "Contact us"
+    }
+  },
+  "aboutPage": {
+    "kicker": "About Go Gulf",
+    "title": "A registered Indian company, recruiting for the Gulf",
+    "lead": "Go Gulf is a brand of {legalName}, a private limited company incorporated in India on {date}, with its registered office in {place}.",
+    "what": {
+      "kicker": "What we do",
+      "title": "We work with job seekers and with employers",
+      "seekersTitle": "For job seekers",
+      "seekers": "We list Gulf openings, take applications, and help with what a Gulf job needs — interviews, medicals, attestation, visas and travel.",
+      "seekersLink": "How applying works",
+      "employersTitle": "For employers",
+      "employers": "We take your requirement, screen and shortlist candidates against it, and coordinate the paperwork through to deployment.",
+      "employersLink": "Hiring from India"
+    },
+    "purposeHeading": "Our mission and vision",
+    "mission": {
+      "kicker": "Mission",
+      "title": "Transparent recruitment, at every step",
+      "body": "To connect talented professionals with Gulf employers through ethical, transparent, and technology-driven recruitment services — building successful careers and long-term business relationships."
+    },
+    "vision": {
+      "kicker": "Vision",
+      "title": "A recruitment brand you can recognise and trust",
+      "body": "To become one of the most trusted and recognised Gulf recruitment brands, by delivering reliable hiring solutions, innovative recruitment technology, and exceptional customer service."
+    },
+    "rules": {
+      "kicker": "How we work",
+      "title": "Three rules we keep",
+      "r1Title": "Fees in writing, first",
+      "r1": "Every fee is quoted to you in writing before you pay.",
+      "r2Title": "No guarantees",
+      "r2": "We do not guarantee selection, employment, a visa or a joining date.",
+      "r3Title": "Checkable contact details",
+      "r3": "Our official numbers and addresses are listed on our Verify page. Check there before you act on a message in our name.",
+      "pricing": "Pricing & fees",
+      "terms": "Terms & conditions"
+    },
+    "values": {
+      "kicker": "Values",
+      "title": "What guides our work",
+      "v1": "Integrity",
+      "v2": "Transparency",
+      "v3": "Professionalism",
+      "v4": "Trust",
+      "v5": "Commitment",
+      "v6": "Excellence",
+      "v7": "Customer first",
+      "v8": "Compliance",
+      "v9": "Innovation",
+      "v10": "Long-term relationships"
+    },
+    "cta": {
+      "title": "Check us before you trust us",
+      "lead": "Look up our registration yourself, or ask us anything.",
+      "verify": "Verify Go Gulf",
+      "contact": "Contact us"
+    }
+  },
+  "contactPage": {
+    "kicker": "Contact",
+    "title": "How can we help?",
+    "lead": "Choose what your message is about. Each route reaches the team that handles it.",
+    "purposeHeading": "What is it about?",
+    "job": {
+      "title": "A job, or applying",
+      "body": "Find an opening and apply online with your CV and passport copy, or send a general application.",
+      "find": "Find a job",
+      "general": "Send a general application"
+    },
+    "assisted": {
+      "title": "Help with applying, or a service",
+      "body": "If you cannot apply online, or need help with documents, medicals, attestation, visas or travel, talk to us or send a service enquiry.",
+      "greeting": "Hello Go Gulf, I need help with my application.",
+      "whatsapp": "WhatsApp us",
+      "call": "Call {phone}",
+      "service": "Send a service enquiry"
+    },
+    "employer": {
+      "title": "Hiring staff for the Gulf",
+      "body": "Send your requirement — roles, headcount, location and timeline — to our business desk.",
+      "cta": "Send a requirement"
+    },
+    "general": {
+      "title": "Something else",
+      "body": "For anything else, write to us with the form on this page.",
+      "cta": "Write to us"
+    },
+    "form": {
+      "kicker": "Message",
+      "title": "Send us a message",
+      "lead": "Tell us what you need. We reply by email or phone.",
+      "policies": "Before you send anything, you may want to read our <privacy>Privacy policy</privacy> and <terms>Terms & conditions</terms>."
+    },
+    "aside": {
+      "label": "Contact details and registered office",
+      "channels": "Phone, WhatsApp and email",
+      "office": "Registered office",
+      "gstin": "GSTIN"
+    }
+  },
+  "verifyPage": {
+    "kicker": "Verify Go Gulf",
+    "title": "How to check you are dealing with Go Gulf",
+    "lead": "Before you share documents or pay anything, check these details. Each one can be confirmed independently of us.",
+    "company": {
+      "heading": "The company behind Go Gulf",
+      "body": "Go Gulf is a brand of {legalName}. You can look the company up on the Ministry of Corporate Affairs website using its CIN.",
+      "mca": "Ministry of Corporate Affairs website"
+    },
+    "facts": {
+      "legalName": "Legal name",
+      "brand": "Trading as",
+      "cin": "Corporate Identity Number (CIN)",
+      "type": "Company type",
+      "incorporated": "Incorporated",
+      "registrar": "Registrar",
+      "activity": "Registered business activity",
+      "office": "Registered office",
+      "gstin": "GSTIN"
+    },
+    "channels": {
+      "heading": "Our official contact details",
+      "body": "If someone claiming to be Go Gulf contacts you from a different number or address, check with us on these details before you act."
+    },
+    "payments": {
+      "heading": "Our rules about payments",
+      "r1": "Every fee is quoted to you in writing before you pay. See <pricing>Pricing & fees</pricing>.",
+      "r2": "If you are asked to pay an account or a person that we have not confirmed to you in writing, stop and contact us before paying.",
+      "r3": "We do not guarantee selection, employment, a visa or a joining date. See our <terms>Terms & conditions</terms>."
+    },
+    "report": {
+      "heading": "If something does not feel right",
+      "body": "Tell us before you pay or send documents. Email {email} or call {phone}."
+    }
+  },
+  "candidatesPage": {
+    "kicker": "For job seekers",
+    "title": "Working in the Gulf, step by step",
+    "lead": "What happens when you apply through Go Gulf: the steps, the documents, the fees, and how to stay safe from fraud.",
+    "findJob": "Find a job",
+    "ask": "Ask on WhatsApp",
+    "whatsappGreeting": "Hello Go Gulf, I would like to know how applying works.",
+    "onThisPage": "On this page",
+    "nav": {
+      "steps": "The ten steps",
+      "documents": "Documents",
+      "fees": "Fees",
+      "safety": "Staying safe",
+      "questions": "Common questions"
+    },
+    "steps": {
+      "kicker": "How it works",
+      "title": "The ten steps, from enquiry to joining",
+      "lead": "Every candidate goes through the same steps, in this order."
+    },
+    "documents": {
+      "kicker": "Documents",
+      "title": "What you need, and when",
+      "lead": "You need very little to apply. More documents come later, once an employer has selected you.",
+      "applyHeading": "To apply",
+      "apply1": "Your CV or resume",
+      "apply2": "A copy of your passport",
+      "apply3": "Certificates and experience letters, if you have them",
+      "applyLink": "Apply online",
+      "laterHeading": "Later, if you are selected",
+      "later1": "A medical test",
+      "later2": "Documents for attestation (MOFA)",
+      "later3": "The papers your visa needs",
+      "laterNote": "Our team tells you what each step needs when you reach it."
+    },
+    "fees": {
+      "kicker": "Fees",
+      "title": "What you pay, and when",
+      "lead": "Some of our services carry a fee. None is payable until it has been quoted to you in writing.",
+      "rule1": "Every fee is quoted to you in writing before you pay.",
+      "rule2": "Pay only into an account we have confirmed to you in writing.",
+      "rule3": "Government, embassy, attestation, medical and travel costs are separate, and are identified to you as such.",
+      "rule4": "We do not guarantee selection, employment, a visa or a joining date.",
+      "pricing": "Read our Pricing & fees policy",
+      "refunds": "Cancellation and refunds"
+    },
+    "safety": {
+      "kicker": "Staying safe",
+      "title": "How not to be cheated",
+      "lead": "People sometimes pretend to be recruitment companies to take money. These checks protect you.",
+      "check1Title": "Use our official numbers",
+      "check1": "Our phone and WhatsApp number and our email addresses are listed here and on our Verify page. If someone uses our name from another number, check with us first.",
+      "check2Title": "Never pay without a written quote",
+      "check2": "If anyone asks you for money without a written quote from Go Gulf, do not pay.",
+      "check3Title": "Check the company",
+      "check3": "Go Gulf is a brand of a registered company. You can look up its CIN on the Ministry of Corporate Affairs website.",
+      "check4Title": "Tell us",
+      "check4": "If something does not feel right, tell us before you pay or send documents.",
+      "channelsHeading": "Our official contact details",
+      "verify": "How to verify Go Gulf",
+      "mca": "Ministry of Corporate Affairs website"
+    },
+    "faq": {
+      "kicker": "Questions",
+      "title": "Common questions",
+      "q1": "Does Go Gulf guarantee me a job or a visa?",
+      "a1": "No. We do not guarantee selection, employment, a visa or a joining date. <terms>Our Terms & conditions</terms> explain this.",
+      "q2": "How will I know what I have to pay?",
+      "a2": "Every fee is quoted to you in writing before you pay. If a fee has not been quoted in writing, do not pay it. <pricing>Pricing & fees</pricing> explains how our fees work.",
+      "q3": "What do I need to apply?",
+      "a3": "Your CV and a copy of your passport. You can add certificates and experience letters too.",
+      "q4": "What happens after I apply?",
+      "a4": "You get a confirmation email with a reference number, and our recruitment team contacts you about the next step.",
+      "q5": "Can I ask about a job before I apply?",
+      "a5": "Yes. Ask us on WhatsApp. If you ask from a job’s page, the job’s reference goes with your message.",
+      "q6": "How can I check I am really dealing with Go Gulf?",
+      "a6": "Use only the contact details on our <verify>Verify page</verify>, and look up the company’s CIN on the Ministry of Corporate Affairs website."
+    },
+    "cta": {
+      "title": "Ready to apply?",
+      "lead": "Choose a job, or send a general application with your CV.",
+      "findJob": "Find a job",
+      "general": "Send a general application"
+    }
+  },
+  "employersPage": {
+    "kicker": "For employers",
+    "title": "Hire from India for your Gulf operation",
+    "lead": "Tell us the roles, headcount and timeline. We source, screen and shortlist candidates against your requirement, and coordinate documentation and visas through to deployment.",
+    "requirement": "Tell us your requirement",
+    "callDesk": "Call {phone}",
+    "services": {
+      "kicker": "What we can do",
+      "title": "Recruitment support for Gulf employers",
+      "lead": "Choose the kind of help you need, then tell us more in the requirement form."
+    },
+    "process": {
+      "kicker": "How it works",
+      "title": "From your requirement to deployment",
+      "s1Title": "Your requirement",
+      "s1": "You share the trades, headcount, work location and timeline.",
+      "s2Title": "Sourcing and screening",
+      "s2": "Candidates are sourced and shortlisted against your requirement.",
+      "s3Title": "Interviews",
+      "s3": "We schedule and coordinate interviews with shortlisted candidates.",
+      "s4Title": "Selection and offer",
+      "s4": "You select the candidates you want and issue offers.",
+      "s5Title": "Documentation and visas",
+      "s5": "We coordinate the documentation, MOFA attestation and visa paperwork for selected candidates.",
+      "s6Title": "Deployment",
+      "s6": "Selected candidates travel and join you."
+    },
+    "working": {
+      "kicker": "Working with us",
+      "title": "What you can expect",
+      "p1Title": "Screening against your brief",
+      "p1": "Candidates are shortlisted against the requirement you share.",
+      "p2Title": "A business desk for employers",
+      "p2": "Employer requirements go to our business team, separately from candidate enquiries.",
+      "p3Title": "Terms in writing",
+      "p3": "Employer engagements are quoted against your specific requirement. Requesting a quotation is free.",
+      "pricing": "How commercial terms are agreed"
+    },
+    "form": {
+      "kicker": "Requirement",
+      "title": "Tell us what you need",
+      "lead": "The more you tell us, the better we can plan the search. Fields marked optional can be left blank.",
+      "asideHeading": "Prefer to talk?",
+      "asideBody": "Our business desk handles employer requirements.",
+      "email": "Email",
+      "phone": "Phone"
+    }
+  },
+  "servicesPage": {
+    "kicker": "Services",
+    "title": "What Go Gulf does",
+    "lead": "Services for job seekers and for employers hiring in the Gulf. Choose one and send an enquiry — it goes to the right team.",
+    "jumpLabel": "Services by audience",
+    "seekersHeading": "For job seekers",
+    "seekersLead": "Help with applying, and with what a Gulf job needs before you travel.",
+    "employersHeading": "For employers",
+    "employersLead": "Hiring support for companies recruiting from India for Gulf roles.",
+    "ask": "Ask about this",
+    "employerForm": "Hiring? Use the requirement form",
+    "inquiry": {
+      "kicker": "Enquiry",
+      "title": "Tell us what you need",
+      "lead": "Choose a service and share a few details. Your enquiry reaches the right team.",
+      "asideHeading": "Before you send",
+      "free": "Sending an enquiry is free. Where a service carries a fee, it is quoted to you in writing before you pay — see <pricing>Pricing & fees</pricing>."
+    }
+  },
+  "jobsPage": {
+    "kicker": "Jobs",
+    "title": "Gulf job openings",
+    "lead": "Read what each job involves, then apply online. Every fee is quoted in writing before you pay.",
+    "stepsHeading": "How applying works",
+    "step1": "Choose a job and apply online with your CV and a copy of your passport.",
+    "step2": "Our recruitment team contacts you about the next step.",
+    "step3": "Any fee is quoted to you in writing before you pay.",
+    "listHeading": "Open jobs",
+    "filters": {
+      "label": "Filter jobs",
+      "search": "Search",
+      "searchPlaceholder": "Job title or industry",
+      "country": "Country",
+      "allCountries": "All countries",
+      "industry": "Industry",
+      "allIndustries": "All industries",
+      "type": "Contract",
+      "allTypes": "All contracts",
+      "clear": "Clear filters"
+    },
+    "count": "{count, plural, =0 {No jobs match} one {# job} other {# jobs}}",
+    "noMatchTitle": "No jobs match these filters",
+    "noMatchBody": "Try clearing a filter, or send a general application.",
+    "emptyTitle": "No jobs are listed right now",
+    "emptyBody": "New jobs appear here once they are confirmed. You can still send a general application, or ask us a question on WhatsApp.",
+    "generalHeading": "Don’t see the right job?",
+    "generalBody": "Send a general application with your CV. Tell us the work you do and the country you would like to work in.",
+    "general": "Send a general application",
+    "ask": "Ask on WhatsApp",
+    "whatsappGreeting": "Hello Go Gulf, I would like to ask about jobs."
+  },
+  "apply": {
+    "kicker": "Apply",
+    "title": "Apply for a Gulf job",
+    "lead": "Fill in your details and attach your CV and a copy of your passport. You get a confirmation email with a reference number.",
+    "target": {
+      "applyingFor": "You are applying for",
+      "general": "General application"
+    },
+    "groups": {
+      "you": "About you",
+      "documents": "Your documents"
+    },
+    "fields": {
+      "experience": "Work experience",
+      "experienceHint": "For example: 3 years as a site supervisor.",
+      "message": "Anything you would like us to know",
+      "cv": "CV or resume",
+      "cvHint": "PDF or Word document, up to 8 MB.",
+      "passport": "Passport copy",
+      "passportHint": "PDF, JPG or PNG, up to 8 MB. A clear photo of the photo page is fine.",
+      "other": "Other documents",
+      "otherHint": "Certificates, experience letters and similar. Up to 8 MB each."
+    },
+    "errors": {
+      "phoneMissing": "Enter your phone or WhatsApp number.",
+      "cvMissing": "Attach your CV.",
+      "passportMissing": "Attach a copy of your passport.",
+      "tooLarge": "{file} is larger than 8 MB. Attach a smaller file.",
+      "uploadFailed": "We could not upload your application. Check your connection and try again. If it keeps failing, send us your CV on WhatsApp or by email."
+    },
+    "submit": "Submit application",
+    "sending": "Uploading your documents…",
+    "receipt": {
+      "status": "Application received",
+      "heading": "We have your application",
+      "reference": "Reference",
+      "route": "Route: {from} to {to}",
+      "gulf": "The Gulf",
+      "job": "Job",
+      "country": "Country",
+      "documents": "Documents",
+      "confirmationSent": "A confirmation has been emailed to you.",
+      "confirmationFailed": "We could not email you a confirmation, but your application and documents did reach us.",
+      "next": "Our recruitment team reviews your application and contacts you about the next step.",
+      "keep": "Keep this reference. Quote it if you contact us about this application.",
+      "safety": "Every fee is quoted to you in writing before you pay. If anyone asks you to pay without a written quote, contact us first.",
+      "otherJobs": "See other jobs",
+      "ask": "Ask about your application",
+      "whatsappMessage": "Hello Go Gulf, I have a question about my application (reference {reference})."
+    },
+    "aside": {
+      "docsHeading": "What you need",
+      "docCv": "Your CV or resume — PDF or Word",
+      "docPassport": "A copy of your passport — PDF or a clear photo",
+      "docOther": "Certificates or experience letters, if you have them",
+      "nextHeading": "After you apply",
+      "next1": "You get a confirmation email with your reference number.",
+      "next2": "Our recruitment team contacts you about the next step.",
+      "next3": "Any fee is quoted to you in writing before you pay.",
+      "privacy": "Your documents go to private storage — they are not sent by email. See our <privacy>Privacy policy</privacy>."
     }
   },
   "jobs": {
@@ -160,6 +705,31 @@
     "place": "{city}, {country}",
     "metaTitle": "{title} in {where}",
     "metaDescription": "{title} job in {where} listed by Go Gulf. {summary}",
+    "experience": "Experience",
+    "employer": "Employer",
+    "employerConfidential": "The employer has asked not to be named on this page.",
+    "reference": "Reference",
+    "keyFacts": "Key facts",
+    "requirements": "Requirements",
+    "requirementsMissing": "The full requirements for this job are not listed here yet. Ask us before you apply.",
+    "benefits": "What the job offers",
+    "benefitsMissing": "What this job offers beyond the salary is not listed here yet. Ask us before you apply.",
+    "howToApply": "How to apply",
+    "applyStep1": "Apply online with your CV and a copy of your passport.",
+    "applyStep2": "Our recruitment team contacts you about the next step.",
+    "applyStep3": "Any fee is quoted to you in writing before you pay.",
+    "safety": "Fees and safety",
+    "related": "Other open jobs",
+    "allJobs": "See all jobs",
+    "card": {
+      "salaryNotStated": "Salary not stated",
+      "posted": "Posted {date}",
+      "closes": "Closes {date}",
+      "new": "New",
+      "closingSoon": "Closes soon",
+      "apply": "Apply",
+      "applyHidden": "for {title}"
+    },
     "type": {
       "fullTime": "Full-Time",
       "partTime": "Part-Time",

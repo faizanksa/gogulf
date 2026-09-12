@@ -1,0 +1,66 @@
+.heading {
+  margin-bottom: var(--space-6);
+}
+
+.withAction {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4) var(--space-6);
+}
+
+.text {
+  display: grid;
+  gap: var(--space-3);
+  max-width: 46rem;
+}
+
+.center {
+  margin-inline: auto;
+  justify-items: center;
+  text-align: center;
+}
+
+.kicker {
+  margin: 0;
+  color: var(--color-action);
+  font-size: var(--text-kicker);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.01em;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--text-h2);
+  font-weight: 650;
+  line-height: var(--leading-heading);
+  letter-spacing: -0.016em;
+}
+.title3 {
+  font-size: var(--text-h3);
+  letter-spacing: -0.008em;
+}
+
+.lead {
+  margin: 0;
+  max-width: 60ch;
+  font-size: var(--text-lead);
+  line-height: var(--leading-snug);
+  color: var(--color-text-secondary);
+}
+
+/* Sits beside the text while it fits; wraps below it, and may then shrink so a long
+   (or translated) label wraps instead of pushing the page sideways. */
+.action {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.onDark .kicker {
+  color: var(--gg-green-100);
+}
+.onDark .lead {
+  color: var(--gg-green-50);
+}

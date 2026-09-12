@@ -16,6 +16,7 @@ import { validate } from "./schema";
 export const COMPANY = {
   brand: LEGAL_ENTITY.brand,
   legalName: LEGAL_ENTITY.name,
+  shortName: LEGAL_ENTITY.shortName,
   cin: LEGAL_ENTITY.cin,
   companyType: LEGAL_ENTITY.constitution,
   incorporationDate: LEGAL_ENTITY.incorporationDate,

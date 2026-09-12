@@ -15,24 +15,35 @@
 
 /* Explicit padding so element-level rules in older stylesheets cannot override it. */
 .section {
-  padding-block: var(--space-7);
-}
-@media (min-width: 768px) {
-  .section {
-    padding-block: var(--space-8);
-  }
+  padding-block: var(--section-space);
 }
 .tight {
-  padding-block: var(--space-6);
+  padding-block: var(--space-7);
 }
+.divided {
+  border-top: 1px solid var(--color-divider);
+}
+
 .subtle {
   background: var(--color-bg-subtle);
 }
+
+.brand {
+  background: var(--color-bg-brand);
+  color: var(--gg-paper);
+}
+.brand a:not([class]) {
+  color: var(--gg-paper);
+}
+.brand :focus-visible {
+  outline-color: var(--color-focus-inverse);
+}
+
 .inverse {
   background: var(--color-bg-inverse);
   color: var(--color-text-inverse);
 }
-.inverse a {
+.inverse a:not([class]) {
   color: var(--color-link-inverse);
 }
 .inverse :focus-visible {
@@ -70,4 +81,25 @@
 }
 .gap6 {
   gap: var(--space-6);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
+}
+@media (min-width: 768px) {
+  .cols2,
+  .cols3,
+  .cols4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  .cols3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .cols4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }

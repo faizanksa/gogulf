@@ -1,5 +1,6 @@
 import { getJob, reviewedTranslation, visibleJobs, type Job } from "@/content/jobs";
 import { PAGES, type PageEntry } from "@/content/pages";
+import type { Service } from "@/content/services";
 import { CATALOGS, lookup } from "./catalogs";
 import { activeLocales, DEFAULT, isPseudo, localizedPath, type AnyLocale, type LocaleCode } from "./locales";
 import { pseudoLocalize } from "./pseudo";
@@ -99,22 +100,68 @@ export function pageText(entry: PageEntry, locale: AnyLocale): PageText {
   return { title: text.title, description: text.description, breadcrumb: text.breadcrumb, absoluteTitle: field("absoluteTitle") };
 }
 
+export interface ServiceText {
+  name: string;
+  summary: string;
+}
+
+/**
+ * A service's name and summary in `locale`. The English source lives in
+ * content/services.ts (like page titles in the registry); other languages add
+ * services.items.<id>.name / .summary to their catalogue. A published catalogue must
+ * carry every service (i18n.test.ts), so the English fallback only serves drafts.
+ */
+export function serviceText(service: Service, locale: AnyLocale): ServiceText {
+  if (locale === DEFAULT) return { name: service.name, summary: service.summary };
+  if (isPseudo(locale)) return { name: pseudoLocalize(service.name, locale), summary: pseudoLocalize(service.summary, locale) };
+  const field = (name: string) => lookup(CATALOGS[locale], `services.items.${service.id}.${name}`);
+  return { name: field("name") ?? service.name, summary: field("summary") ?? service.summary };
+}
+
 export interface JobText {
   title: string;
   summary: string;
   industry: string;
   city?: string;
+  experience?: string;
+  requirements: string[];
+  benefits: string[];
 }
 
 /** A job's words in `locale`: its reviewed translation, pseudo-localised English for testing, or the English. */
 export function jobText(job: Job, locale: AnyLocale): JobText {
-  const english = { title: job.title, summary: job.summary, industry: job.industry, city: job.city };
+  const english: JobText = {
+    title: job.title,
+    summary: job.summary,
+    industry: job.industry,
+    city: job.city,
+    experience: job.experience,
+    requirements: job.requirements,
+    benefits: job.benefits,
+  };
   if (locale === DEFAULT) return english;
   if (isPseudo(locale)) {
     const p = (s: string) => pseudoLocalize(s, locale);
-    return { title: p(job.title), summary: p(job.summary), industry: p(job.industry), city: job.city && p(job.city) };
+    return {
+      title: p(job.title),
+      summary: p(job.summary),
+      industry: p(job.industry),
+      city: job.city && p(job.city),
+      experience: job.experience && p(job.experience),
+      requirements: job.requirements.map(p),
+      benefits: job.benefits.map(p),
+    };
   }
   const tr = reviewedTranslation(job, locale);
   if (!tr) return english;
-  return { title: tr.title, summary: tr.summary, industry: tr.industry ?? job.industry, city: tr.city ?? job.city };
+  // content/jobs.ts guarantees a reviewed translation carries every list entry and the experience line.
+  return {
+    title: tr.title,
+    summary: tr.summary,
+    industry: tr.industry ?? job.industry,
+    city: tr.city ?? job.city,
+    experience: tr.experience ?? job.experience,
+    requirements: tr.requirements,
+    benefits: tr.benefits,
+  };
 }

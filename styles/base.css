@@ -39,9 +39,15 @@ h2,
 h3,
 h4 {
   font-family: var(--font-display);
-  font-variation-settings: "wdth" var(--display-wdth);
   color: inherit;
+  letter-spacing: -0.012em;
   text-wrap: balance;
+}
+
+/* Mukta ships 400 and 600: bold text uses 600 rather than a faked 700. */
+b,
+strong {
+  font-weight: var(--weight-semibold);
 }
 
 p,

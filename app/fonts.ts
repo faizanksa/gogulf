@@ -4,14 +4,18 @@ import { Anek_Devanagari, Anek_Latin, IBM_Plex_Mono, Mukta } from "next/font/goo
  * Self-hosted typefaces (next/font downloads them at build and serves them from our
  * own domain — no request to Google at run time).
  *
- *   Display  Anek (Ek Type, Mumbai) — variable weight + width
- *   Body/UI  Mukta (Ek Type)
- *   Data     IBM Plex Mono — salaries, references, dates only
+ *   Display  Anek (Ek Type, Mumbai) — variable weight
+ *   Body/UI  Mukta (Ek Type) — 400 and 600
+ *   Data     IBM Plex Mono — salaries, references, identifiers, dates only
  *
- * Devanagari: Anek and Mukta each have a Devanagari face. They are declared as
- * separate, non-preloaded families that the stacks in styles/tokens.css fall back to,
- * so Hindi text renders in the brand faces while Latin-only pages never download a
- * Devanagari file (each @font-face carries a unicode-range).
+ * Font budget (docs/REDESIGN-PLAN.md §13: ≤ 120 KB, two families preloaded). Phase 2B
+ * measured 145 KB preloaded, most of it Anek's width axis. 2C loads Anek with its
+ * weight axis only, and Mukta with two weights: bold text uses 600 (tokens
+ * --weight-bold), so the browser never fakes a bold.
+ *
+ * Devanagari: Anek and Mukta each have a Devanagari face, declared as separate,
+ * non-preloaded families that the stacks in styles/tokens.css fall back to. Latin-only
+ * pages never download them (each @font-face carries a unicode-range).
  *
  * Other scripts (docs/I18N.md): each language's face is added with its first reviewed
  * catalogue — Noto Sans Arabic, Anek Malayalam, Anek Tamil, Anek Bangla — never before,
@@ -23,14 +27,12 @@ import { Anek_Devanagari, Anek_Latin, IBM_Plex_Mono, Mukta } from "next/font/goo
 
 export const anekLatin = Anek_Latin({
   subsets: ["latin"],
-  axes: ["wdth"],
   variable: "--font-anek",
   display: "swap",
 });
 
 export const anekDevanagari = Anek_Devanagari({
   subsets: ["devanagari"],
-  axes: ["wdth"],
   variable: "--font-anek-deva",
   display: "swap",
   preload: false,
@@ -38,14 +40,14 @@ export const anekDevanagari = Anek_Devanagari({
 
 export const mukta = Mukta({
   subsets: ["latin"],
-  weight: ["400", "600", "700"],
+  weight: ["400", "600"],
   variable: "--font-mukta",
   display: "swap",
 });
 
 export const muktaDevanagari = Mukta({
   subsets: ["devanagari"],
-  weight: ["400", "600", "700"],
+  weight: ["400", "600"],
   variable: "--font-mukta-deva",
   display: "swap",
   preload: false,

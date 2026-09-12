@@ -5,19 +5,44 @@
 
 .inner {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-2);
   max-width: calc(var(--container-page) + 2 * var(--gutter));
   margin-inline: auto;
-  padding: var(--space-4) var(--gutter) var(--space-7);
+  padding: var(--space-3) var(--gutter) var(--space-7);
+}
+
+.layout {
+  display: grid;
+  gap: var(--space-6);
+}
+@media (min-width: 1024px) {
+  .withAside {
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 25rem);
+    align-items: end;
+    gap: var(--space-8);
+  }
+}
+
+.text {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+
+.kicker {
+  margin: var(--space-2) 0 0;
+  color: var(--color-action);
+  font-size: var(--text-kicker);
+  font-weight: var(--weight-semibold);
 }
 
 .title {
-  margin: var(--space-2) 0 0;
-  max-width: 24ch;
+  margin: 0;
+  max-width: 22ch;
   font-size: var(--text-h1);
   font-weight: 650;
   line-height: var(--leading-heading);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.018em;
 }
 
 .lead {
@@ -33,4 +58,8 @@
   flex-wrap: wrap;
   gap: var(--space-3);
   margin-top: var(--space-2);
+}
+
+.aside {
+  min-width: 0;
 }
