@@ -44,7 +44,7 @@ test.describe("right to left", () => {
 
   test.describe("reflow", () => {
     test.skip(({ isMobile }) => isMobile, "viewport is set explicitly");
-    for (const width of [320, 640, 1024]) {
+    for (const width of [320, 375, 390, 430, 640, 1024]) {
       test(`no right-to-left or lengthened page scrolls sideways at ${width}px`, async ({ page }) => {
         await page.setViewportSize({ width, height: 900 });
         const offenders: string[] = [];

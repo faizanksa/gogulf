@@ -11,7 +11,7 @@ import { organizationJsonLd, postalAddress } from "@/lib/seo";
  *
  *   1. The company is not registered or licensed as a recruiting agent. No public string
  *      may claim or imply it (content/company.ts CLAIMS.recruitingAgentRegistration).
- *   2. The public address omits the MCA record's care-of line and its premises number.
+ *   2. The public address omits the MCA record's care-of line (the plot number stays).
  *
  * Code comments are stripped first — they explain the rules and are never rendered.
  * content/company.ts (the claims register) and lib/legal.js (the record) are the
@@ -39,7 +39,9 @@ const PUBLIC_SOURCES = [
 
 const withoutComments = (source: string) => source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
 
-const read = (path: string) => withoutComments(readFileSync(path, "utf8"));
+// Whitespace collapsed, so a phrase wrapped across source lines ("we do not\n guarantee")
+// reads as it renders.
+const read = (path: string) => withoutComments(readFileSync(path, "utf8")).replace(/\s+/g, " ");
 
 /** Wording that claims or implies recruiting-agent status, or a claim the register has not cleared. */
 const FORBIDDEN: RegExp[] = [
@@ -58,7 +60,18 @@ const FORBIDDEN: RegExp[] = [
   /genuine,?\s+screened/i,
   /\b\d{2}\s*\+\s*years/i,
   /thousands\s+of\s+(placements|candidates|workers)/i,
+  /\b\d[\d,]*\s*\+?\s*(placements|candidates placed|workers placed|people placed|successful placements)/i,
+  /\b\d+\s*\+?\s*(countries|nations|sectors|industries)\b/i,
+  /\bwithin\s+\d+\s*(hours?|days?|business days?|working days?)/i,
+  /(employer|partner)s?\s+network|network\s+of\s+(verified\s+|trusted\s+)?employers/i,
+  /(?<!not\s|never\s|no\s)guarantee[ds]?\s+(you\s+)?(a\s+)?(job|jobs|employment|visa|placement|selection|joining)\b/i,
+  /eMigrate|Protector\s+(General\s+)?of\s+Emigrants/i,
+  /authori[sz]ed\s+recruit/i,
+  /\bsince\s+(19|20)\d{2}\b/i,
 ];
+
+/** Years-of-experience claims about the company; job listings legitimately state requirements. */
+const COMPANY_EXPERIENCE = /\b\d+\s*\+?\s*years?\s+(of\s+)?(experience|expertise|in\s+(the\s+)?(industry|business|recruitment|gulf))/i;
 
 describe("public copy", () => {
   it("scans a meaningful set of files", () => {
@@ -73,6 +86,11 @@ describe("public copy", () => {
     expect(hits).toEqual([]);
   });
 
+  it("claims no years of company experience (job requirements aside)", () => {
+    const hits = PUBLIC_SOURCES.filter((path) => !/content[\\/]jobs\.ts$/.test(path) && COMPANY_EXPERIENCE.test(read(path)));
+    expect(hits).toEqual([]);
+  });
+
   it("never shows the registered office's care-of line", () => {
     const hits = PUBLIC_SOURCES.filter((path) => /Asha\s+Yadav|\bC\/o\b/i.test(read(path)));
     expect(hits).toEqual([]);
@@ -82,17 +100,17 @@ describe("public copy", () => {
 describe("public address", () => {
   const publicForms = [ADDRESS_LINES.join("\n"), ADDRESS_ONE_LINE, JSON.stringify(postalAddress()), JSON.stringify(organizationJsonLd())];
 
-  it("keeps the full record, but displays neither the care-of line nor its premises number", () => {
+  it("keeps the full record, but never displays the care-of line", () => {
     expect(REGISTERED_ADDRESS.careOf).toBe("C/o Asha Yadav");
     for (const text of publicForms) {
       expect(text).not.toContain(REGISTERED_ADDRESS.careOf);
-      expect(text).not.toContain(REGISTERED_ADDRESS.premises);
       expect(text).not.toMatch(/Asha|C\/o/i);
     }
   });
 
-  it("still carries the street, area, city, state, PIN and country", () => {
-    expect(ADDRESS_ONE_LINE).toBe("Mishrapur Kursi Road, Jankipuram, Lucknow, Uttar Pradesh – 226021, India");
-    expect(postalAddress()).toMatchObject({ streetAddress: "Mishrapur Kursi Road, Jankipuram", addressLocality: "Lucknow", postalCode: "226021", addressCountry: "IN" });
+  it("shows the approved public address, plot number included", () => {
+    expect(ADDRESS_LINES).toEqual(["G No-364, Mishrapur", "Kursi Road, Jankipuram", "Lucknow, Uttar Pradesh – 226021", "India"]);
+    expect(ADDRESS_ONE_LINE).toBe("G No-364, Mishrapur, Kursi Road, Jankipuram, Lucknow, Uttar Pradesh – 226021, India");
+    expect(postalAddress()).toMatchObject({ streetAddress: "G No-364, Mishrapur, Kursi Road, Jankipuram", addressLocality: "Lucknow", postalCode: "226021", addressCountry: "IN" });
   });
 });

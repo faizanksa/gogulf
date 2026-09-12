@@ -7,8 +7,9 @@ const ROUTES = [...PRODUCTION_ROUTES, "/verify", SAMPLE_JOB];
 test.describe("reflow and zoom", () => {
   test.skip(({ isMobile }) => isMobile, "viewport is set explicitly");
 
-  // 320px is the WCAG 1.4.10 reflow width; 640px is a 1280px window at 200% zoom.
-  for (const width of [320, 640]) {
+  // 320px is the WCAG 1.4.10 reflow width; 375, 390 and 430px are common phone widths;
+  // 640px is a 1280px window at 200% zoom.
+  for (const width of [320, 375, 390, 430, 640]) {
     test(`no page scrolls sideways at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       const offenders: string[] = [];
