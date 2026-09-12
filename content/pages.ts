@@ -137,8 +137,8 @@ export const PAGES: PageEntry[] = validate(
     },
     {
       id: "shipping-policy", path: "/shipping-policy", title: "Shipping & delivery",
-      description: "Go Gulf sells no physical goods. How its recruitment services are delivered to you instead, and how physical documents are handled.",
-      breadcrumb: "Shipping & delivery", updatedOn: "2026-09-05", index: true, sitemap: { changeFrequency: "yearly", priority: 0.3 },
+      description: "Go Gulf sells no physical goods. How its services are delivered to you instead, and how any physical documents are handled.",
+      breadcrumb: "Shipping & delivery", updatedOn: "2026-09-12", index: true, sitemap: { changeFrequency: "yearly", priority: 0.3 },
     },
     {
       id: "travel", path: "/travel", title: "Travel",

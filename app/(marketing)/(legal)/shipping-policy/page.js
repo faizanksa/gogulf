@@ -103,9 +103,9 @@ const SECTIONS = [
     body: (
       <>
         <p>
-          We respond to inquiries and applications submitted through this website within{" "}
-          <strong>1–2 business days</strong>, which is the response time stated on our inquiry and
-          application forms.
+          Our team contacts you about each inquiry and application submitted through this website.
+          How soon depends on the number of inquiries we are handling, so we do not publish a fixed
+          response time.
         </p>
         <p>
           Where a service carries a fee, we begin the engaged work once the service has been

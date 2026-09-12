@@ -322,7 +322,7 @@ const SECTIONS = [
           </p>
         </div>
         <p>
-          What we commit to is the service itself: presenting genuine, screened opportunities,
+          What we commit to is the service itself: describing the opportunities we list accurately,
           handling your profile professionally, coordinating each stage properly, and being
           transparent with you about where your application stands.
         </p>
@@ -395,8 +395,8 @@ const SECTIONS = [
           payable will be set out to you in writing — in a quotation, invoice, service agreement,
           proposal or purchase order — before you are asked to pay. Any applicable fees, inclusions,
           exclusions, taxes and refund terms are communicated to you before payment, or agreed in
-          the relevant written service agreement. There are no hidden charges: if it has not been
-          stated to you in writing, it is not payable to us. Our{" "}
+          the relevant written service agreement. If a charge has not been stated to you in
+          writing, it is not payable to us. Our{" "}
           <Link href="/pricing">Pricing &amp; Fees</Link> page explains how this works in full.
         </p>
         <p>
