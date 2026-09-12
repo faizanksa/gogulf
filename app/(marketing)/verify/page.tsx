@@ -1,13 +1,18 @@
 import Link from "next/link";
+import { MCA_URL } from "@/components/site/CompanyFacts";
 import { DevNotice } from "@/components/site/DevNotice";
 import { OfficialChannels } from "@/components/site/OfficialChannels";
 import { PageHeader } from "@/components/site/PageHeader";
+import { FactList, type Fact } from "@/components/ui/FactList";
+import { Icon } from "@/components/ui/Icon";
 import { Container, Section } from "@/components/ui/Layout";
 import { LtrText } from "@/components/ui/LtrText";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 import { VisuallyHidden } from "@/components/ui/VisuallyHidden";
 import { BUSINESS_EMAIL, PHONE } from "@/content/channels";
 import { COMPANY } from "@/content/company";
 import { pageEntry } from "@/content/pages";
+import { formatDate } from "@/lib/i18n/format";
 import { hrefIn, pageText } from "@/lib/i18n/pages";
 import { getTranslator, localizedPageMetadata, requireAvailable } from "@/lib/i18n/server";
 import styles from "./verify.module.css";
@@ -23,25 +28,25 @@ export async function generateMetadata() {
  * Every statement here is either an MCA fact (lib/legal.js), a confirmed channel
  * (content/channels.ts), or wording from the published policies.
  *
- * Served in English here and, through app/[locale]/verify, in each language the registry
- * lists for it (content/pages.ts). The interface around it translates itself; the body
- * copy moves into the catalogues when its first translation is commissioned (docs/I18N.md).
+ * The record's values (names, numbers, the address) are data and stay as registered; the
+ * words around them come from the catalogues, so the page translates like any other.
  */
 export default async function VerifyPage() {
   const locale = await requireAvailable(PATH);
   const t = await getTranslator();
   const href = (path: string) => hrefIn(path, locale);
 
-  const facts: { label: string; value: React.ReactNode }[] = [
-    { label: "Legal name", value: COMPANY.legalName },
-    { label: "Trading as", value: COMPANY.brand },
-    { label: "Corporate Identity Number (CIN)", value: <span className={styles.mono}>{COMPANY.cin}</span> },
-    { label: "Company type", value: COMPANY.companyType },
-    { label: "Incorporated", value: <time dateTime={COMPANY.incorporationISO}>{COMPANY.incorporationDate}</time> },
-    { label: "Registrar", value: COMPANY.roc },
-    { label: "Registered business activity", value: COMPANY.registeredActivity },
+  const facts: Fact[] = [
+    { key: "legal-name", label: t("verifyPage.facts.legalName"), value: COMPANY.legalName },
+    { key: "brand", label: t("verifyPage.facts.brand"), value: COMPANY.brand },
+    { key: "cin", label: t("verifyPage.facts.cin"), value: <LtrText>{COMPANY.cin}</LtrText>, mono: true },
+    { key: "type", label: t("verifyPage.facts.type"), value: COMPANY.companyType },
+    { key: "incorporated", label: t("verifyPage.facts.incorporated"), value: <time dateTime={COMPANY.incorporationISO}>{formatDate(COMPANY.incorporationISO, locale)}</time> },
+    { key: "registrar", label: t("verifyPage.facts.registrar"), value: COMPANY.roc },
+    { key: "activity", label: t("verifyPage.facts.activity"), value: COMPANY.registeredActivity },
     {
-      label: "Registered office",
+      key: "office",
+      label: t("verifyPage.facts.office"),
       value: (
         <address className={styles.address}>
           {COMPANY.addressLines.map((line) => (
@@ -50,99 +55,72 @@ export default async function VerifyPage() {
         </address>
       ),
     },
-    { label: "GSTIN", value: <span className={styles.mono}>{COMPANY.gstin}</span> },
+    { key: "gstin", label: t("verifyPage.facts.gstin"), value: <LtrText>{COMPANY.gstin}</LtrText>, mono: true },
   ];
 
   return (
     <>
       <PageHeader
         crumbs={[{ name: pageText(pageEntry(PATH), locale).breadcrumb, path: PATH }]}
-        title="How to check you are dealing with Go Gulf"
-        lead="Before you share documents or pay anything, check these details. Each one can be confirmed independently of us."
+        kicker={t("verifyPage.kicker")}
+        title={t("verifyPage.title")}
+        lead={t("verifyPage.lead")}
       />
 
       <Section labelledBy="company-heading">
         <Container>
           <div className={styles.grid}>
             <div className={styles.block}>
-              <h2 id="company-heading" className={styles.h2}>
-                The company behind Go Gulf
-              </h2>
-              <p>
-                Go Gulf is a brand of {COMPANY.legalName}. You can look the company up on the Ministry of Corporate Affairs
-                website using its CIN.
-              </p>
-              <dl className={styles.facts}>
-                {facts.map((f) => (
-                  <div key={f.label} className={styles.fact}>
-                    <dt>{f.label}</dt>
-                    <dd>{f.value}</dd>
-                  </div>
-                ))}
-              </dl>
-              <p>
-                <a href="https://www.mca.gov.in/" target="_blank" rel="noopener noreferrer">
-                  Ministry of Corporate Affairs website
+              <SectionHeading id="company-heading" title={t("verifyPage.company.heading")} lead={t("verifyPage.company.body", { legalName: COMPANY.legalName })} />
+              <FactList items={facts} />
+              <p className={styles.links}>
+                <a href={MCA_URL} target="_blank" rel="noopener noreferrer">
+                  {t("verifyPage.company.mca")}
                   <VisuallyHidden> {t("common.opensInNewTab")}</VisuallyHidden>
                 </a>
               </p>
             </div>
 
-            <div className={styles.block}>
+            <aside className={styles.channels} aria-labelledby="channels-heading">
               <h2 id="channels-heading" className={styles.h2}>
-                Our official contact details
+                <Icon name="shield" size={24} className={styles.icon} />
+                {t("verifyPage.channels.heading")}
               </h2>
-              <p>
-                If someone claiming to be Go Gulf contacts you from a different number or address, check with us on these
-                details before you act.
-              </p>
+              <p>{t("verifyPage.channels.body")}</p>
               <OfficialChannels />
-            </div>
+            </aside>
           </div>
         </Container>
       </Section>
 
       <Section tone="subtle" labelledBy="payments-heading">
         <Container width="prose">
-          <div className={styles.block}>
-            <h2 id="payments-heading" className={styles.h2}>
-              Our rules about payments
-            </h2>
-            <ul className={styles.list}>
-              <li>
-                Every fee is quoted to you in writing before you pay. See <Link href={href("/pricing")}>Pricing &amp; fees</Link>.
-              </li>
-              <li>
-                If you are asked to pay an account or a person that we have not confirmed to you in writing, stop and contact
-                us before paying.
-              </li>
-              <li>
-                We do not guarantee selection, employment, a visa or a joining date. See our{" "}
-                <Link href={href("/terms-and-conditions")}>Terms &amp; conditions</Link>.
-              </li>
-            </ul>
-          </div>
+          <SectionHeading id="payments-heading" title={t("verifyPage.payments.heading")} />
+          <ol className={styles.rules}>
+            <li>{t.rich("verifyPage.payments.r1", { pricing: (chunks) => <Link href={href("/pricing")}>{chunks}</Link> })}</li>
+            <li>{t("verifyPage.payments.r2")}</li>
+            <li>{t.rich("verifyPage.payments.r3", { terms: (chunks) => <Link href={href("/terms-and-conditions")}>{chunks}</Link> })}</li>
+          </ol>
         </Container>
       </Section>
 
       <Section labelledBy="report-heading">
         <Container width="prose">
-          <div className={styles.block}>
-            <h2 id="report-heading" className={styles.h2}>
-              If something does not feel right
-            </h2>
-            <p>
-              Tell us before you pay or send documents. Email <a href={BUSINESS_EMAIL.href}>{BUSINESS_EMAIL.value}</a> or call{" "}
-              <a href={PHONE.href}>
-                <LtrText>{PHONE.value}</LtrText>
-              </a>
-              .
-            </p>
-            <DevNotice decision="D1">
-              Once the business confirms whether it holds an overseas Recruiting Agent registration, the registration number
-              and how to check it on the government’s eMigrate portal belong on this page.
-            </DevNotice>
-          </div>
+          <SectionHeading id="report-heading" title={t("verifyPage.report.heading")} />
+          <p className={styles.report}>
+            {t.rich("verifyPage.report.body", {
+              email: <a href={BUSINESS_EMAIL.href}>{BUSINESS_EMAIL.value}</a>,
+              phone: (
+                <a href={PHONE.href}>
+                  <LtrText>{PHONE.value}</LtrText>
+                </a>
+              ),
+            })}
+          </p>
+          <DevNotice decision="D1">
+            Once the business confirms whether it holds an overseas Recruiting Agent registration, the registration number and
+            how to check it on the government’s eMigrate portal belong on this page.
+          </DevNotice>
         </Container>
       </Section>
     </>
