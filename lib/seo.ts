@@ -13,7 +13,12 @@ import { pageLocales, pageText } from "@/lib/i18n/pages";
  * verified information. So the Organization node carries the MCA facts and confirmed
  * contact points only — no GSTIN (certificate pending, D8), no social profiles until
  * confirmed, no countries served, no heritage date. foundingDate is the incorporation
- * date. TravelAgency is added only when a confirmed travel service is published.
+ * date.
+ *
+ * Its type is plain Organization. EmploymentAgency was dropped (12 Sep 2026): the
+ * company is not registered or licensed as a recruiting agent, and a schema type is a
+ * claim like any other. TravelAgency (its registered activity) is used only once a
+ * confirmed travel service is published.
  */
 
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.gogulf.co").replace(/\/+$/, "");
@@ -139,7 +144,7 @@ export function postalAddress() {
 export function organizationJsonLd() {
   const sameAs = CONFIRMED_SOCIAL.map((c) => c.href);
   return {
-    "@type": TRAVEL_PUBLISHED ? ["EmploymentAgency", "TravelAgency"] : "EmploymentAgency",
+    "@type": TRAVEL_PUBLISHED ? "TravelAgency" : "Organization",
     "@id": `${SITE_URL}/#organization`,
     name: SITE_NAME,
     legalName: COMPANY.legalName,

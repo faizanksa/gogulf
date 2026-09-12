@@ -109,7 +109,7 @@ describe("service inquiry routing", () => {
   it("routes employer services to the business desk", async () => {
     const { provider, sent } = makeProvider();
     await sendServiceInquiryEmails(
-      { ...base, service_type: "Bulk Manpower Recruitment" },
+      { ...base, service_type: "Bulk Candidate Sourcing" },
       provider,
     );
     expect(sent[0]?.to).toBe("business@gogulf.co");
@@ -118,7 +118,7 @@ describe("service inquiry routing", () => {
   it("routes candidate services to the careers desk", async () => {
     const { provider, sent } = makeProvider();
     await sendServiceInquiryEmails(
-      { ...base, service_type: "Gulf Job Placement" },
+      { ...base, service_type: "Job Matching" },
       provider,
     );
     expect(sent[0]?.to).toBe("careers@gogulf.co");

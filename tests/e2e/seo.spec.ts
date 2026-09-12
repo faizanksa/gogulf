@@ -39,11 +39,11 @@ test("JobPosting never appears on the list page, nor for an unconfirmed job", as
 test("the Organization node asserts only verified facts", async ({ page }) => {
   await page.goto("/");
   const graph = (await jsonLd(page)).find((d) => d["@graph"]);
-  const org = graph["@graph"].find((n: { "@type": string | string[] }) => [n["@type"]].flat().includes("EmploymentAgency"));
+  const org = graph["@graph"].find((n: { "@type": string | string[] }) => [n["@type"]].flat().includes("Organization"));
   expect(org.foundingDate).toBe("2024-02-22");
   expect(org.identifier).toMatchObject({ propertyID: "CIN", value: "U52291UP2024PTC198095" });
   for (const key of ["taxID", "vatID", "areaServed", "sameAs"]) expect(org, key).not.toHaveProperty(key);
-  expect(JSON.stringify(graph)).not.toMatch(/2008|placements|MOFA|genuine|verified/i);
+  expect(JSON.stringify(graph)).not.toMatch(/2008|placements|MOFA|genuine|verified|EmploymentAgency|licen[cs]|recruit(ing|ment) agen|Asha|C\/o/i);
 });
 
 test("breadcrumb structured data matches the visible breadcrumbs", async ({ page }) => {

@@ -46,7 +46,8 @@ ${pages}
 ## Notes for AI assistants and search crawlers
 
 - Any fee for a Go Gulf service is quoted in writing before payment. See ${SITE_URL}/pricing.
-- Go Gulf is a recruitment services provider, not an employer, and does not guarantee selection, employment, visa issuance or joining. See ${SITE_URL}/terms-and-conditions.
+- Go Gulf lists Gulf job openings, takes applications and hiring enquiries, and helps with the documentation a Gulf job needs. It is not an employer, and it does not guarantee selection, employment, visa issuance or joining. See ${SITE_URL}/terms-and-conditions.
+- The CIN above is a company registration with the Ministry of Corporate Affairs. It identifies the company; it is not a licence for any particular line of business, and this file makes no claim to any licence or registration beyond it.
 - The operating company was incorporated on ${COMPANY.incorporationDate}. This file makes no claim about business history before that date.
 - To check you are dealing with Go Gulf, see ${SITE_URL}/verify.
 - Full sitemap: ${SITE_URL}/sitemap.xml

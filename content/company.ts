@@ -32,8 +32,13 @@ export const COMPANY = {
   tagline: "Go Gulf. Get Hired.",
 } as const;
 
+/**
+ * verified    evidenced; may appear in copy, structured data and llms.txt
+ * unresolved  not evidenced yet; kept out of production
+ * refuted     confirmed untrue; must never be stated or implied anywhere
+ */
 const claim = z.object({
-  status: z.enum(["verified", "unresolved"]),
+  status: z.enum(["verified", "unresolved", "refuted"]),
   decision: z.string().optional(),
   note: z.string(),
 });
@@ -55,7 +60,7 @@ export const CLAIMS = validate(
   }),
   {
     feesQuotedInWriting: { status: "verified", note: "The rule stated in the Pricing & Fees policy: no fee is payable unless quoted in writing first." },
-    recruitingAgentRegistration: { status: "unresolved", decision: "D1", note: "Whether an overseas Recruiting Agent registration (Emigration Act) is held." },
+    recruitingAgentRegistration: { status: "refuted", decision: "D1", note: "The company is not registered or licensed as a recruiting agent (confirmed by the business, 12 Sep 2026). Company registration (CIN) is not recruitment-agency licensing; no page, schema or translation may claim or imply otherwise." },
     heritage2008: { status: "unresolved", decision: "D3", note: "Whose experience dates to 2008, and under what name. Never the company's founding (incorporated 22 Feb 2024)." },
     placementNumbers: { status: "unresolved", decision: "D3", note: "No evidence for any placement figure." },
     officesOutsideLucknow: { status: "unresolved", decision: "D3", note: "Sharjah and Jeddah appeared only in the old share image." },

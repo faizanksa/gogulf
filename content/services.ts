@@ -3,8 +3,10 @@ import { CANDIDATE_SERVICES, EMPLOYER_SERVICES } from "@/lib/forms/service-optio
 import { validate } from "./schema";
 
 /**
- * The service catalogue, with the business's existing one-line descriptions (carried
- * over from the current /services page, not newly written). `inquiryOption` ties each
+ * The service catalogue, with the business's one-line descriptions (carried over from
+ * the pre-redesign /services page). On 12 Sep 2026 the names and summaries that implied
+ * a registered or licensed recruiting agency were reworded neutrally — the company holds
+ * no such registration (content/company.ts CLAIMS); the services themselves are unchanged. `inquiryOption` ties each
  * entry to the exact option name the inquiry form sends, so the server routes it to
  * the right desk. The 2C Services page renders from this.
  */
@@ -24,20 +26,20 @@ export type Service = z.infer<typeof service>;
 export const SERVICES: Service[] = validate(
   z.array(service),
   [
-    { id: "overseas-recruitment", name: "Overseas Recruitment", audience: "job-seekers", summary: "Full-cycle recruitment for candidates seeking Gulf employment.", inquiryOption: "Overseas Recruitment" },
-    { id: "gulf-job-placement", name: "Gulf Job Placement", audience: "job-seekers", summary: "Matching candidate profiles to open Gulf jobs.", inquiryOption: "Gulf Job Placement" },
+    { id: "job-applications", name: "Gulf job applications", audience: "job-seekers", summary: "Help finding Gulf openings that suit you, and applying for them.", inquiryOption: "Gulf Job Applications" },
+    { id: "job-matching", name: "Job matching", audience: "job-seekers", summary: "Matching your profile to the Gulf openings we list.", inquiryOption: "Job Matching" },
     { id: "interview-coordination", name: "Interview Coordination", audience: "job-seekers", summary: "Scheduling and coordinating candidate–employer interviews.", inquiryOption: "Interview Coordination" },
     { id: "visa-documentation", name: "Visa & Documentation", audience: "job-seekers", summary: "Guidance and processing support for the paperwork a job needs.", inquiryOption: "Visa & Documentation Assistance" },
     { id: "medical-coordination", name: "Medical Coordination", audience: "job-seekers", summary: "Scheduling and coordination of pre-employment medical exams.", inquiryOption: "Medical Coordination" },
-    { id: "mofa-embassy", name: "MOFA & Embassy Processing", audience: "job-seekers", summary: "Help arranging document attestation and embassy formalities.", inquiryOption: "MOFA & Embassy Processing" },
-    { id: "immigration-support", name: "Immigration Support", audience: "job-seekers", summary: "Clearance and compliance guidance through to departure.", inquiryOption: "Immigration Support" },
+    { id: "attestation-embassy", name: "Attestation & embassy formalities", audience: "job-seekers", summary: "Help arranging document attestation, including MOFA attestation, and embassy formalities.", inquiryOption: "Attestation & Embassy Formalities" },
+    { id: "immigration-support", name: "Immigration Support", audience: "job-seekers", summary: "Guidance on the immigration paperwork a Gulf job needs, up to departure.", inquiryOption: "Immigration Support" },
     { id: "air-ticket-travel", name: "Air Ticket & Travel", audience: "job-seekers", summary: "Travel arrangements coordinated for departure.", inquiryOption: "Air Ticket & Travel Assistance" },
     { id: "pre-departure", name: "Pre-Departure Orientation", audience: "job-seekers", summary: "Briefing candidates on what to expect before they fly.", inquiryOption: "Pre-Departure Orientation" },
     { id: "employer-hiring", name: "Employer Hiring Solutions", audience: "employers", summary: "Hiring support for companies sourcing talent for Gulf roles.", inquiryOption: "Employer Hiring Solutions" },
-    { id: "bulk-manpower", name: "Bulk Manpower Recruitment", audience: "employers", summary: "Large-scale workforce sourcing for construction, industrial and facility projects.", inquiryOption: "Bulk Manpower Recruitment" },
-    { id: "rpo", name: "Recruitment Process Outsourcing", audience: "employers", summary: "End-to-end recruitment run for you, so your team stays focused on operations.", inquiryOption: "Recruitment Process Outsourcing (RPO)" },
+    { id: "bulk-sourcing", name: "Bulk candidate sourcing", audience: "employers", summary: "Sourcing candidates at volume for construction, industrial and facility projects.", inquiryOption: "Bulk Candidate Sourcing" },
+    { id: "recruitment-support", name: "Recruitment support", audience: "employers", summary: "Sourcing, screening and interview coordination handled for you, so your team stays focused on operations.", inquiryOption: "Recruitment Support" },
     { id: "candidate-screening", name: "Candidate Screening", audience: "employers", summary: "Checking and shortlisting candidates against your requirements.", inquiryOption: "Candidate Screening" },
-    { id: "hr-support", name: "HR & Recruitment Support", audience: "employers", summary: "Ongoing HR assistance for placed candidates and employers.", inquiryOption: "HR & Recruitment Support" },
+    { id: "hr-support", name: "HR support", audience: "employers", summary: "Ongoing HR assistance for employers and the people they hire.", inquiryOption: "HR Support" },
   ],
   "content/services.ts",
 );

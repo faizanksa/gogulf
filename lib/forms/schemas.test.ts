@@ -67,7 +67,7 @@ describe("contact schema", () => {
 
 describe("service inquiry schema", () => {
   const valid = {
-    service_type: "Gulf Job Placement",
+    service_type: "Job Matching",
     from_name: "Ravi",
     reply_to: "ravi@example.com",
     phone: "+919936309015",

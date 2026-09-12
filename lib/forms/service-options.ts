@@ -8,21 +8,26 @@
  * which desk an inquiry reaches.
  */
 
+//
+// Renamed 12 Sep 2026 so no service name implies a registered or licensed recruiting
+// agency ("Overseas Recruitment", "Gulf Job Placement", "Bulk Manpower Recruitment",
+// "Recruitment Process Outsourcing", "HR & Recruitment Support", "MOFA & Embassy
+// Processing"). Routing is unchanged: each list still decides the desk.
 export const EMPLOYER_SERVICES = [
   "Employer Hiring Solutions",
-  "Bulk Manpower Recruitment",
-  "Recruitment Process Outsourcing (RPO)",
+  "Bulk Candidate Sourcing",
+  "Recruitment Support",
   "Candidate Screening",
-  "HR & Recruitment Support",
+  "HR Support",
 ] as const;
 
 export const CANDIDATE_SERVICES = [
-  "Overseas Recruitment",
-  "Gulf Job Placement",
+  "Gulf Job Applications",
+  "Job Matching",
   "Interview Coordination",
   "Visa & Documentation Assistance",
   "Medical Coordination",
-  "MOFA & Embassy Processing",
+  "Attestation & Embassy Formalities",
   "Immigration Support",
   "Air Ticket & Travel Assistance",
   "Pre-Departure Orientation",

@@ -38,9 +38,9 @@ test.describe("job-seeker hub", () => {
 test.describe("service catalogue", () => {
   test("a service card preselects its service in the enquiry form", async ({ page }) => {
     await page.goto("/services");
-    await page.locator("#service-bulk-manpower").getByRole("link").click();
-    await expect(page).toHaveURL(/\?service=bulk-manpower#inquiry$/);
-    await expect(page.getByLabel("What do you need?")).toHaveValue("Bulk Manpower Recruitment");
+    await page.locator("#service-bulk-sourcing").getByRole("link").click();
+    await expect(page).toHaveURL(/\?service=bulk-sourcing#inquiry$/);
+    await expect(page.getByLabel("What do you need?")).toHaveValue("Bulk Candidate Sourcing");
   });
 
   test("an empty submit lists every missing field in order, and sends nothing", async ({ page }) => {

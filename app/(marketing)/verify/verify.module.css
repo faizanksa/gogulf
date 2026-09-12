@@ -19,6 +19,12 @@
   font-style: normal;
 }
 
+.note {
+  margin: var(--space-4) 0 0;
+  max-width: var(--container-prose);
+  color: var(--color-text-secondary);
+}
+
 .links {
   margin: var(--space-4) 0 0;
 }

@@ -147,7 +147,7 @@ export default async function AboutPage() {
             ))}
           </ul>
           <DevNotice decision="D3">
-            If the business confirms whose recruitment experience dates to 2008, it can be told here — attributed to that
+            If the business confirms whose industry experience dates to 2008, it can be told here — attributed to that
             person, never as the company&apos;s founding date (the company was incorporated in 2024).
           </DevNotice>
         </Container>

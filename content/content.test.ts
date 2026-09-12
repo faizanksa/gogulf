@@ -84,15 +84,20 @@ describe("claims and structured data", () => {
     expect(org).not.toHaveProperty("taxID");
     expect(org).not.toHaveProperty("vatID");
     expect(org).not.toHaveProperty("areaServed");
-    expect(org["@type"]).toBe("EmploymentAgency");
+    // Not EmploymentAgency: the company is not registered or licensed as a recruiting agent.
+    expect(org["@type"]).toBe("Organization");
     expect(JSON.stringify(org)).not.toMatch(/2008|placement|MOFA|verified/i);
     // No social profile is confirmed yet, so there is no sameAs.
     expect(CONFIRMED_SOCIAL).toEqual([]);
     expect(org).not.toHaveProperty("sameAs");
   });
 
+  it("records the recruiting-agent registration as refuted, never verified", () => {
+    expect(CLAIMS.recruitingAgentRegistration.status).toBe("refuted");
+  });
+
   it("keeps every unresolved claim flagged", () => {
-    for (const id of ["recruitingAgentRegistration", "heritage2008", "placementNumbers", "officesOutsideLucknow", "countriesRecruitedFor", "sectors", "employerVerification", "responseTimeSla", "travelServices", "socialProfiles", "gstCertificate"] as const) {
+    for (const id of ["heritage2008", "placementNumbers", "officesOutsideLucknow", "countriesRecruitedFor", "sectors", "employerVerification", "responseTimeSla", "travelServices", "socialProfiles", "gstCertificate"] as const) {
       expect(CLAIMS[id].status).toBe("unresolved");
     }
   });

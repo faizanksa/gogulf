@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { MCA_URL } from "@/components/site/CompanyFacts";
-import { DevNotice } from "@/components/site/DevNotice";
 import { OfficialChannels } from "@/components/site/OfficialChannels";
 import { PageHeader } from "@/components/site/PageHeader";
 import { FactList, type Fact } from "@/components/ui/FactList";
@@ -30,6 +29,11 @@ export async function generateMetadata() {
  *
  * The record's values (names, numbers, the address) are data and stay as registered; the
  * words around them come from the catalogues, so the page translates like any other.
+ *
+ * Company registration is not recruitment-agency licensing. The page shows what the
+ * CIN proves — that the company exists and is registered — and says plainly that it is
+ * not a licence for a line of business. There is no licence section: the company holds
+ * no recruiting-agent registration (content/company.ts CLAIMS), and none is implied.
  */
 export default async function VerifyPage() {
   const locale = await requireAvailable(PATH);
@@ -73,6 +77,7 @@ export default async function VerifyPage() {
             <div className={styles.block}>
               <SectionHeading id="company-heading" title={t("verifyPage.company.heading")} lead={t("verifyPage.company.body", { legalName: COMPANY.legalName })} />
               <FactList items={facts} />
+              <p className={styles.note}>{t("verifyPage.company.registration")}</p>
               <p className={styles.links}>
                 <a href={MCA_URL} target="_blank" rel="noopener noreferrer">
                   {t("verifyPage.company.mca")}
@@ -117,10 +122,6 @@ export default async function VerifyPage() {
               ),
             })}
           </p>
-          <DevNotice decision="D1">
-            Once the business confirms whether it holds an overseas Recruiting Agent registration, the registration number and
-            how to check it on the government’s eMigrate portal belong on this page.
-          </DevNotice>
         </Container>
       </Section>
     </>
