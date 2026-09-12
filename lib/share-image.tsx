@@ -44,8 +44,10 @@ export async function renderShareImage(): Promise<ImageResponse> {
           <div style={{ fontSize: 30, fontWeight: 700, color: INK, marginTop: 28 }}>{COMPANY.website}</div>
         </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 440, background: SURFACE }}>
+          {/* The logo's size sets the file's weight: 340 px made a 194 KB PNG, 240 px (still a
+              downscale, so sharp) makes about 124 KB — inside the 150 KB share-image budget. */}
           {/* eslint-disable-next-line @next/next/no-img-element -- rendered by Satori into a PNG, not a page */}
-          <img src={logoSrc} width={340} height={340} alt="" />
+          <img src={logoSrc} width={240} height={240} alt="" />
         </div>
         <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 14, background: GREEN }} />
       </div>
