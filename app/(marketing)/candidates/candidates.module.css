@@ -1,0 +1,201 @@
+.toc {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+  background: var(--color-bg);
+}
+
+.tocHeading {
+  margin: 0;
+  font-weight: var(--weight-semibold);
+}
+
+.tocList {
+  display: grid;
+  margin: 0;
+  padding-inline-start: 1.25rem;
+}
+.tocList a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+}
+
+.h3 {
+  margin: 0;
+  font-size: var(--text-h3);
+  font-weight: 650;
+  line-height: var(--leading-heading);
+}
+
+.columns {
+  display: grid;
+  gap: var(--space-5);
+}
+@media (min-width: 900px) {
+  .columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.panel {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+  padding: var(--space-6);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+  background: var(--color-bg);
+}
+
+.checklist {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.checklist li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-2);
+  line-height: var(--leading-snug);
+}
+.checklist svg {
+  color: var(--color-action);
+  margin-top: 0.1rem;
+}
+
+.panelAction,
+.panelNote {
+  margin: 0;
+}
+.panelAction a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  font-weight: var(--weight-semibold);
+}
+.panelNote {
+  color: var(--color-text-secondary);
+}
+
+.split {
+  display: grid;
+  gap: var(--space-5);
+}
+@media (min-width: 1024px) {
+  .split {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: var(--space-8);
+  }
+}
+
+.rules {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: rule;
+}
+.rules li {
+  position: relative;
+  padding: var(--space-4) var(--space-5);
+  padding-inline-start: 3.5rem;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-control);
+  background: var(--color-bg);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+  counter-increment: rule;
+}
+.rules li::before {
+  content: counter(rule);
+  position: absolute;
+  inset-inline-start: var(--space-4);
+  top: var(--space-4);
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: var(--gg-green-50);
+  color: var(--color-action);
+  font-family: var(--font-mono);
+  font-size: var(--text-data);
+  font-weight: 500;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-6);
+  margin: var(--space-4) 0 0;
+}
+.links a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--target-min);
+  font-weight: var(--weight-semibold);
+}
+
+.safety {
+  display: grid;
+  gap: var(--space-6);
+}
+@media (min-width: 1024px) {
+  .safety {
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    gap: var(--space-8);
+  }
+}
+
+.checks {
+  display: grid;
+  gap: var(--space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 768px) {
+  .checks {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.check {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  padding-top: var(--space-4);
+  border-top: 2px solid var(--color-text);
+}
+.check p {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.checkIcon {
+  color: var(--color-action);
+}
+
+.channels {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+  padding: var(--space-5);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+  background: var(--color-bg);
+}
+
+.faq {
+  border-top: 1px solid var(--color-divider);
+}
+.faq p {
+  margin: 0;
+}
