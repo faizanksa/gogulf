@@ -71,7 +71,7 @@ const SECTIONS = [
       <>
         <p>
           These are the services a candidate may engage us for — registration and profile
-          preparation, job placement support, documentation and attestation guidance, MOFA and
+          preparation, job-application and job-matching support, documentation and attestation guidance, MOFA and
           embassy processing, medical coordination, immigration support, travel and ticketing
           coordination, and pre-departure orientation.
         </p>
@@ -92,9 +92,8 @@ const SECTIONS = [
     body: (
       <>
         <p>
-          Employer hiring solutions, bulk manpower recruitment, recruitment process outsourcing
-          (RPO), candidate screening, interview coordination and HR &amp; recruitment support are
-          business-to-business engagements. They are quoted commercially and separately from
+          Employer hiring solutions, bulk candidate sourcing, recruitment support, candidate
+          screening, interview coordination and HR support are business-to-business engagements. They are quoted commercially and separately from
           anything on the candidate side.
         </p>
         <p>
@@ -158,8 +157,8 @@ const SECTIONS = [
           vacancies, interview coordination, documentation and attestation support, MOFA and embassy
           processing, medical and visa coordination, travel coordination, pre-departure orientation
           and post-joining support. On the employer side it is sourcing, screening and verification,
-          shortlisting, interview coordination, bulk manpower mobilisation, RPO delivery and
-          recruitment and HR support, to the scope agreed in your commercial terms.
+          shortlisting, interview coordination, sourcing at volume, recruitment support and HR
+          support, to the scope agreed in your commercial terms.
         </p>
         <p>
           It is a fee for that service and that effort. It is{" "}
@@ -215,7 +214,7 @@ const SECTIONS = [
     heading: "Limits imposed by law",
     body: (
       <p>
-        Any fee charged in connection with overseas recruitment or emigration services is subject to
+        Any fee we charge for a service is subject to
         the limits and conditions imposed by applicable Indian law and by the law of the destination
         country. We do not charge, and will not ask you for, anything that the law does not permit
         us to charge. If you believe a charge you have been asked for exceeds what is permitted,

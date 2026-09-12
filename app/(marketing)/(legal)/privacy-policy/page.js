@@ -11,9 +11,9 @@ export const metadata = pageMetadata("/privacy-policy");
 // therefore not reach production before the cutover that moves production onto
 // Resend — production still runs its EmailJS build from `main` until then.
 //
-// OPEN (Phase 2B, flagged, not edited): fonts are now self-hosted through next/font,
-// so browsers no longer request them from Google. The "Google Fonts" entry below
-// overstates what happens. Legal wording changes only with the approver's sign-off.
+// Fonts are self-hosted through next/font (downloaded at build, served from our own
+// domain), so no font request reaches Google. The former "Google Fonts" entry was
+// removed on 12 Sep 2026 at the approver's instruction.
 const SECTIONS = [
   {
     id: "who-we-are",
@@ -31,7 +31,7 @@ const SECTIONS = [
           In this policy, “we”, “us” and “our” mean {LEGAL_ENTITY.name}. “You” means anyone who
           visits this website, contacts us through it, applies for a job through it, or engages us
           as an employer or business client. We decide why and how your personal information is
-          handled in connection with this website and our recruitment services, and we are
+          handled in connection with this website and our services, and we are
           responsible for it.
         </p>
       </>
@@ -44,7 +44,7 @@ const SECTIONS = [
       <>
         <p>
           This policy explains what personal information we collect through this website and our
-          recruitment services, why we collect it, who we share it with, how long we keep it, how
+          services, why we collect it, who we share it with, how long we keep it, how
           we protect it, and what you can ask us to do with it.
         </p>
         <p>It applies to:</p>
@@ -98,7 +98,7 @@ const SECTIONS = [
           </li>
           <li>
             <strong>Direct contact</strong> — anything you send us by email, WhatsApp, phone or
-            through our social channels, including documents you share during the recruitment
+            through our social channels, including documents you share during the hiring
             process.
           </li>
         </ul>
@@ -114,7 +114,7 @@ const SECTIONS = [
 
         <h3>Information from employers and partners</h3>
         <p>
-          During a live recruitment process, an employer, an authorised recruitment partner, a
+          During a live hiring process, an employer, a partner working with us on the requirement, a
           medical centre or a visa processing agent may share information about your application
           with us — for example interview feedback, a shortlisting or selection decision, medical
           fitness status, or visa or document processing status.
@@ -124,11 +124,11 @@ const SECTIONS = [
   },
   {
     id: "candidate-information",
-    heading: "Candidate and recruitment information",
+    heading: "Candidate and application information",
     body: (
       <>
         <p>
-          Recruitment naturally involves more information than a general website inquiry. Where you
+          An overseas job application involves more information than a general website inquiry. Where you
           proceed as a candidate, the information we handle may include:
         </p>
         <ul>
@@ -201,7 +201,7 @@ const SECTIONS = [
             you for roles you may be suitable for;
           </li>
           <li>
-            share your profile with employers and authorised recruitment partners for the purpose
+            share your profile with employers, and partners working with us on the requirement, for the purpose
             of a specific hiring process (see section 8);
           </li>
           <li>coordinate screening, interviews, employer feedback and selection outcomes;</li>
@@ -282,7 +282,7 @@ const SECTIONS = [
     body: (
       <>
         <p>
-          Recruitment does not work unless your profile reaches an employer, so sharing is part of
+          An application cannot progress unless your profile reaches an employer, so sharing is part of
           the service you are asking us for. We share only what is needed, only with the categories
           below, and only for the purposes described.
         </p>
@@ -295,7 +295,7 @@ const SECTIONS = [
             and the law of its country.
           </li>
           <li>
-            <strong>Recruitment and sourcing partners</strong> who are working with us on a
+            <strong>Sourcing partners</strong> who are working with us on a
             specific requirement.
           </li>
           <li>
@@ -379,14 +379,6 @@ const SECTIONS = [
               Hosts our {LEGAL_ENTITY.brand} email accounts, including {CONTACT.jobsEmail} and{" "}
               {CONTACT.businessEmail}. Anything you email us, and any email we send you, is stored
               in that mail service.
-            </dd>
-          </div>
-          <div>
-            <dt>Google Fonts</dt>
-            <dd>
-              Serves the typefaces used on this website. Your browser requests the font files
-              directly from Google, which means Google receives your IP address and basic browser
-              information as part of that request. No content you type into a form is involved.
             </dd>
           </div>
           <div>
@@ -475,7 +467,7 @@ const SECTIONS = [
     body: (
       <>
         <p>
-          Our business is overseas recruitment, so your information will in many cases leave India —
+          Our work concerns jobs outside India, so your information will in many cases leave India —
           that is inherent in what you are asking us to do.
         </p>
         <ul>
@@ -547,7 +539,7 @@ const SECTIONS = [
           copies and other documents are stored in a private file store that is not publicly
           readable and is not linkable from this website — the storage rules permit submissions to
           be written but not read back by the public — and access is limited to authorised members
-          of our team who need it for a live recruitment process. Our email accounts are on a
+          of our team who need it for a live hiring process. Our email accounts are on a
           managed business email platform.
         </p>
         <p>
@@ -705,7 +697,7 @@ export default function PrivacyPolicyPage() {
       title="Privacy Policy"
       eyebrow="Legal"
       path="/privacy-policy"
-      intro="What we collect, why we collect it, who we share it with, and the control you have over it — written for how this website and our recruitment services actually work."
+      intro="What we collect, why we collect it, who we share it with, and the control you have over it — written for how this website and our services actually work."
       sections={SECTIONS}
     />
   );

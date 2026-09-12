@@ -18,8 +18,8 @@ const SECTIONS = [
         <div className="legal-callout">
           <p>
             <strong>
-              {LEGAL_ENTITY.name} (trading as {LEGAL_ENTITY.brand}) is a recruitment services
-              company. We sell no goods, we operate no online store, and we ship nothing.
+              {LEGAL_ENTITY.name} (trading as {LEGAL_ENTITY.brand}) provides services to job
+              seekers and employers. We sell no goods, we operate no online store, and we ship nothing.
             </strong>{" "}
             There is therefore no shipping charge, no courier partner, no dispatch or tracking
             process and no delivery address to provide.
@@ -39,7 +39,7 @@ const SECTIONS = [
     body: (
       <>
         <p>
-          What you receive from us is recruitment and mobilisation work performed by our team,
+          What you receive from us is work performed by our team,
           delivered as communications, coordination and documentation support. Depending on the
           service, that includes:
         </p>
@@ -53,7 +53,7 @@ const SECTIONS = [
           <li>immigration guidance and travel and ticketing coordination;</li>
           <li>pre-departure orientation and post-joining support;</li>
           <li>
-            for employers: sourcing, bulk manpower recruitment, recruitment process outsourcing,
+            for employers: candidate sourcing, including at volume, recruitment support,
             screening reports, candidate shortlists and hiring coordination.
           </li>
         </ul>
@@ -123,7 +123,7 @@ const SECTIONS = [
       <>
         <p>
           We work to the timelines we agree with you and keep you informed of progress. But
-          recruitment for overseas employment moves at the pace of parties we do not control:
+          overseas hiring moves at the pace of parties we do not control:
           employers deciding on shortlists and interviews, embassies and consulates issuing visas,
           ministries and attestation authorities processing documents, approved medical centres
           scheduling examinations, and airlines and immigration authorities handling travel.
@@ -144,7 +144,7 @@ const SECTIONS = [
     body: (
       <>
         <p>
-          Some stages of overseas recruitment involve original physical documents — a passport for
+          Some stages of an overseas job application involve original physical documents — a passport for
           visa stamping, or attested originals returned by an authority, for example.
         </p>
         <p>
@@ -224,7 +224,7 @@ export default function ShippingPolicyPage() {
       title="Shipping & Delivery Policy"
       eyebrow="Legal"
       path="/shipping-policy"
-      intro="We sell no products and ship no goods. This page explains how our recruitment services are delivered, when delivery begins, and what to expect on timelines."
+      intro="We sell no products and ship no goods. This page explains how our services are delivered, when delivery begins, and what to expect on timelines."
       sections={SECTIONS}
     />
   );

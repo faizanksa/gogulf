@@ -10,8 +10,8 @@ import {
 
 export const metadata = pageMetadata("/terms-and-conditions");
 
-// Written against what Go Gulf actually does — recruitment and mobilisation
-// support, not employment. Deliberately carries no guarantee of selection,
+// Written against what Go Gulf actually does — support for job seekers and
+// employers, not employment. Deliberately carries no guarantee of selection,
 // visa issuance or joining, because the site makes no such promise either.
 const SECTIONS = [
   {
@@ -21,7 +21,7 @@ const SECTIONS = [
       <>
         <p>
           These Terms &amp; Conditions govern your use of the website{" "}
-          <strong>www.gogulf.co</strong> and of the recruitment and related services offered
+          <strong>www.gogulf.co</strong> and of the services offered
           through it. Please read them before you use the website or submit anything to us.
         </p>
         <p>
@@ -64,12 +64,12 @@ const SECTIONS = [
     body: (
       <>
         <p>
-          This website presents our recruitment services, publishes job openings with Gulf-based
+          This website presents our services, publishes job openings with Gulf-based
           employers, and lets candidates and employers reach us. It is an information and inquiry
           platform.
         </p>
         <p>
-          We are a recruitment services provider. We are <strong>not</strong> the employer for any
+          We provide support services to job seekers and employers. We are <strong>not</strong> the employer for any
           role advertised on this website, we are not a party to the employment contract you may
           eventually sign, and we are not a government or immigration authority. The employer named
           in a placement is your employer; we introduce, screen, coordinate and support the process
@@ -115,7 +115,7 @@ const SECTIONS = [
           <li>you may submit an application only for yourself, and only with your own documents;</li>
           <li>
             you authorise us to review your profile, assess your suitability, and share your profile
-            and supporting documents with employers and authorised recruitment partners for the
+            and supporting documents with employers, and partners working with us on the requirement, for the
             purpose of a hiring process, as described in our{" "}
             <Link href="/privacy-policy">Privacy Policy</Link>;
           </li>
@@ -139,7 +139,7 @@ const SECTIONS = [
       <>
         <p>
           If you contact us as an employer, client or partner, you confirm that the vacancy you
-          describe is genuine, that you are authorised to recruit for it, and that the role, terms,
+          describe is genuine, that you are authorised to hire for it, and that the role, terms,
           wages, benefits, working conditions and accommodation you describe are accurate and comply
           with the labour and immigration law of the country where the work will be performed.
         </p>
@@ -200,7 +200,7 @@ const SECTIONS = [
   },
   {
     id: "recruitment-process",
-    heading: "The recruitment process",
+    heading: "The application and hiring process",
     body: (
       <>
         <p>
@@ -341,7 +341,7 @@ const SECTIONS = [
       <>
         <p>
           Delivering these services involves parties we do not control: employers and their
-          representatives, recruitment and sourcing partners, embassies, consulates, ministries and
+          representatives, sourcing partners, embassies, consulates, ministries and
           attestation bodies, immigration and emigration authorities, approved medical centres,
           airlines and travel providers, banks and payment providers, and the technology providers
           listed in our <Link href="/privacy-policy">Privacy Policy</Link>.
@@ -406,7 +406,7 @@ const SECTIONS = [
           payment for you. Taxes, including GST, apply as required by law.
         </p>
         <p>
-          Any fee charged in connection with overseas recruitment or emigration services is subject
+          Any fee we charge for a service is subject
           to the limits and conditions imposed by applicable Indian law and by the law of the
           destination country, and nothing in these terms permits a charge that the law does not.
         </p>
@@ -426,7 +426,7 @@ const SECTIONS = [
     body: (
       <>
         <p>
-          Overseas recruitment attracts impersonators. Protect yourself: verify any communication
+          Offers of overseas jobs attract impersonators. Protect yourself: verify any communication
           claiming to be from {LEGAL_ENTITY.brand} against the contact details published on this
           website before you act on it or pay anything.
         </p>
@@ -652,7 +652,7 @@ export default function TermsPage() {
       title="Terms & Conditions"
       eyebrow="Legal"
       path="/terms-and-conditions"
-      intro="The terms on which we provide this website and our recruitment services — what we do, what we do not promise, and what we each remain responsible for."
+      intro="The terms on which we provide this website and our services — what we do, what we do not promise, and what we each remain responsible for."
       sections={SECTIONS}
     />
   );

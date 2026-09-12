@@ -42,7 +42,7 @@ const SECTIONS = [
     body: (
       <>
         <p>
-          We provide professional recruitment and mobilisation services — sourcing, screening,
+          We provide professional support services — sourcing, screening,
           interview coordination, documentation and attestation support, medical and visa
           coordination, travel coordination and post-joining support. We do not sell goods.
         </p>
