@@ -10,8 +10,12 @@ import { Receipt } from "@/components/ui/Receipt";
 import { collectNativeErrors, fromServerErrors, type FormError } from "@/lib/forms/native-validation";
 import { submitViaServer } from "@/lib/forms/transport";
 import type { ApplyFormCopy } from "@/lib/i18n/forms";
-import { submitJobApplication } from "@/lib/supabase";
 import styles from "./ApplyForm.module.css";
+
+// supabase-js is needed only when the applicant presses Send, so it loads then instead of
+// shipping with the page (it was over a quarter of /jobs/apply's JavaScript). It starts
+// loading as soon as the applicant focuses the form, so sending never waits for it.
+const loadUploader = () => import("@/lib/supabase");
 
 /**
  * The job application form (2C-1). Same data flow as before, which stays until Phase 5:
@@ -124,6 +128,7 @@ export function ApplyForm({ copy }: { copy: ApplyFormCopy }) {
 
     let saved: { submissionId: string; otherPaths: string[] };
     try {
+      const { submitJobApplication } = await loadUploader();
       saved = await submitJobApplication({
         jobTitle,
         jobCountry: target.country,
@@ -213,7 +218,15 @@ export function ApplyForm({ copy }: { copy: ApplyFormCopy }) {
   }
 
   return (
-    <form ref={formRef} id="apply-form" className={styles.form} onSubmit={handleSubmit} noValidate aria-busy={sending || undefined}>
+    <form
+      ref={formRef}
+      id="apply-form"
+      className={styles.form}
+      onSubmit={handleSubmit}
+      onFocusCapture={() => void loadUploader()}
+      noValidate
+      aria-busy={sending || undefined}
+    >
       <div className={styles.target}>
         <p className={styles.targetLabel}>{copy.target.applyingFor}</p>
         <p className={styles.targetValue}>

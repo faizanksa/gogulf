@@ -25,10 +25,16 @@ import { Anek_Devanagari, Anek_Latin, IBM_Plex_Mono, Mukta } from "next/font/goo
  * styles/tokens.css in the same change.
  */
 
+// `optional`, not `swap`, for the display face (2C final pass): with `swap` the hero
+// heading — the home page's largest element — was repainted when Anek arrived, so LCP
+// waited for the font (4.7 s on Lighthouse's slow 4G). With `optional` the heading
+// paints at once; Anek is used if it arrives within the block period (it is preloaded,
+// and cached for every later page), otherwise the metric-matched fallback stays for
+// that page view. No layout shift either way: next/font sizes the fallback to Anek.
 export const anekLatin = Anek_Latin({
   subsets: ["latin"],
   variable: "--font-anek",
-  display: "swap",
+  display: "optional",
 });
 
 export const anekDevanagari = Anek_Devanagari({
