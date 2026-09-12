@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ContactForm from "@/components/ContactForm";
 import JsonLd from "@/components/JsonLd";
+import { contactFormCopy } from "@/lib/i18n/forms";
 import { pageMetadata, breadcrumbJsonLd } from "@/lib/seo";
 import { LEGAL_ENTITY, ADDRESS_LINES } from "@/lib/legal";
 
@@ -8,7 +9,8 @@ export const metadata = pageMetadata("/contact");
 
 const BREADCRUMB = breadcrumbJsonLd([{ name: "Contact", path: "/contact" }]);
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const copy = await contactFormCopy();
   return (
     <>
       <JsonLd data={BREADCRUMB} />
@@ -78,7 +80,7 @@ export default function ContactPage() {
           <div>
             <div className="eyebrow">Quick Message</div>
             <h2>Send us a note</h2>
-            <ContactForm />
+            <ContactForm copy={copy} />
           </div>
         </div>
       </section>

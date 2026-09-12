@@ -6,7 +6,8 @@
 
 .honeypot {
   position: absolute;
-  left: -9999px;
+  /* Logical, so on a right-to-left page it sits off the non-scrolling edge too. */
+  inset-inline-start: -9999px;
   width: 1px;
   height: 1px;
   overflow: hidden;

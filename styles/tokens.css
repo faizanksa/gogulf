@@ -124,6 +124,18 @@
   --z-skip: 100;
 }
 
+/*
+ * Script stacks. A language's face and its :lang() stack arrive together with its first
+ * reviewed catalogue (app/fonts.ts explains why not sooner). Until then Arabic and
+ * Malayalam text renders in the system's font for that script.
+ *
+ * Arabic has no narrow cut, so right-to-left headings drop the width axis back to
+ * normal. :lang(ar) also matches the ar-XB pseudo-locale, so RTL testing sees it too.
+ */
+:lang(ar) {
+  --display-wdth: 100;
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     --duration-fast: 0.01ms;

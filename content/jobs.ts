@@ -34,6 +34,31 @@ const employer = z.discriminatedUnion("disclosure", [
   z.object({ disclosure: z.literal("confidential") }),
 ]);
 
+/**
+ * A translation of a job's human-written text into one language. The job's facts —
+ * country, salary, dates, slug, employment type — stay language-neutral on the job itself
+ * and are formatted for each language when the page renders (lib/i18n/format.ts); only
+ * words a person wrote are translated. This is the shape of the future Supabase table
+ * job_translations(job_id, locale, …) (docs/I18N.md).
+ *
+ * A translation is shown only once it is "reviewed", recording who reviewed it and when.
+ * Never machine-translate a listing at request time.
+ */
+const jobTranslation = z
+  .object({
+    locale: z.enum(["hi", "ar", "ml", "ta", "bn"]),
+    title: z.string().min(2).max(120),
+    summary: z.string().min(20).max(600),
+    industry: z.string().min(2).optional(),
+    city: z.string().min(2).optional(),
+    status: z.enum(["draft", "in-review", "reviewed"]),
+    reviewedBy: z.string().min(2).nullable(),
+    reviewedOn: isoDate.nullable(),
+  })
+  .refine((t) => t.status !== "reviewed" || (t.reviewedBy && t.reviewedOn), "A reviewed translation records who reviewed it and when");
+
+export type JobTranslation = z.infer<typeof jobTranslation>;
+
 const job = z
   .object({
     slug,
@@ -51,10 +76,13 @@ const job = z
     employer: employer.nullable(),
     verification,
     verificationNote: z.string().optional(),
+    translations: z.array(jobTranslation).default([]),
   })
   .superRefine((j, ctx) => {
     if (j.updatedOn < j.postedOn) ctx.addIssue({ code: "custom", message: "updatedOn is before postedOn", path: ["updatedOn"] });
     if (j.closesOn && j.closesOn < j.postedOn) ctx.addIssue({ code: "custom", message: "closesOn is before postedOn", path: ["closesOn"] });
+    const langs = j.translations.map((t) => t.locale);
+    if (new Set(langs).size !== langs.length) ctx.addIssue({ code: "custom", message: "At most one translation per language", path: ["translations"] });
     if (j.verification === "confirmed") {
       if (!j.closesOn) ctx.addIssue({ code: "custom", message: "A confirmed job needs an explicit closesOn date", path: ["closesOn"] });
       if (!j.employer) ctx.addIssue({ code: "custom", message: "A confirmed job needs an employer disclosure (named or confidential)", path: ["employer"] });
@@ -202,3 +230,18 @@ export function formatSalary(s: Job["salary"]): string | null {
   const n = (v: number) => v.toLocaleString("en-IN");
   return `${s.currency} ${n(s.min)} – ${n(s.max)} / ${s.period}`;
 }
+
+/** The reviewed translation of a job's text into `locale`, if one exists. */
+export function reviewedTranslation(j: Job, locale: string): JobTranslation | null {
+  return j.translations.find((t) => t.locale === locale && t.status === "reviewed") ?? null;
+}
+
+/** ISO 3166-1 codes of the countries jobs are in — for Intl.DisplayNames (lib/i18n/format.ts). */
+export const COUNTRY_CODES: Record<Job["country"], string> = {
+  "Saudi Arabia": "SA",
+  "United Arab Emirates": "AE",
+  Qatar: "QA",
+  Oman: "OM",
+  Kuwait: "KW",
+  Bahrain: "BH",
+};

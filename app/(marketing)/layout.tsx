@@ -1,28 +1,24 @@
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
-import JsonLd from "@/components/JsonLd";
-import { SiteFooter } from "@/components/site/SiteFooter";
-import { SiteHeader } from "@/components/site/SiteHeader";
-import { SkipLink } from "@/components/site/SkipLink";
-import { siteJsonLdGraph } from "@/lib/seo";
-import styles from "./marketing.module.css";
+import { RootDocument } from "@/components/site/RootDocument";
+import { SiteShell } from "@/components/site/SiteShell";
+import { rootMetadata, ROOT_VIEWPORT } from "@/lib/root-metadata";
 
 /**
- * The public site's shell: skip link, header, one <main> landmark, footer, and the
- * sitewide Organization + WebSite structured data.
+ * Root layout of the English public site — the source language, at unprefixed URLs.
+ * Other languages have their own root layout in app/[locale], so each page's
+ * <html lang dir> is right for its language.
  *
  * Pages not yet rebuilt sit in the (legacy) and (legal) groups, whose layouts load the
  * scoped pre-redesign stylesheet.
  */
+export const metadata: Metadata = rootMetadata();
+export const viewport: Viewport = ROOT_VIEWPORT;
+
 export default function MarketingLayout({ children }: { children: ReactNode }) {
   return (
-    <>
-      <SkipLink />
-      <SiteHeader />
-      <main id="main-content" tabIndex={-1} className={styles.main}>
-        {children}
-      </main>
-      <SiteFooter />
-      <JsonLd data={siteJsonLdGraph()} />
-    </>
+    <RootDocument locale="en">
+      <SiteShell>{children}</SiteShell>
+    </RootDocument>
   );
 }

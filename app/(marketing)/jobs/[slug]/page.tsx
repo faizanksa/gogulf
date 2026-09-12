@@ -9,7 +9,12 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Container, Section } from "@/components/ui/Layout";
 import { whatsappLink } from "@/content/channels";
-import { formatSalary, getJob, jobIsClosed, visibleJobs, type Job } from "@/content/jobs";
+import { getJob, jobIsClosed, visibleJobs, type Job } from "@/content/jobs";
+import { countryName, formatDate, formatNumber, salaryText } from "@/lib/i18n/format";
+import { DEFAULT, hreflangAlternates } from "@/lib/i18n/locales";
+import { hrefIn, jobLocales, jobText, type JobText } from "@/lib/i18n/pages";
+import { currentLocale, getTranslator, requireAvailable } from "@/lib/i18n/server";
+import { createTranslator, type MessageKey, type Translator } from "@/lib/i18n/translator";
 import { jobPostingJsonLd } from "@/lib/job-posting";
 import { buildMetadata } from "@/lib/seo";
 import styles from "./job.module.css";
@@ -23,6 +28,10 @@ import styles from "./job.module.css";
  * Unknown slugs 404. Unconfirmed jobs render only outside production, flagged, noindex
  * and without JobPosting. Hourly regeneration moves a job to "closed" on its closing
  * date without a deploy.
+ *
+ * Languages: English here; app/[locale]/jobs/[slug] serves the same page for each job
+ * with a reviewed translation (content/jobs.ts). The job's facts stay language-neutral
+ * and are only formatted per language; its words come from the translation.
  */
 export const dynamicParams = false;
 export const revalidate = 3600;
@@ -31,25 +40,39 @@ export function generateStaticParams() {
   return visibleJobs().map((j) => ({ slug: j.slug }));
 }
 
-const where = (j: Job) => (j.city ? `${j.city}, ${j.country}` : j.country);
+const TYPE_KEYS: Record<Job["employmentType"], MessageKey> = {
+  "Full-Time": "jobs.type.fullTime",
+  "Part-Time": "jobs.type.partTime",
+  Contract: "jobs.type.contract",
+  Temporary: "jobs.type.temporary",
+};
+
+function placeOf(job: Job, text: JobText, t: Translator): string {
+  const country = countryName(job.country, t.locale);
+  return text.city ? t("jobs.place", { city: text.city, country }) : country;
+}
 
 function trimTo(text: string, max: number) {
   if (text.length <= max) return text;
   return `${text.slice(0, text.lastIndexOf(" ", max - 1))}…`;
 }
 
-const dateFormat = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
-const formatDate = (iso: string) => dateFormat.format(new Date(`${iso}T00:00:00Z`));
-
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const job = getJob(slug);
   if (!job) return {};
+  const locale = await currentLocale();
+  const t = createTranslator(locale);
+  const text = jobText(job, locale);
+  const where = placeOf(job, text, t);
+  const path = `/jobs/${job.slug}`;
   return buildMetadata({
-    path: `/jobs/${job.slug}`,
-    title: `${job.title} in ${where(job)}`,
-    description: trimTo(`${job.title} job in ${where(job)} listed by Go Gulf. ${job.summary}`, 160),
+    path,
+    locale,
+    title: t("jobs.metaTitle", { title: text.title, where }),
+    description: trimTo(t("jobs.metaDescription", { title: text.title, where, summary: text.summary }), 160),
     noIndex: job.verification !== "confirmed" || jobIsClosed(job),
+    languages: hreflangAlternates(path, jobLocales(job)),
   });
 }
 
@@ -57,24 +80,32 @@ export default async function JobPage({ params }: { params: Promise<{ slug: stri
   const { slug } = await params;
   const job = getJob(slug);
   if (!job) notFound();
+  const path = `/jobs/${job.slug}`;
+  const locale = await requireAvailable(path);
+  const t = await getTranslator();
+  const href = (p: string) => hrefIn(p, locale);
 
+  const text = jobText(job, locale);
+  const where = placeOf(job, text, t);
   const closed = jobIsClosed(job);
-  const salary = formatSalary(job.salary);
-  const schema = closed ? null : jobPostingJsonLd(job);
-  const applyHref = `/jobs/apply?${new URLSearchParams({ job: job.title, country: job.country, type: job.employmentType }).toString()}`;
-  const askHref = whatsappLink(`Hello Go Gulf, I would like to know more about the ${job.title} job in ${where(job)} (ref ${job.slug}).`);
+  // JobPosting only on the English page: the translations are its hreflang alternates,
+  // and structured data must match the page it sits on word for word.
+  const schema = closed || locale !== DEFAULT ? null : jobPostingJsonLd(job);
+  // The apply form's prefill stays in English: it is data for staff, not reading text.
+  const applyHref = `${href("/jobs/apply")}?${new URLSearchParams({ job: job.title, country: job.country, type: job.employmentType }).toString()}`;
+  const askHref = whatsappLink(t("jobs.askMessage", { title: text.title, where, slug: job.slug }));
 
   const facts: { label: string; value: React.ReactNode }[] = [
-    { label: "Location", value: where(job) },
-    { label: "Industry", value: job.industry },
-    { label: "Contract", value: job.employmentType },
-    { label: "Salary", value: salary ? <span className={styles.mono}>{salary}</span> : "Not stated" },
-    { label: "Posted", value: <time dateTime={job.postedOn}>{formatDate(job.postedOn)}</time> },
+    { label: t("jobs.location"), value: where },
+    { label: t("jobs.industry"), value: text.industry },
+    { label: t("jobs.contract"), value: t(TYPE_KEYS[job.employmentType]) },
+    { label: t("jobs.salary"), value: job.salary ? <span className={styles.mono}>{salaryText(job.salary, t)}</span> : t("jobs.salaryNotStated") },
+    { label: t("jobs.posted"), value: <time dateTime={job.postedOn}>{formatDate(job.postedOn, locale)}</time> },
     {
-      label: "Closes",
-      value: job.closesOn ? <time dateTime={job.closesOn}>{formatDate(job.closesOn)}</time> : "No closing date given",
+      label: t("jobs.closes"),
+      value: job.closesOn ? <time dateTime={job.closesOn}>{formatDate(job.closesOn, locale)}</time> : t("jobs.noClosingDate"),
     },
-    ...(job.openings ? [{ label: "Openings", value: String(job.openings) }] : []),
+    ...(job.openings ? [{ label: t("jobs.openings"), value: formatNumber(job.openings, locale) }] : []),
   ];
 
   return (
@@ -82,14 +113,14 @@ export default async function JobPage({ params }: { params: Promise<{ slug: stri
       {schema ? <JsonLd data={schema} /> : null}
       <PageHeader
         crumbs={[
-          { name: "Jobs", path: "/jobs" },
-          { name: job.title, path: `/jobs/${job.slug}` },
+          { name: t("jobs.breadcrumb"), path: "/jobs" },
+          { name: text.title, path },
         ]}
-        title={job.title}
-        lead={`${where(job)} · ${job.industry}`}
+        title={text.title}
+        lead={`${where} · ${text.industry}`}
       >
-        <Badge tone="green">{job.employmentType}</Badge>
-        {closed ? <Badge tone="error">Closed</Badge> : null}
+        <Badge tone="green">{t(TYPE_KEYS[job.employmentType])}</Badge>
+        {closed ? <Badge tone="error">{t("jobs.closedBadge")}</Badge> : null}
       </PageHeader>
 
       <Section>
@@ -98,26 +129,26 @@ export default async function JobPage({ params }: { params: Promise<{ slug: stri
             <div className={styles.main}>
               {job.verification === "unconfirmed" ? <DevNotice decision="D4">{job.verificationNote}</DevNotice> : null}
               {closed ? (
-                <Alert tone="info" title="This position has closed">
-                  <p>
-                    It is no longer accepting applications. <Link href="/jobs">See current openings</Link>.
-                  </p>
+                <Alert tone="info" title={t("jobs.closedTitle")}>
+                  <p>{t.rich("jobs.closedBody", { jobs: (chunks) => <Link href={href("/jobs")}>{chunks}</Link> })}</p>
                 </Alert>
               ) : null}
 
-              <h2 className={styles.h2}>About the role</h2>
-              <p className={styles.summary}>{job.summary}</p>
+              <h2 className={styles.h2}>{t("jobs.aboutRole")}</h2>
+              <p className={styles.summary}>{text.summary}</p>
 
-              <h2 className={styles.h2}>Fees</h2>
+              <h2 className={styles.h2}>{t("jobs.fees")}</h2>
               <p>
-                Every fee is quoted to you in writing before you pay. See <Link href="/pricing">Pricing &amp; fees</Link>, and{" "}
-                <Link href="/verify">how to check you are dealing with Go Gulf</Link>.
+                {t.rich("jobs.feesBody", {
+                  pricing: (chunks) => <Link href={href("/pricing")}>{chunks}</Link>,
+                  verify: (chunks) => <Link href={href("/verify")}>{chunks}</Link>,
+                })}
               </p>
             </div>
 
             <aside className={styles.aside} aria-labelledby="job-facts-heading">
               <h2 id="job-facts-heading" className={styles.h3}>
-                Job details
+                {t("jobs.details")}
               </h2>
               <dl className={styles.facts}>
                 {facts.map((f) => (
@@ -136,10 +167,10 @@ export default async function JobPage({ params }: { params: Promise<{ slug: stri
         <div className={styles.applyBar}>
           <div className={styles.applyInner}>
             <Button href={applyHref} icon="arrow-right" iconPosition="end">
-              Apply for this job
+              {t("jobs.apply")}
             </Button>
-            <Button href={askHref} variant="secondary" icon="whatsapp" opensWhatsApp>
-              Ask on WhatsApp
+            <Button href={askHref} variant="secondary" icon="whatsapp" opensWhatsApp={t("common.opensWhatsApp")}>
+              {t("jobs.askWhatsApp")}
             </Button>
           </div>
         </div>

@@ -11,4 +11,9 @@ export const A11Y_ROUTES: { path: string; expectStatus: number }[] = [
   { path: "/admin/login", expectStatus: 200 },
   { path: "/portal/login", expectStatus: 200 },
   { path: "/this-page-does-not-exist", expectStatus: 404 },
+  // Pseudo-locales (local and staging builds only): right-to-left and lengthened text.
+  { path: "/ar-XB/verify", expectStatus: 200 },
+  { path: `/ar-XB${SAMPLE_JOB}`, expectStatus: 200 },
+  { path: "/en-XA/verify", expectStatus: 200 },
+  { path: "/ar-XB/about", expectStatus: 404 },
 ];

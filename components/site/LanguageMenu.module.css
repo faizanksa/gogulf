@@ -1,0 +1,82 @@
+.menu {
+  position: relative;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--target-min);
+  min-width: var(--target-min);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+.button:hover {
+  border-color: var(--color-text);
+}
+
+/* Opens under the button, aligned to its end edge — right in LTR, left in RTL. */
+.list {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  inset-inline-end: 0;
+  z-index: var(--z-menu);
+  min-width: 12rem;
+  margin: 0;
+  padding: var(--space-1);
+  list-style: none;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-control);
+  background: var(--color-bg);
+  box-shadow: var(--shadow-overlay);
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  min-height: var(--target-min);
+  padding-inline: var(--space-3);
+  border-radius: var(--radius-control);
+  color: var(--color-text);
+  text-decoration: none;
+}
+.option:hover {
+  background: var(--color-bg-subtle);
+  text-decoration: underline;
+}
+/* Current language: a bar and weight, not colour alone. */
+.option[aria-current="true"] {
+  border-inline-start: 3px solid var(--color-action);
+  font-weight: var(--weight-semibold);
+}
+
+/* The list variant, inside the mobile menu panel. */
+.inline {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+}
+
+.inlineHeading {
+  margin: 0;
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-muted);
+}
+
+.inlineList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.inlineList .option {
+  border: 1px solid var(--color-border);
+}

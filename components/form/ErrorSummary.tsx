@@ -12,11 +12,12 @@ import styles from "./ErrorSummary.module.css";
 export function ErrorSummary({
   errors,
   attempt,
-  title = "There is a problem",
+  title,
 }: {
   errors: FormError[];
   attempt: number;
-  title?: string;
+  /** "There is a problem", translated by the page. */
+  title: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const titleId = useId();

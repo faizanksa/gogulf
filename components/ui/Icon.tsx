@@ -78,6 +78,12 @@ const PATHS = {
     </>
   ),
   shield: <path d="M12 3 19 6v6c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6z" />,
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z" />
+    </>
+  ),
   building: <path d="M4 21V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v16M15 9h4a1 1 0 0 1 1 1v11M3 21h18M8 8h3M8 12h3M8 16h3" />,
   spinner: <path d="M12 3a9 9 0 1 0 9 9" />,
   whatsapp: (
@@ -86,6 +92,9 @@ const PATHS = {
 } satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof PATHS;
+
+/** Icons that point along the line of text; mirrored under dir="rtl" (Icon.module.css). */
+const DIRECTIONAL: ReadonlySet<IconName> = new Set<IconName>(["arrow-right", "chevron-right"]);
 
 export function Icon({
   name,
@@ -104,7 +113,7 @@ export function Icon({
       viewBox="0 0 24 24"
       width={size}
       height={size}
-      className={cx(styles.icon, name === "spinner" && styles.spin, className)}
+      className={cx(styles.icon, name === "spinner" && styles.spin, DIRECTIONAL.has(name) && styles.directional, className)}
       fill={filled ? "currentColor" : "none"}
       stroke={filled ? "none" : "currentColor"}
       strokeWidth={1.75}

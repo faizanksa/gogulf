@@ -20,29 +20,47 @@ export interface NavIcons {
   phone: ReactNode;
 }
 
+/** The island's own words, translated on the server. */
+export interface NavText {
+  menu: string;
+  close: string;
+  talkToUs: string;
+  opensWhatsApp: string;
+}
+
 /**
- * The shell's only client island: current-page marking and the mobile menu.
+ * The shell's only always-present client island: current-page marking and the mobile menu.
  *
  * Menu = disclosure pattern: the button owns aria-expanded / aria-controls; the panel
  * follows it in the DOM so Tab moves straight into it; Escape closes it and returns
  * focus to the button; choosing a link closes it. No focus trap — it is not a dialog.
  *
- * Anything that does not need the browser — the primary call to action and the icons —
- * is rendered by SiteHeader on the server and passed in as elements. That keeps this
- * island to the state it actually owns.
+ * Anything that does not need the browser — the primary call to action, the icons, the
+ * language menu and every label — is rendered by SiteHeader on the server and passed in.
+ * That keeps this island to the state it actually owns, and no catalogue in the browser.
  */
 export function SiteNav({
+  label,
   items,
   cta,
+  languageMenu,
+  languageList,
   icons,
-  whatsappHref,
-  phone,
+  text,
+  whatsapp,
+  call,
 }: {
+  label: string;
   items: Item[];
   cta: ReactNode;
+  /** The desktop language disclosure; shown from 1024px. */
+  languageMenu: ReactNode;
+  /** The same choice as links, inside the mobile menu panel. */
+  languageList: ReactNode;
   icons: NavIcons;
-  whatsappHref: string;
-  phone: { value: string; href: string };
+  text: NavText;
+  whatsapp: { href: string; label: ReactNode };
+  call: { href: string; label: ReactNode };
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -66,7 +84,7 @@ export function SiteNav({
 
   return (
     <>
-      <nav aria-label="Main" className={styles.desktop}>
+      <nav aria-label={label} className={styles.desktop}>
         <ul className={styles.desktopList}>
           {items.map((item) => (
             <li key={item.href}>
@@ -79,6 +97,7 @@ export function SiteNav({
       </nav>
 
       <div className={styles.actions}>
+        {languageMenu ? <div className={styles.languageDesktop}>{languageMenu}</div> : null}
         {cta}
         <button
           ref={buttonRef}
@@ -89,12 +108,12 @@ export function SiteNav({
           onClick={() => setOpen((v) => !v)}
         >
           {open ? icons.close : icons.menu}
-          <span>{open ? "Close" : "Menu"}</span>
+          <span>{open ? text.close : text.menu}</span>
         </button>
       </div>
 
       <div id="site-menu" className={styles.panel} hidden={!open}>
-        <nav aria-label="Main">
+        <nav aria-label={label}>
           <ul className={styles.panelList}>
             {items.map((item) => (
               <li key={item.href}>
@@ -111,16 +130,17 @@ export function SiteNav({
             ))}
           </ul>
         </nav>
+        {languageList}
         <div className={styles.contact}>
-          <p className={styles.contactHeading}>Talk to us</p>
-          <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className={styles.contactLink} onClick={close}>
+          <p className={styles.contactHeading}>{text.talkToUs}</p>
+          <a href={whatsapp.href} target="_blank" rel="noopener noreferrer" className={styles.contactLink} onClick={close}>
             {icons.whatsapp}
-            WhatsApp {phone.value}
-            <span className="visually-hidden"> (opens WhatsApp)</span>
+            {whatsapp.label}
+            <span className="visually-hidden"> {text.opensWhatsApp}</span>
           </a>
-          <a href={phone.href} className={styles.contactLink} onClick={close}>
+          <a href={call.href} className={styles.contactLink} onClick={close}>
             {icons.phone}
-            Call {phone.value}
+            {call.label}
           </a>
         </div>
       </div>

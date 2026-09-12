@@ -3,20 +3,35 @@ import { DevNotice } from "@/components/site/DevNotice";
 import { OfficialChannels } from "@/components/site/OfficialChannels";
 import { PageHeader } from "@/components/site/PageHeader";
 import { Container, Section } from "@/components/ui/Layout";
+import { LtrText } from "@/components/ui/LtrText";
 import { VisuallyHidden } from "@/components/ui/VisuallyHidden";
 import { BUSINESS_EMAIL, PHONE } from "@/content/channels";
 import { COMPANY } from "@/content/company";
-import { pageMetadata } from "@/lib/seo";
+import { pageEntry } from "@/content/pages";
+import { hrefIn, pageText } from "@/lib/i18n/pages";
+import { getTranslator, localizedPageMetadata, requireAvailable } from "@/lib/i18n/server";
 import styles from "./verify.module.css";
 
-export const metadata = pageMetadata("/verify");
+const PATH = "/verify";
+
+export async function generateMetadata() {
+  return localizedPageMetadata(PATH);
+}
 
 /**
  * "Is Go Gulf genuine?" — answered with facts a stranger can check independently.
  * Every statement here is either an MCA fact (lib/legal.js), a confirmed channel
  * (content/channels.ts), or wording from the published policies.
+ *
+ * Served in English here and, through app/[locale]/verify, in each language the registry
+ * lists for it (content/pages.ts). The interface around it translates itself; the body
+ * copy moves into the catalogues when its first translation is commissioned (docs/I18N.md).
  */
-export default function VerifyPage() {
+export default async function VerifyPage() {
+  const locale = await requireAvailable(PATH);
+  const t = await getTranslator();
+  const href = (path: string) => hrefIn(path, locale);
+
   const facts: { label: string; value: React.ReactNode }[] = [
     { label: "Legal name", value: COMPANY.legalName },
     { label: "Trading as", value: COMPANY.brand },
@@ -41,7 +56,7 @@ export default function VerifyPage() {
   return (
     <>
       <PageHeader
-        crumbs={[{ name: "Verify Go Gulf", path: "/verify" }]}
+        crumbs={[{ name: pageText(pageEntry(PATH), locale).breadcrumb, path: PATH }]}
         title="How to check you are dealing with Go Gulf"
         lead="Before you share documents or pay anything, check these details. Each one can be confirmed independently of us."
       />
@@ -68,7 +83,7 @@ export default function VerifyPage() {
               <p>
                 <a href="https://www.mca.gov.in/" target="_blank" rel="noopener noreferrer">
                   Ministry of Corporate Affairs website
-                  <VisuallyHidden> (opens in a new tab)</VisuallyHidden>
+                  <VisuallyHidden> {t("common.opensInNewTab")}</VisuallyHidden>
                 </a>
               </p>
             </div>
@@ -95,7 +110,7 @@ export default function VerifyPage() {
             </h2>
             <ul className={styles.list}>
               <li>
-                Every fee is quoted to you in writing before you pay. See <Link href="/pricing">Pricing &amp; fees</Link>.
+                Every fee is quoted to you in writing before you pay. See <Link href={href("/pricing")}>Pricing &amp; fees</Link>.
               </li>
               <li>
                 If you are asked to pay an account or a person that we have not confirmed to you in writing, stop and contact
@@ -103,7 +118,7 @@ export default function VerifyPage() {
               </li>
               <li>
                 We do not guarantee selection, employment, a visa or a joining date. See our{" "}
-                <Link href="/terms-and-conditions">Terms &amp; conditions</Link>.
+                <Link href={href("/terms-and-conditions")}>Terms &amp; conditions</Link>.
               </li>
             </ul>
           </div>
@@ -118,7 +133,10 @@ export default function VerifyPage() {
             </h2>
             <p>
               Tell us before you pay or send documents. Email <a href={BUSINESS_EMAIL.href}>{BUSINESS_EMAIL.value}</a> or call{" "}
-              <a href={PHONE.href}>{PHONE.value}</a>.
+              <a href={PHONE.href}>
+                <LtrText>{PHONE.value}</LtrText>
+              </a>
+              .
             </p>
             <DevNotice decision="D1">
               Once the business confirms whether it holds an overseas Recruiting Agent registration, the registration number

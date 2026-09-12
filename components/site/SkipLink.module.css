@@ -1,7 +1,7 @@
 .skip {
   position: absolute;
   top: var(--space-2);
-  left: var(--space-2);
+  inset-inline-start: var(--space-2);
   z-index: var(--z-skip);
   display: inline-flex;
   align-items: center;

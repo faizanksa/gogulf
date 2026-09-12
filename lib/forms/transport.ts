@@ -22,6 +22,19 @@ export interface SubmitResult {
   acknowledgementSent?: boolean;
 }
 
+export interface SubmitOptions {
+  /** The page's language (sent as X-Form-Locale); the server words its replies in it. */
+  locale?: string;
+  /** Messages for failures the server cannot word: no connection, or a reply that is not ours. */
+  messages?: { offline: string; unexpected: string };
+}
+
+/** Used by the forms not yet given a copy prop (ServiceInquiryForm, ApplyForm — rebuilt in 2C). */
+const ENGLISH = {
+  offline: "We could not reach the server. Check your connection and try again.",
+  unexpected: "Something went wrong sending your message. Please try again, or contact us directly.",
+};
+
 /**
  * Submit to a form route.
  *
@@ -31,19 +44,18 @@ export interface SubmitResult {
 export async function submitViaServer(
   endpoint: "contact" | "service-inquiry" | "job-application",
   payload: Record<string, unknown>,
+  { locale, messages = ENGLISH }: SubmitOptions = {},
 ): Promise<SubmitResult> {
   let response: Response;
   try {
+    // The language travels as a header, so the endpoint URL stays the same in every language.
     response = await fetch(`/api/forms/${endpoint}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...(locale ? { "X-Form-Locale": locale } : {}) },
       body: JSON.stringify(payload),
     });
   } catch {
-    return {
-      ok: false,
-      error: "We could not reach the server. Check your connection and try again.",
-    };
+    return { ok: false, error: messages.offline };
   }
 
   let body: SubmitResult | null = null;
@@ -56,9 +68,7 @@ export async function submitViaServer(
   if (!response.ok) {
     return {
       ok: false,
-      error:
-        body?.error ??
-        "Something went wrong sending your message. Please try again, or contact us directly.",
+      error: body?.error ?? messages.unexpected,
       fieldErrors: body?.fieldErrors,
     };
   }

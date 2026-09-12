@@ -1,18 +1,25 @@
 import Link from "next/link";
 import JsonLd from "@/components/JsonLd";
+import { hrefIn } from "@/lib/i18n/pages";
+import { getTranslator } from "@/lib/i18n/server";
 import { breadcrumbJsonLd, type Crumb } from "@/lib/seo";
 import { Icon } from "./Icon";
 import styles from "./Breadcrumbs.module.css";
 
 /**
  * Visible breadcrumbs and the matching BreadcrumbList structured data, from one list —
- * so what search engines read is exactly what people see. `items` excludes Home.
+ * so what search engines read is exactly what people see. `items` excludes Home, carry
+ * translated names and English paths; each link goes to the reader's language where the
+ * page exists in it.
  */
-export function Breadcrumbs({ items }: { items: Crumb[] }) {
-  const trail = [{ name: "Home", path: "/" }, ...items];
+export async function Breadcrumbs({ items }: { items: Crumb[] }) {
+  const t = await getTranslator();
+  const home = { name: t("common.home"), path: hrefIn("/", t.locale) };
+  const crumbs = items.map((c) => ({ name: c.name, path: hrefIn(c.path, t.locale) }));
+  const trail = [home, ...crumbs];
   return (
     <>
-      <nav aria-label="Breadcrumb" className={styles.nav}>
+      <nav aria-label={t("common.breadcrumb")} className={styles.nav}>
         <ol className={styles.list}>
           {trail.map((item, i) => {
             const last = i === trail.length - 1;
@@ -33,7 +40,7 @@ export function Breadcrumbs({ items }: { items: Crumb[] }) {
           })}
         </ol>
       </nav>
-      <JsonLd data={breadcrumbJsonLd(items)} />
+      <JsonLd data={breadcrumbJsonLd(crumbs, home)} />
     </>
   );
 }

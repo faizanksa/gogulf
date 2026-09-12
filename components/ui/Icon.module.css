@@ -4,6 +4,11 @@
   vertical-align: -0.2em;
 }
 
+/* Arrows and chevrons point the way the text runs, so they mirror on right-to-left pages. */
+[dir="rtl"] .directional {
+  transform: scaleX(-1);
+}
+
 .spin {
   animation: spin 900ms linear infinite;
 }

@@ -4,7 +4,7 @@
   gap: var(--space-3);
   padding: var(--space-4);
   border: 1px solid transparent;
-  border-left-width: 4px;
+  border-inline-start-width: 4px;
   border-radius: var(--radius-control);
   color: var(--color-text);
 }

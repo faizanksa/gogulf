@@ -24,10 +24,10 @@
 .step::before {
   content: "";
   position: absolute;
-  left: calc(1.125rem - 1px);
+  inset-inline-start: calc(1.125rem - 1px);
   top: 2.5rem;
   bottom: 0.25rem;
-  border-left: 2px solid var(--color-divider);
+  border-inline-start: 2px solid var(--color-divider);
 }
 .step:last-child::before {
   display: none;

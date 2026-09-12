@@ -12,6 +12,13 @@ import { Anek_Devanagari, Anek_Latin, IBM_Plex_Mono, Mukta } from "next/font/goo
  * separate, non-preloaded families that the stacks in styles/tokens.css fall back to,
  * so Hindi text renders in the brand faces while Latin-only pages never download a
  * Devanagari file (each @font-face carries a unicode-range).
+ *
+ * Other scripts (docs/I18N.md): each language's face is added with its first reviewed
+ * catalogue — Noto Sans Arabic, Anek Malayalam, Anek Tamil, Anek Bangla — never before,
+ * because every declared family puts its @font-face rules in the CSS of every page
+ * (Arabic and Malayalam together measured 1.5 KB gzip). Declare it here non-preloaded,
+ * with adjustFontFallback: false when it leads a stack, and add its :lang() stack in
+ * styles/tokens.css in the same change.
  */
 
 export const anekLatin = Anek_Latin({

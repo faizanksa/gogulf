@@ -1,0 +1,9 @@
+{
+  "$meta": {
+    "locale": "ar",
+    "status": "not-started",
+    "reviewedBy": null,
+    "reviewedOn": null,
+    "note": "Arabic — primary launch language, right-to-left. Translate from messages/en.json, then record the native-speaker review (status \"reviewed\", reviewedBy, reviewedOn) to publish. Plurals use all six Arabic categories (zero, one, two, few, many, other)."
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "$meta": {
+    "locale": "hi",
+    "status": "not-started",
+    "reviewedBy": null,
+    "reviewedOn": null,
+    "note": "Hindi — primary launch language. Translate from messages/en.json, then record the native-speaker review (status \"reviewed\", reviewedBy, reviewedOn) to publish. Never publish machine output unreviewed."
+  }
+}

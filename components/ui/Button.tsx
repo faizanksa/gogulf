@@ -37,10 +37,13 @@ type AsButton = Common &
 type AsLink = Common &
   Omit<ComponentPropsWithoutRef<"a">, "className" | "children" | "href"> & {
     href: string;
-    /** Opens in a new tab and says so to assistive technology. */
-    external?: boolean;
-    /** Opens WhatsApp; announced as such. */
-    opensWhatsApp?: boolean;
+    /**
+     * Opens in a new tab; the value is what assistive technology hears, already
+     * translated — e.g. t("common.opensInNewTab").
+     */
+    external?: string;
+    /** Opens WhatsApp; the value is the translated announcement, t("common.opensWhatsApp"). */
+    opensWhatsApp?: string;
   };
 
 export type ButtonProps = AsButton | AsLink;
@@ -63,11 +66,12 @@ export function Button(props: ButtonProps) {
 
   if (typeof props.href === "string") {
     const { href, external, opensWhatsApp, variant: _v, size: _s, icon: _i, iconPosition: _p, fullWidth: _f, className: _c, children, ...rest } = props;
-    const newTab = external || opensWhatsApp;
+    const note = opensWhatsApp ?? external;
+    const newTab = Boolean(note);
     const inner = (
       <>
         {content(props)}
-        {opensWhatsApp ? <VisuallyHidden> (opens WhatsApp)</VisuallyHidden> : external ? <VisuallyHidden> (opens in a new tab)</VisuallyHidden> : null}
+        {note ? <VisuallyHidden> {note}</VisuallyHidden> : null}
       </>
     );
     void children;

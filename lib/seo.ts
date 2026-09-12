@@ -3,6 +3,8 @@ import { BUSINESS_EMAIL, CAREERS_EMAIL, CONFIRMED_SOCIAL, PHONE, WHATSAPP } from
 import { COMPANY } from "@/content/company";
 import { pageEntry } from "@/content/pages";
 import { TRAVEL_PUBLISHED } from "@/content/travel";
+import { DEFAULT, hreflangAlternates, isPseudo, localizedPath, LOCALES, type AnyLocale } from "@/lib/i18n/locales";
+import { pageLocales, pageText } from "@/lib/i18n/pages";
 
 /**
  * SEO: metadata and structured data, derived from the content layer.
@@ -36,12 +38,16 @@ export function absoluteUrl(path = "/"): string {
 }
 
 interface MetadataInput {
+  /** The page's English path ("/jobs/<slug>"); the canonical URL adds the language prefix. */
   path: string;
   title: string;
   description: string;
   /** Replaces the whole <title> instead of using the "%s — Go Gulf" template. */
   absoluteTitle?: string;
   noIndex?: boolean;
+  locale?: AnyLocale;
+  /** hreflang alternates (lib/i18n/locales.ts hreflangAlternates); omitted for single-language pages. */
+  languages?: Record<string, string>;
 }
 
 /**
@@ -63,27 +69,32 @@ const TWITTER_IMAGES = [{ url: "/twitter-image", ...SHARE_IMAGE }];
  * that sets its own `openGraph` or `twitter` object replaces the parent's whole object,
  * including the images the app/opengraph-image file convention would have supplied.
  */
-export function buildMetadata({ path, title, description, absoluteTitle, noIndex = false }: MetadataInput): Metadata {
+export function buildMetadata({ path, title, description, absoluteTitle, noIndex = false, locale = DEFAULT, languages }: MetadataInput): Metadata {
   const socialTitle = absoluteTitle ?? `${title} — ${SITE_NAME}`;
+  const url = localizedPath(path, locale);
   return {
     title: absoluteTitle ? { absolute: absoluteTitle } : title,
     description,
-    alternates: { canonical: path },
-    openGraph: { title: socialTitle, description, url: path, siteName: SITE_NAME, type: "website", locale: "en_IN", images: OG_IMAGES },
+    alternates: { canonical: url, ...(languages ? { languages } : {}) },
+    openGraph: { title: socialTitle, description, url, siteName: SITE_NAME, type: "website", locale: LOCALES[locale].ogLocale, images: OG_IMAGES },
     twitter: { card: "summary_large_image", title: socialTitle, description, images: TWITTER_IMAGES },
-    ...(noIndex ? { robots: { index: false, follow: true } } : {}),
+    // Pseudo-locales exist only outside production, but are never indexable anywhere.
+    ...(noIndex || isPseudo(locale) ? { robots: { index: false, follow: true } } : {}),
   };
 }
 
-/** Metadata for a registered page (content/pages.ts). */
-export function pageMetadata(path: string): Metadata {
+/** Metadata for a registered page (content/pages.ts) in `locale` — English by default. */
+export function pageMetadata(path: string, locale: AnyLocale = DEFAULT): Metadata {
   const entry = pageEntry(path);
+  const text = pageText(entry, locale);
   return buildMetadata({
     path: entry.path,
-    title: entry.title,
-    description: entry.description,
-    absoluteTitle: entry.absoluteTitle,
+    title: text.title,
+    description: text.description,
+    absoluteTitle: text.absoluteTitle,
     noIndex: !entry.index,
+    locale,
+    languages: hreflangAlternates(entry.path, pageLocales(entry)),
   });
 }
 
@@ -96,9 +107,12 @@ export interface Crumb {
   path: string;
 }
 
-/** BreadcrumbList for Home › …; `items` excludes Home. Rendered by components/ui/Breadcrumbs. */
-export function breadcrumbJsonLd(items: Crumb[]) {
-  const trail = [{ name: "Home", path: "/" }, ...items];
+/**
+ * BreadcrumbList for Home › …; `items` excludes Home. Rendered by components/ui/Breadcrumbs,
+ * which passes the translated Home crumb and the paths each link actually points to.
+ */
+export function breadcrumbJsonLd(items: Crumb[], home: Crumb = { name: "Home", path: "/" }) {
+  const trail = [home, ...items];
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",

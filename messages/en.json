@@ -1,0 +1,176 @@
+{
+  "$meta": {
+    "locale": "en",
+    "status": "source",
+    "note": "English is the source language. Write every new string here first; other catalogues follow this key set. ICU MessageFormat. Page titles and descriptions stay in content/pages.ts (their English source); other languages add them under pages.<id>."
+  },
+  "common": {
+    "skipToContent": "Skip to main content",
+    "homeSuffix": ", home",
+    "home": "Home",
+    "breadcrumb": "Breadcrumb",
+    "opensInNewTab": "(opens in a new tab)",
+    "opensWhatsApp": "(opens WhatsApp)",
+    "optional": "(optional)",
+    "errorPrefix": "Error:",
+    "tone": {
+      "info": "Information",
+      "success": "Success",
+      "warning": "Warning",
+      "error": "Error"
+    },
+    "unconfirmed": "Unconfirmed — not shown in production",
+    "unconfirmedDecision": "Unconfirmed — not shown in production (decision {decision})"
+  },
+  "nav": {
+    "label": "Main",
+    "jobs": "Jobs",
+    "jobSeekers": "Job seekers",
+    "employers": "Employers",
+    "travel": "Travel",
+    "about": "About",
+    "contact": "Contact",
+    "findAJob": "Find a job",
+    "menu": "Menu",
+    "close": "Close",
+    "talkToUs": "Talk to us",
+    "whatsappNumber": "WhatsApp {phone}",
+    "callNumber": "Call {phone}",
+    "whatsappGreeting": "Hello Go Gulf, I have a question."
+  },
+  "footer": {
+    "label": "Footer",
+    "about": "Gulf job openings and enquiries from job seekers and employers, handled from {city}, {region}.",
+    "officialContact": "Official contact",
+    "groups": {
+      "jobSeekers": "Job seekers",
+      "employers": "Employers",
+      "company": "Company",
+      "legal": "Legal"
+    },
+    "links": {
+      "currentJobs": "Current jobs",
+      "howItWorks": "How it works",
+      "applyOnline": "Apply online",
+      "pricing": "Pricing & fees",
+      "hireFromIndia": "Hire from India",
+      "allServices": "All services",
+      "aboutGoGulf": "About Go Gulf",
+      "verify": "Verify Go Gulf",
+      "contact": "Contact",
+      "privacyPolicy": "Privacy Policy",
+      "terms": "Terms & Conditions",
+      "pricingFees": "Pricing & Fees",
+      "refunds": "Cancellation & Refunds",
+      "shipping": "Shipping & Delivery Policy"
+    },
+    "brandOf": "<b>{brand}</b> is a brand of <b>{legalName}</b>, a {companyType} registered in India (CIN {cin}).",
+    "gstin": "GSTIN: {gstin}",
+    "rights": "© {year} {legalName}. All rights reserved.",
+    "staffWebmail": "Staff webmail"
+  },
+  "channels": {
+    "phone": "Phone",
+    "whatsapp": "WhatsApp",
+    "careers": "Job seekers",
+    "business": "Employers and business"
+  },
+  "language": {
+    "menuLabel": "Language",
+    "current": "(current)",
+    "suggestion": "This page is also available in {language}.",
+    "switchAction": "Read in {language}",
+    "dismiss": "Dismiss"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "code": "Error 404",
+    "heading": "We can’t find that page",
+    "lead": "The link may be out of date, or the job it pointed to may have closed. One of these should help:",
+    "links": {
+      "jobs": "Current Gulf job openings",
+      "candidates": "How applying works",
+      "employers": "Hiring from India",
+      "verify": "How to check you are dealing with Go Gulf"
+    },
+    "home": "Go to the home page",
+    "contact": "Contact Go Gulf"
+  },
+  "forms": {
+    "errorSummaryTitle": "There is a problem",
+    "sending": "Sending…",
+    "honeypot": "Leave this field empty",
+    "validation": {
+      "nameRequired": "Name is required.",
+      "emailRequired": "Email address is required.",
+      "emailInvalid": "Enter a valid email address.",
+      "phoneRequired": "Phone number is required.",
+      "phoneInvalid": "Enter a valid phone number, including country code if outside India.",
+      "messageRequired": "Message is required.",
+      "serviceRequired": "Service type is required.",
+      "roleRequired": "Role is required.",
+      "tooLong": "This answer is too long."
+    },
+    "outcome": {
+      "checkFields": "Please check the highlighted fields.",
+      "rateLimited": "Too many submissions from this connection. Please try again shortly.",
+      "unreadable": "Could not read the submission.",
+      "deliveryFailed": "We could not send your message just now. Please try again, or contact us directly.",
+      "unexpected": "Something went wrong sending your message. Please try again, or contact us directly.",
+      "offline": "We could not reach the server. Check your connection and try again."
+    },
+    "contact": {
+      "fullName": "Full name",
+      "email": "Email address",
+      "phone": "Phone or WhatsApp number",
+      "phoneHint": "Include the country code if you are outside India.",
+      "message": "Message",
+      "submit": "Send message",
+      "nameMissing": "Enter your full name.",
+      "emailMissing": "Enter your email address.",
+      "emailInvalid": "Enter an email address like name@example.com.",
+      "messageMissing": "Enter your message.",
+      "sent": "Message received — our team will contact you.",
+      "sentNoCopy": "Message received — our team will contact you. We could not email you a copy, but your message did reach us.",
+      "failed": "We could not send your message. Please try again, or call or WhatsApp us."
+    }
+  },
+  "jobs": {
+    "breadcrumb": "Jobs",
+    "details": "Job details",
+    "location": "Location",
+    "industry": "Industry",
+    "contract": "Contract",
+    "salary": "Salary",
+    "salaryNotStated": "Not stated",
+    "salaryRange": "{currency} {min} – {max} / {period}",
+    "posted": "Posted",
+    "closes": "Closes",
+    "noClosingDate": "No closing date given",
+    "openings": "Openings",
+    "aboutRole": "About the role",
+    "fees": "Fees",
+    "feesBody": "Every fee is quoted to you in writing before you pay. See <pricing>Pricing & fees</pricing>, and <verify>how to check you are dealing with Go Gulf</verify>.",
+    "closedTitle": "This position has closed",
+    "closedBody": "It is no longer accepting applications. <jobs>See current openings</jobs>.",
+    "closedBadge": "Closed",
+    "apply": "Apply for this job",
+    "askWhatsApp": "Ask on WhatsApp",
+    "askMessage": "Hello Go Gulf, I would like to know more about the {title} job in {where} (ref {slug}).",
+    "place": "{city}, {country}",
+    "metaTitle": "{title} in {where}",
+    "metaDescription": "{title} job in {where} listed by Go Gulf. {summary}",
+    "type": {
+      "fullTime": "Full-Time",
+      "partTime": "Part-Time",
+      "contract": "Contract",
+      "temporary": "Temporary"
+    },
+    "perUnit": {
+      "hour": "hour",
+      "day": "day",
+      "month": "month",
+      "year": "year"
+    }
+  }
+}

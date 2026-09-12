@@ -1,0 +1,55 @@
+/* Fixed, so appearing after hydration shifts no content. */
+.offer {
+  position: fixed;
+  inset-block-end: var(--space-4);
+  inset-inline: var(--gutter);
+  z-index: var(--z-menu);
+  display: grid;
+  gap: var(--space-3);
+  max-width: 26rem;
+  margin-inline-start: auto;
+  padding: var(--space-4);
+  border: 1px solid var(--color-divider);
+  border-inline-start: 4px solid var(--color-action);
+  border-radius: var(--radius-card);
+  background: var(--color-bg);
+  box-shadow: var(--shadow-overlay);
+}
+
+.message {
+  margin: 0;
+  font-weight: var(--weight-semibold);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.switch,
+.dismiss {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-control);
+  font-weight: var(--weight-semibold);
+}
+
+.switch {
+  background: var(--color-action);
+  color: var(--color-action-text);
+  text-decoration: none;
+}
+.switch:hover {
+  background: var(--color-action-hover);
+  color: var(--color-action-text);
+}
+
+.dismiss {
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  cursor: pointer;
+}

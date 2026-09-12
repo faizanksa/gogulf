@@ -42,8 +42,7 @@
 .desktopLink[aria-current="page"]::after {
   content: "";
   position: absolute;
-  left: var(--space-3);
-  right: var(--space-3);
+  inset-inline: var(--space-3);
   bottom: 4px;
   height: 3px;
   border-radius: 2px;
@@ -54,11 +53,21 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 @media (min-width: 1024px) {
   .actions {
-    margin-left: 0;
+    margin-inline-start: 0;
+  }
+}
+
+/* The language disclosure has room only in the desktop header; phones get it in the panel. */
+.languageDesktop {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .languageDesktop {
+    display: block;
   }
 }
 
@@ -99,8 +108,7 @@
 .panel {
   position: absolute;
   top: 100%;
-  left: 0;
-  right: 0;
+  inset-inline: 0;
   z-index: var(--z-menu);
   max-height: calc(100dvh - var(--header-height));
   overflow-y: auto;
@@ -137,8 +145,8 @@
   color: var(--color-text-muted);
 }
 .panelLinkCurrent {
-  border-left: 4px solid var(--color-action);
-  padding-left: var(--space-3);
+  border-inline-start: 4px solid var(--color-action);
+  padding-inline-start: var(--space-3);
   color: var(--color-link-hover);
 }
 

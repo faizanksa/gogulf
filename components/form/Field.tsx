@@ -12,12 +12,21 @@ import styles from "./Field.module.css";
  * Order follows the GOV.UK pattern: label, hint, error, control — so the error is read
  * before the reader reaches the field. Optional fields are marked, not required ones.
  */
+/** The words Field adds around every control, translated by the page and passed down. */
+export interface FieldText {
+  /** "(optional)" */
+  optional: string;
+  /** "Error:" — spoken before each error message. */
+  errorPrefix: string;
+}
+
 export function Field({
   id,
   label,
   hint,
   error,
   optional,
+  text,
   className,
   children,
 }: {
@@ -26,6 +35,7 @@ export function Field({
   hint?: ReactNode;
   error?: string;
   optional?: boolean;
+  text: FieldText;
   className?: string;
   children: ReactElement<Record<string, unknown>>;
 }) {
@@ -41,7 +51,7 @@ export function Field({
     <div className={cx(styles.field, error && styles.hasError, className)}>
       <label htmlFor={id} className={styles.label}>
         {label}
-        {optional ? <span className={styles.optional}> (optional)</span> : null}
+        {optional ? <span className={styles.optional}> {text.optional}</span> : null}
       </label>
       {hint ? (
         <p id={hintId} className={styles.hint}>
@@ -51,7 +61,7 @@ export function Field({
       {error ? (
         <p id={errorId} className={styles.error}>
           <Icon name="error" size={18} />
-          <VisuallyHidden>Error: </VisuallyHidden>
+          <VisuallyHidden>{text.errorPrefix} </VisuallyHidden>
           {error}
         </p>
       ) : null}

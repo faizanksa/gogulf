@@ -16,18 +16,15 @@ import styles from "./ContactForm.module.css";
 //   - an error summary that takes focus on a failed submit and links to each field
 //   - errors tied to their fields with aria-describedby / aria-invalid
 //   - fields stay enabled while sending; the button reports its state instead
+//   - every word arrives in `copy` (lib/i18n/forms.ts contactFormCopy), built on the
+//     server in the page's language; the submission carries that language, so the
+//     server's replies match it
 //
 // Submits to /api/forms/contact, which re-validates and sends through Resend.
 
 const IDS = { from_name: "c_name", reply_to: "c_email", phone: "c_phone", message: "c_message" };
 
-const MESSAGES = {
-  from_name: () => "Enter your full name.",
-  reply_to: (el) => (el.validity.valueMissing ? "Enter your email address." : "Enter an email address like name@example.com."),
-  message: () => "Enter your message.",
-};
-
-export default function ContactForm() {
+export default function ContactForm({ copy }) {
   const formRef = useRef(null);
   const [errors, setErrors] = useState([]);
   const [attempt, setAttempt] = useState(0);
@@ -35,12 +32,18 @@ export default function ContactForm() {
   const sending = status.state === "sending";
   const errorFor = (name) => errors.find((e) => e.name === name)?.message;
 
+  const messages = {
+    from_name: () => copy.errors.nameMissing,
+    reply_to: (el) => (el.validity.valueMissing ? copy.errors.emailMissing : copy.errors.emailInvalid),
+    message: () => copy.errors.messageMissing,
+  };
+
   async function handleSubmit(e) {
     e.preventDefault();
     if (sending) return;
     const form = formRef.current;
 
-    const clientErrors = collectNativeErrors(form, MESSAGES);
+    const clientErrors = collectNativeErrors(form, messages);
     if (clientErrors.length) {
       setErrors(clientErrors);
       setAttempt((n) => n + 1);
@@ -51,14 +54,18 @@ export default function ContactForm() {
     setErrors([]);
     setStatus({ state: "sending", message: "" });
 
-    const result = await submitViaServer("contact", {
-      from_name: form.elements.from_name.value,
-      reply_to: form.elements.reply_to.value,
-      phone: form.elements.phone.value,
-      message: form.elements.message.value,
-      page_source: "Contact Page",
-      website: form.elements.website.value,
-    });
+    const result = await submitViaServer(
+      "contact",
+      {
+        from_name: form.elements.from_name.value,
+        reply_to: form.elements.reply_to.value,
+        phone: form.elements.phone.value,
+        message: form.elements.message.value,
+        page_source: "Contact Page",
+        website: form.elements.website.value,
+      },
+      { locale: copy.locale, messages: { offline: copy.outcome.offline, unexpected: copy.outcome.unexpected } },
+    );
 
     if (!result.ok) {
       const serverErrors = fromServerErrors(result.fieldErrors, (name) => IDS[name] ?? name);
@@ -66,18 +73,13 @@ export default function ContactForm() {
         setErrors(serverErrors);
         setAttempt((n) => n + 1);
       }
-      setStatus({
-        state: "error",
-        message: result.error || "We could not send your message. Please try again, or call or WhatsApp us.",
-      });
+      setStatus({ state: "error", message: result.error || copy.outcome.failed });
       return;
     }
 
     setStatus({
       state: "success",
-      message:
-        "Message received — our team will contact you." +
-        (result.acknowledgementSent === false ? " We could not email you a copy, but your message did reach us." : ""),
+      message: result.acknowledgementSent === false ? copy.outcome.sentNoCopy : copy.outcome.sent,
     });
     form.reset();
   }
@@ -86,31 +88,33 @@ export default function ContactForm() {
     <form ref={formRef} id="contact-form" className={styles.form} onSubmit={handleSubmit} noValidate aria-busy={sending || undefined}>
       {/* Honeypot — hidden from people, filled by naive bots. */}
       <div aria-hidden="true" className={styles.honeypot}>
-        <label htmlFor="c_website">Leave this field empty</label>
+        <label htmlFor="c_website">{copy.honeypot}</label>
         <input type="text" id="c_website" name="website" tabIndex={-1} autoComplete="off" defaultValue="" />
       </div>
 
-      <ErrorSummary errors={errors} attempt={attempt} />
+      <ErrorSummary errors={errors} attempt={attempt} title={copy.errorSummaryTitle} />
 
-      <Field id={IDS.from_name} label="Full name" error={errorFor("from_name")}>
+      <Field id={IDS.from_name} label={copy.labels.fullName} text={copy.field} error={errorFor("from_name")}>
         <Input name="from_name" type="text" autoComplete="name" required />
       </Field>
-      <Field id={IDS.reply_to} label="Email address" error={errorFor("reply_to")}>
+      <Field id={IDS.reply_to} label={copy.labels.email} text={copy.field} error={errorFor("reply_to")}>
         <Input name="reply_to" type="email" autoComplete="email" inputMode="email" spellCheck={false} required />
       </Field>
-      <Field id={IDS.phone} label="Phone or WhatsApp number" hint="Include the country code if you are outside India." optional error={errorFor("phone")}>
+      <Field id={IDS.phone} label={copy.labels.phone} hint={copy.labels.phoneHint} optional text={copy.field} error={errorFor("phone")}>
         <Input name="phone" type="tel" autoComplete="tel" inputMode="tel" />
       </Field>
-      <Field id={IDS.message} label="Message" error={errorFor("message")}>
+      <Field id={IDS.message} label={copy.labels.message} text={copy.field} error={errorFor("message")}>
         <Textarea name="message" required rows={5} />
       </Field>
 
       <div>
         <Button type="submit" loading={sending}>
-          {sending ? "Sending…" : "Send message"}
+          {sending ? copy.sending : copy.submit}
         </Button>
       </div>
-      <FormStatus state={status.state}>{status.message}</FormStatus>
+      <FormStatus state={status.state} text={copy.status}>
+        {status.message}
+      </FormStatus>
     </form>
   );
 }

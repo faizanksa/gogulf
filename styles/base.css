@@ -28,6 +28,9 @@ body {
   font-family: var(--font-body);
   font-size: var(--text-body);
   line-height: var(--leading-body);
+  /* A word longer than its box — an email address, a URL, a long Malayalam word — breaks
+     rather than pushing the page sideways. */
+  overflow-wrap: break-word;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -84,8 +87,10 @@ a:hover {
   color: var(--gg-ink-900);
 }
 
-/* Devanagari needs more leading than Latin. */
-:lang(hi) {
+/* Devanagari, Malayalam and Arabic need more leading than Latin (stacked marks, diacritics). */
+:lang(hi),
+:lang(ml),
+:lang(ar) {
   line-height: 1.75;
 }
 

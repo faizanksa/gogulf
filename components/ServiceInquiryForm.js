@@ -73,7 +73,8 @@ export default function ServiceInquiryForm() {
       </div>
 
       <div className="pass-main">
-        <ErrorSummary errors={errors} attempt={attempt} />
+        {/* English-only until this form is rebuilt in 2C with a copy prop, like ContactForm. */}
+        <ErrorSummary errors={errors} attempt={attempt} title="There is a problem" />
         <div className="field" style={{ marginTop: errors.length ? 20 : 0 }}>
           <label htmlFor="service_type">Service type</label>
           <select id="service_type" name="service_type" required defaultValue="" aria-invalid={Boolean(errorFor("service_type"))} aria-describedby={describe("service_type")}>
