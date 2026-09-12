@@ -32,7 +32,7 @@ test("JobPosting never appears on the list page, nor for an unconfirmed job", as
   await page.goto(SAMPLE_JOB);
   expect(JSON.stringify(await jsonLd(page))).not.toContain("JobPosting");
   // …and the unconfirmed job is flagged and kept out of the index.
-  await expect(page.getByText(/Unconfirmed — not shown in production/)).toBeVisible();
+  await expect(page.getByText(/Unconfirmed — not shown in production/).first()).toBeVisible();
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
 });
 

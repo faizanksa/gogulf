@@ -41,7 +41,7 @@ test.describe("contact form", () => {
     await page.goto("/contact");
     await page.getByLabel("Full name").fill("Test Person");
     await page.getByLabel("Email address").fill("not-an-email");
-    await page.getByLabel("Message").fill("Hello");
+    await page.getByLabel("Message", { exact: true }).fill("Hello");
     await page.getByRole("button", { name: "Send message" }).click();
     await expect(page.locator("#c_email-error")).toContainText("name@example.com");
   });
@@ -58,7 +58,7 @@ test.describe("contact form", () => {
     await page.getByLabel("Full name").fill("Test Person");
     await page.getByLabel("Email address").fill("test@example.com");
     await page.getByLabel(/Phone or WhatsApp number/).fill("12");
-    await page.getByLabel("Message").fill("Hello");
+    await page.getByLabel("Message", { exact: true }).fill("Hello");
     await page.getByRole("button", { name: "Send message" }).click();
 
     await expect(page.getByLabel(/Phone or WhatsApp number/)).toHaveAttribute("aria-invalid", "true");
@@ -76,7 +76,7 @@ test.describe("contact form", () => {
     await page.goto("/contact");
     await page.getByLabel("Full name").fill("Test Person");
     await page.getByLabel("Email address").fill("test@example.com");
-    await page.getByLabel("Message").fill("Hello");
+    await page.getByLabel("Message", { exact: true }).fill("Hello");
     await page.getByRole("button", { name: "Send message" }).click();
 
     const button = page.getByRole("button", { name: "Sending…" });

@@ -34,7 +34,7 @@ test.describe("desktop header", () => {
     // Travel stays out of the navigation until a travel service is confirmed (D2).
     await expect(nav.getByRole("link", { name: "Travel" })).toHaveCount(0);
     await expect(nav.getByRole("link", { name: "About" })).toHaveAttribute("aria-current", "page");
-    await expect(page.getByRole("link", { name: "Find a job" })).toBeVisible();
+    await expect(page.getByRole("banner").getByRole("link", { name: "Find a job" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Menu" })).toBeHidden();
   });
 });
@@ -76,7 +76,7 @@ test.describe("mobile menu", () => {
 
   test("keeps the header's primary action visible and every target at least 44px", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("link", { name: "Find a job" })).toBeVisible();
+    await expect(page.getByRole("banner").getByRole("link", { name: "Find a job" })).toBeVisible();
     const button = page.getByRole("button", { name: "Menu" });
     expect((await button.boundingBox())!.height).toBeGreaterThanOrEqual(44);
     await button.click();

@@ -48,7 +48,28 @@ test.describe("right to left", () => {
       test(`no right-to-left or lengthened page scrolls sideways at ${width}px`, async ({ page }) => {
         await page.setViewportSize({ width, height: 900 });
         const offenders: string[] = [];
-        for (const path of ["/ar-XB/verify", `/ar-XB${SAMPLE_JOB}`, "/en-XA/verify", `/en-XA${SAMPLE_JOB}`]) {
+        for (const path of [
+          "/ar-XB",
+          "/ar-XB/jobs",
+          "/ar-XB/jobs/apply",
+          "/ar-XB/verify",
+          "/ar-XB/candidates",
+          "/ar-XB/employers",
+          "/ar-XB/services",
+          "/ar-XB/about",
+          "/ar-XB/contact",
+          `/ar-XB${SAMPLE_JOB}`,
+          "/en-XA",
+          "/en-XA/jobs",
+          "/en-XA/jobs/apply",
+          "/en-XA/verify",
+          "/en-XA/candidates",
+          "/en-XA/employers",
+          "/en-XA/services",
+          "/en-XA/about",
+          "/en-XA/contact",
+          `/en-XA${SAMPLE_JOB}`,
+        ]) {
           await page.goto(path);
           const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
           if (overflow > 0) offenders.push(`${path} (+${overflow}px)`);
@@ -68,7 +89,8 @@ test.describe("which languages exist", () => {
 
   test("an untranslated page under a language is the helpful 404", async ({ page }) => {
     // No route matches, so app/global-not-found.tsx answers — in English, the canonical language.
-    const response = await page.goto("/ar-XB/about");
+    // The policies stay English-only until a legal review signs off a translation.
+    const response = await page.goto("/ar-XB/pricing");
     expect(response?.status()).toBe(404);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("We can’t find that page");
   });
@@ -118,7 +140,8 @@ test.describe("choosing a language", () => {
   });
 
   test("a page that exists in one language shows no language choice", async ({ page }) => {
-    await page.goto("/about");
+    // The policies stay English-only until a legal review signs off a translation.
+    await page.goto("/pricing");
     await expect(page.locator("header a[hreflang]")).toHaveCount(0);
     await expect(page.getByRole("button", { name: /^Language:/ })).toHaveCount(0);
   });
