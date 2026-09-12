@@ -30,6 +30,13 @@
   font-size: var(--text-h3);
   line-height: var(--leading-heading);
 }
+.heading:focus {
+  outline: none;
+}
+.heading:focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: 4px;
+}
 
 .facts {
   display: grid;
@@ -51,9 +58,10 @@
 
 .reference {
   font-family: var(--font-mono);
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
+  overflow-wrap: anywhere;
 }
 
 .next {
@@ -85,7 +93,6 @@
 
 .place {
   font-family: var(--font-display);
-  font-variation-settings: "wdth" var(--display-wdth);
   font-weight: 600;
   font-size: 1.125rem;
 }

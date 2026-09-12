@@ -182,13 +182,14 @@ describe("paths, hreflang and availability", () => {
 
   it("serves localizable pages in the pseudo-locales, and links elsewhere to English", () => {
     expect(pathLocales("/verify")).toEqual(["en", "en-XA", "ar-XB"]);
-    expect(pathLocales("/about")).toEqual(["en"]);
+    // The policies stay English-only until a legal review signs off a translation.
+    expect(pathLocales("/pricing")).toEqual(["en"]);
     expect(hrefIn("/verify", "ar-XB")).toBe("/ar-XB/verify");
     expect(hrefIn("/verify#top", "ar-XB")).toBe("/ar-XB/verify#top");
-    expect(hrefIn("/about", "ar-XB")).toBe("/about");
-    expect(hrefIn("/about", "en")).toBe("/about");
+    expect(hrefIn("/pricing", "ar-XB")).toBe("/pricing");
+    expect(hrefIn("/pricing", "en")).toBe("/pricing");
     expect(multilingualPaths()["/verify"]).toEqual(["en", "en-XA", "ar-XB"]);
-    expect(multilingualPaths()["/about"]).toBeUndefined();
+    expect(multilingualPaths()["/pricing"]).toBeUndefined();
   });
 
   it("refuses a real language for a page with no reviewed text in it", () => {
@@ -237,7 +238,10 @@ describe("language-neutral facts", () => {
 
   it("uses a job's translation only once it is reviewed", () => {
     const base = JOBS[0]!;
-    const draft: Job = { ...base, translations: [{ locale: "hi", title: "पर्यवेक्षक", summary: "x".repeat(30), status: "draft", reviewedBy: null, reviewedOn: null }] };
+    const draft: Job = {
+      ...base,
+      translations: [{ locale: "hi", title: "पर्यवेक्षक", summary: "x".repeat(30), requirements: [], benefits: [], status: "draft", reviewedBy: null, reviewedOn: null }],
+    };
     expect(reviewedTranslation(draft, "hi")).toBeNull();
     expect(jobText(draft, "hi").title).toBe(base.title);
     const reviewed: Job = { ...base, translations: [{ ...draft.translations[0]!, status: "reviewed", reviewedBy: "Reviewer", reviewedOn: "2026-09-12" }] };

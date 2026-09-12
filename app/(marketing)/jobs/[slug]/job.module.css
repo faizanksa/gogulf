@@ -1,77 +1,136 @@
+.kicker {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Facts first on a phone (they come first in the markup); beside the text on desktop. */
 .layout {
   display: grid;
-  /* minmax(0, …): a long unbroken word (Malayalam runs long) wraps instead of widening the page. */
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-6);
+  gap: var(--space-7);
 }
 @media (min-width: 1024px) {
   .layout {
-    grid-template-columns: minmax(0, 1fr) 22rem;
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 23rem);
+    grid-template-areas: "article aside";
     gap: var(--space-8);
     align-items: start;
   }
+  .article {
+    grid-area: article;
+  }
+  .aside {
+    grid-area: aside;
+    position: sticky;
+    top: calc(var(--header-height) + var(--space-4));
+  }
 }
 
-.main {
+.aside {
   display: grid;
   gap: var(--space-4);
-  max-width: var(--container-prose);
+  padding: var(--space-5);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+  background: var(--color-bg);
+  box-shadow: var(--shadow-card);
 }
-.main > * {
+
+.asideHeading {
   margin: 0;
+  font-size: var(--text-h3);
+  font-weight: 650;
+}
+
+/* The phone's sticky bar carries the actions; the panel's copy is for desktop. */
+.asideActions {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .asideActions {
+    display: grid;
+    gap: var(--space-2);
+  }
+}
+
+.article {
+  display: grid;
+  gap: var(--space-7);
+  max-width: var(--container-prose);
+  min-width: 0;
+}
+
+.block {
+  display: grid;
+  gap: var(--space-3);
 }
 
 .h2 {
-  margin-top: var(--space-3);
+  margin: 0;
   font-size: var(--text-h2);
-  font-weight: 620;
+  font-weight: 650;
   line-height: var(--leading-heading);
 }
 
 .h3 {
-  margin: 0 0 var(--space-3);
+  margin: 0;
   font-size: var(--text-h3);
-  line-height: var(--leading-heading);
+  font-weight: 650;
 }
 
 .summary {
+  margin: 0;
   font-size: var(--text-lead);
   line-height: var(--leading-snug);
 }
 
-.aside {
-  padding: var(--space-5);
-  border: 1px solid var(--color-divider);
-  border-radius: var(--radius-card);
+.list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding-inline-start: 1.25rem;
+}
+
+.note {
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-control);
   background: var(--color-bg-subtle);
+  color: var(--color-text-secondary);
 }
 
-.facts {
+.callout {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-2);
+  padding: var(--space-5);
+  border-inline-start: 4px solid var(--color-action);
+  border-radius: var(--radius-control);
+  background: var(--gg-green-50);
+}
+.callout p {
   margin: 0;
 }
 
-.fact {
-  display: grid;
-  gap: 0.125rem;
-}
-.fact dt {
-  color: var(--color-text-muted);
-  font-size: var(--text-small);
-}
-.fact dd {
-  margin: 0;
+.allLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
   font-weight: var(--weight-semibold);
 }
 
-.mono {
-  font-family: var(--font-mono);
-  font-size: var(--text-data);
-  font-variant-numeric: tabular-nums;
+.related {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+  gap: var(--space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-/* Apply actions: pinned to the bottom of the viewport on phones, inline on desktop. */
+/* Apply actions: pinned to the bottom of the viewport on phones; the facts panel has them on desktop. */
 .applyBar {
   position: sticky;
   bottom: 0;
@@ -82,9 +141,7 @@
 }
 @media (min-width: 1024px) {
   .applyBar {
-    position: static;
-    border-top: 0;
-    box-shadow: none;
+    display: none;
   }
 }
 
@@ -95,13 +152,6 @@
   max-width: calc(var(--container-page) + 2 * var(--gutter));
   margin-inline: auto;
   padding: var(--space-3) var(--gutter);
-}
-@media (min-width: 1024px) {
-  .applyInner {
-    display: flex;
-    gap: var(--space-3);
-    padding-bottom: var(--space-8);
-  }
 }
 @media (max-width: 379px) {
   .applyInner {

@@ -1,4 +1,4 @@
-import type { Job } from "@/content/jobs";
+import { COUNTRY_CODES, type Job } from "@/content/jobs";
 import { absoluteUrl, SITE_NAME, SITE_URL } from "@/lib/seo";
 
 /**
@@ -7,16 +7,9 @@ import { absoluteUrl, SITE_NAME, SITE_URL } from "@/lib/seo";
  *
  * Returns null — no structured data at all — unless the job is confirmed, has an
  * explicit closing date and an employer disclosure. There is no fallback expiry.
+ * Optional properties (experience, qualifications, benefits, salary, openings) appear
+ * only when the job states them, so the markup never says more than the page.
  */
-
-const COUNTRY_CODES: Record<Job["country"], string> = {
-  "Saudi Arabia": "SA",
-  "United Arab Emirates": "AE",
-  Qatar: "QA",
-  Oman: "OM",
-  Kuwait: "KW",
-  Bahrain: "BH",
-};
 
 const EMPLOYMENT_TYPES: Record<Job["employmentType"], string> = {
   "Full-Time": "FULL_TIME",
@@ -56,6 +49,9 @@ export function jobPostingJsonLd(job: Job) {
     },
     directApply: true,
     url: absoluteUrl(`/jobs/${job.slug}`),
+    ...(job.experience ? { experienceRequirements: job.experience } : {}),
+    ...(job.requirements.length ? { qualifications: job.requirements.join("\n") } : {}),
+    ...(job.benefits.length ? { jobBenefits: job.benefits.join("\n") } : {}),
     ...(job.openings ? { totalJobOpenings: job.openings } : {}),
     ...(job.salary
       ? {

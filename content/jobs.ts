@@ -51,6 +51,9 @@ const jobTranslation = z
     summary: z.string().min(20).max(600),
     industry: z.string().min(2).optional(),
     city: z.string().min(2).optional(),
+    experience: z.string().min(2).max(160).optional(),
+    requirements: z.array(z.string().min(3)).default([]),
+    benefits: z.array(z.string().min(3)).default([]),
     status: z.enum(["draft", "in-review", "reviewed"]),
     reviewedBy: z.string().min(2).nullable(),
     reviewedOn: isoDate.nullable(),
@@ -69,6 +72,12 @@ const job = z
     employmentType,
     salary: salary.optional(),
     summary: z.string().min(20).max(400),
+    /** Experience asked for, as the employer states it — e.g. "3+ years on Gulf construction sites". */
+    experience: z.string().min(2).max(120).optional(),
+    /** What the employer requires, one point per entry. Empty until the business supplies them — never invented. */
+    requirements: z.array(z.string().min(3)).default([]),
+    /** What the job offers beyond salary (accommodation, transport, …), as the employer states it. */
+    benefits: z.array(z.string().min(3)).default([]),
     postedOn: isoDate,
     updatedOn: isoDate,
     closesOn: isoDate.nullable(),
@@ -83,6 +92,13 @@ const job = z
     if (j.closesOn && j.closesOn < j.postedOn) ctx.addIssue({ code: "custom", message: "closesOn is before postedOn", path: ["closesOn"] });
     const langs = j.translations.map((t) => t.locale);
     if (new Set(langs).size !== langs.length) ctx.addIssue({ code: "custom", message: "At most one translation per language", path: ["translations"] });
+    // A reviewed translation carries the whole job: no English list left inside a translated page.
+    j.translations.forEach((t, i) => {
+      if (t.status !== "reviewed") return;
+      if (t.requirements.length !== j.requirements.length) ctx.addIssue({ code: "custom", message: "A reviewed translation translates every requirement", path: ["translations", i, "requirements"] });
+      if (t.benefits.length !== j.benefits.length) ctx.addIssue({ code: "custom", message: "A reviewed translation translates every benefit", path: ["translations", i, "benefits"] });
+      if (j.experience && !t.experience) ctx.addIssue({ code: "custom", message: "A reviewed translation translates the experience line", path: ["translations", i, "experience"] });
+    });
     if (j.verification === "confirmed") {
       if (!j.closesOn) ctx.addIssue({ code: "custom", message: "A confirmed job needs an explicit closesOn date", path: ["closesOn"] });
       if (!j.employer) ctx.addIssue({ code: "custom", message: "A confirmed job needs an employer disclosure (named or confidential)", path: ["employer"] });

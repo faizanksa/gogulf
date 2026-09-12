@@ -1,0 +1,76 @@
+.layout {
+  display: grid;
+  gap: var(--space-7);
+}
+@media (min-width: 1024px) {
+  .layout {
+    grid-template-columns: minmax(0, var(--container-narrow)) minmax(16rem, 22rem);
+    justify-content: space-between;
+    gap: var(--space-8);
+    align-items: start;
+  }
+}
+
+.form {
+  min-width: 0;
+}
+
+.aside {
+  display: grid;
+  gap: var(--space-4);
+}
+@media (min-width: 1024px) {
+  .aside {
+    position: sticky;
+    top: calc(var(--header-height) + var(--space-4));
+  }
+}
+
+.panel {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+  background: var(--color-bg-subtle);
+}
+
+.h2 {
+  margin: 0;
+  font-size: var(--text-h3);
+  font-weight: 650;
+  line-height: var(--leading-heading);
+}
+
+.checklist {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.checklist li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-2);
+  line-height: var(--leading-snug);
+}
+.checklist svg {
+  color: var(--color-action);
+  margin-top: 0.1rem;
+}
+
+.next {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding-inline-start: 1.25rem;
+  line-height: var(--leading-snug);
+}
+
+.note {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+  line-height: var(--leading-snug);
+}
