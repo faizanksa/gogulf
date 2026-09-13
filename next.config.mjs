@@ -30,6 +30,13 @@ const nextConfig = {
   // The app has several root layouts (English, the other languages in app/[locale],
   // /admin, /portal), so a URL that matches no route is rendered by
   // app/global-not-found.tsx. See docs/I18N.md.
+  //
+  // experimental.inlineCss was measured on 12 Sep 2026 and NOT adopted. It removed the two
+  // render-blocking stylesheets, but the home page's lab LCP moved only ~0.3 s (3.6 → 3.3 s,
+  // within Lighthouse's run-to-run noise) while its HTML grew from ~122 KB to ~299 KB
+  // uncompressed (the CSS is carried twice: <style> and the RSC payload) and every page lost
+  // stylesheet caching. The remaining render delay is framework JavaScript executing before
+  // the first paint under a 4x CPU throttle. Revisit only with field data.
   experimental: {
     globalNotFound: true,
   },

@@ -1,0 +1,536 @@
+{
+  "label": "rc2",
+  "preset": "mobile",
+  "target": "staging",
+  "measuredAt": "2026-09-13T02:29:06.686Z",
+  "runsPerRoute": 3,
+  "method": "Local Lighthouse via a localhost proxy to staging (bypass header added only toward staging; browser→proxy HTTP/1.1)",
+  "lighthouseVersion": "13.4.1",
+  "results": [
+    {
+      "route": "/",
+      "runs": 3,
+      "spread": {
+        "performance": [
+          82,
+          94
+        ]
+      },
+      "performance": 94,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 69,
+      "lcpMs": 2578,
+      "fcpMs": 1280,
+      "tbtMs": 172,
+      "cls": 0,
+      "speedIndexMs": 3002,
+      "bytes": {
+        "total": 385065,
+        "document": 18942,
+        "script": 161237,
+        "stylesheet": 16051,
+        "image": 8232,
+        "font": 115135,
+        "thirdParty": 157
+      },
+      "requests": {
+        "total": 30,
+        "script": 10,
+        "font": 6,
+        "thirdParty": 1
+      },
+      "lcpElement": null
+    },
+    {
+      "route": "/about",
+      "runs": 3,
+      "spread": {
+        "performance": [
+          66,
+          83
+        ]
+      },
+      "performance": 83,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 69,
+      "lcpMs": 4559,
+      "fcpMs": 1674,
+      "tbtMs": 64,
+      "cls": 0,
+      "speedIndexMs": 2566,
+      "bytes": {
+        "total": 374764,
+        "document": 15398,
+        "script": 154030,
+        "stylesheet": 16030,
+        "image": 8232,
+        "font": 115135,
+        "thirdParty": 78
+      },
+      "requests": {
+        "total": 29,
+        "script": 9,
+        "font": 6,
+        "thirdParty": 1
+      },
+      "lcpElement": null
+    },
+    {
+      "route": "/services",
+      "runs": 3,
+      "spread": {
+        "performance": [
+          68,
+          97
+        ]
+      },
+      "performance": 77,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 69,
+      "lcpMs": 4905,
+      "fcpMs": 1680,
+      "tbtMs": 156,
+      "cls": 0,
+      "speedIndexMs": 4403,
+      "bytes": {
+        "total": 373150,
+        "document": 16697,
+        "script": 160767,
+        "stylesheet": 16030,
+        "image": 8232,
+        "font": 115135,
+        "thirdParty": 78
+      },
+      "requests": {
+        "total": 28,
+        "script": 10,
+        "font": 6,
+        "thirdParty": 1
+      },
+      "lcpElement": null
+    },
+    {
+      "route": "/jobs",
+      "runs": 3,
+      "spread": {
+        "performance": [
+          93,
+          98
+        ]
+      },
+      "performance": 93,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 69,
+      "lcpMs": 3023,
+      "fcpMs": 1303,
+      "tbtMs": 101,
+      "cls": 0,
+      "speedIndexMs": 1482,
+      "bytes": {
+        "total": 362926,
+        "document": 14833,
+        "script": 154031,
+        "stylesheet": 16031,
+        "image": 8232,
+        "font": 115136,
+        "thirdParty": 78
+      },
+      "requests": {
+        "total": 26,
+        "script": 9,
+        "font": 6,
+        "thirdParty": 1
+      },
+      "lcpElement": null
+    },
+    {
+      "route": "/jobs/apply",
+      "runs": 3,
+      "spread": {
+        "performance": [
+          82,
+          99
+        ]
+      },
+      "performance": 83,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 69,
+      "lcpMs": 4521,
+      "fcpMs": 1475,
+      "tbtMs": 114,
+      "cls": 0,
+      "speedIndexMs": 2408,
+      "bytes": {
+        "total": 374180,
+        "document": 14510,
+        "script": 162111,
+        "stylesheet": 17925,
+        "image": 8232,
+        "font": 115136,
+        "thirdParty": 78
+      },
+      "requests": {
+        "total": 29,
+        "script": 10,
+        "font": 6,
+        "thirdParty": 1
+      },
+      "lcpElement": null
+    },
+    {
+      "route": "/candidates",
+      "runs": 3,
+      "spread": {
+        "performance": [
+          79,
+          84
+        ]
+      },
+      "performance": 83,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 69,
+      "lcpMs": 4521,
+      "fcpMs": 1633,
+      "tbtMs": 56,
+      "cls": 0,
+      "speedIndexMs": 2508,
+      "bytes": {
+        "total": 366752,
+        "document": 17028,
+        "script": 154031,
+        "stylesheet": 16031,
+        "image": 8232,
+        "font": 115136,
+        "thirdParty": 78
+      },
+      "requests": {
+        "total": 27,
+        "script": 9,
+        "font": 6,
+        "thirdParty": 1
+      },
+      "lcpElement": null
+    },
+    {
+      "route": "/employers",
+      "runs": 3,
+      "spread": {
+        "performance": [
+          82,
+          82
+        ]
+      },
+      "performance": 82,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 69,
+      "lcpMs": 4640,
+      "fcpMs": 1643,
+      "tbtMs": 86,
+      "cls": 0,
+      "speedIndexMs": 2466,
+      "bytes": {
+        "total": 382658,
+        "document": 17366,
+        "script": 161152,
+        "stylesheet": 16031,
+        "image": 8232,
+        "font": 115136,
+        "thirdParty": 78
+      },
+      "requests": {
+        "total": 30,
+        "script": 10,
+        "font": 6,
+        "thirdParty": 1
+      },
+      "lcpElement": null
+    },
+    {
+      "route": "/contact",
+      "runs": 3,
+      "spread": {
+        "performance": [
+          77,
+          82
+        ]
+      },
+      "performance": 77,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 69,
+      "lcpMs": 4947,
+      "fcpMs": 1851,
+      "tbtMs": 156,
+      "cls": 0,
+      "speedIndexMs": 4057,
+      "bytes": {
+        "total": 413467,
+        "document": 14650,
+        "script": 175223,
+        "stylesheet": 17925,
+        "image": 8232,
+        "font": 126092,
+        "thirdParty": 78
+      },
+      "requests": {
+        "total": 36,
+        "script": 12,
+        "font": 7,
+        "thirdParty": 1
+      },
+      "lcpElement": null
+    },
+    {
+      "route": "/pricing",
+      "runs": 3,
+      "spread": {
+        "performance": [
+          81,
+          82
+        ]
+      },
+      "performance": 81,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 69,
+      "lcpMs": 4724,
+      "fcpMs": 1802,
+      "tbtMs": 96,
+      "cls": 0,
+      "speedIndexMs": 2542,
+      "bytes": {
+        "total": 378731,
+        "document": 18079,
+        "script": 154031,
+        "stylesheet": 16031,
+        "image": 8232,
+        "font": 126092,
+        "thirdParty": 78
+      },
+      "requests": {
+        "total": 28,
+        "script": 9,
+        "font": 7,
+        "thirdParty": 1
+      },
+      "lcpElement": null
+    },
+    {
+      "route": "/privacy-policy",
+      "runs": 3,
+      "spread": {
+        "performance": [
+          82,
+          97
+        ]
+      },
+      "performance": 82,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 69,
+      "lcpMs": 4610,
+      "fcpMs": 1753,
+      "tbtMs": 79,
+      "cls": 0,
+      "speedIndexMs": 2584,
+      "bytes": {
+        "total": 385434,
+        "document": 24686,
+        "script": 154099,
+        "stylesheet": 16031,
+        "image": 8232,
+        "font": 126092,
+        "thirdParty": 146
+      },
+      "requests": {
+        "total": 28,
+        "script": 9,
+        "font": 7,
+        "thirdParty": 1
+      },
+      "lcpElement": null
+    },
+    {
+      "route": "/terms-and-conditions",
+      "runs": 3,
+      "spread": {
+        "performance": [
+          80,
+          98
+        ]
+      },
+      "performance": 82,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 69,
+      "lcpMs": 4570,
+      "fcpMs": 1811,
+      "tbtMs": 73,
+      "cls": 0,
+      "speedIndexMs": 2535,
+      "bytes": {
+        "total": 384890,
+        "document": 24238,
+        "script": 154031,
+        "stylesheet": 16031,
+        "image": 8232,
+        "font": 126092,
+        "thirdParty": 78
+      },
+      "requests": {
+        "total": 28,
+        "script": 9,
+        "font": 7,
+        "thirdParty": 1
+      },
+      "lcpElement": null
+    },
+    {
+      "route": "/cancellation-and-refunds",
+      "runs": 3,
+      "spread": {
+        "performance": [
+          79,
+          82
+        ]
+      },
+      "performance": 79,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 69,
+      "lcpMs": 4876,
+      "fcpMs": 1808,
+      "tbtMs": 58,
+      "cls": 0,
+      "speedIndexMs": 3961,
+      "bytes": {
+        "total": 379429,
+        "document": 18772,
+        "script": 154031,
+        "stylesheet": 16031,
+        "image": 8232,
+        "font": 126092,
+        "thirdParty": 78
+      },
+      "requests": {
+        "total": 28,
+        "script": 9,
+        "font": 7,
+        "thirdParty": 1
+      },
+      "lcpElement": null
+    },
+    {
+      "route": "/shipping-policy",
+      "runs": 3,
+      "spread": {
+        "performance": [
+          79,
+          81
+        ]
+      },
+      "performance": 80,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 69,
+      "lcpMs": 4724,
+      "fcpMs": 1817,
+      "tbtMs": 133,
+      "cls": 0,
+      "speedIndexMs": 2586,
+      "bytes": {
+        "total": 377532,
+        "document": 16880,
+        "script": 154031,
+        "stylesheet": 16031,
+        "image": 8232,
+        "font": 126092,
+        "thirdParty": 78
+      },
+      "requests": {
+        "total": 28,
+        "script": 9,
+        "font": 7,
+        "thirdParty": 1
+      },
+      "lcpElement": null
+    },
+    {
+      "route": "/verify",
+      "runs": 3,
+      "spread": {
+        "performance": [
+          84,
+          84
+        ]
+      },
+      "performance": 84,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 69,
+      "lcpMs": 4408,
+      "fcpMs": 1493,
+      "tbtMs": 88,
+      "cls": 0,
+      "speedIndexMs": 2455,
+      "bytes": {
+        "total": 363372,
+        "document": 13676,
+        "script": 154031,
+        "stylesheet": 16031,
+        "image": 8232,
+        "font": 115136,
+        "thirdParty": 78
+      },
+      "requests": {
+        "total": 27,
+        "script": 9,
+        "font": 6,
+        "thirdParty": 1
+      },
+      "lcpElement": null
+    },
+    {
+      "route": "/jobs/site-supervisor-saudi-arabia",
+      "runs": 3,
+      "spread": {
+        "performance": [
+          79,
+          83
+        ]
+      },
+      "performance": 82,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 69,
+      "lcpMs": 4583,
+      "fcpMs": 1641,
+      "tbtMs": 85,
+      "cls": 0,
+      "speedIndexMs": 2668,
+      "bytes": {
+        "total": 382662,
+        "document": 15528,
+        "script": 162111,
+        "stylesheet": 17925,
+        "image": 8232,
+        "font": 115136,
+        "thirdParty": 78
+      },
+      "requests": {
+        "total": 32,
+        "script": 10,
+        "font": 6,
+        "thirdParty": 1
+      },
+      "lcpElement": null
+    }
+  ]
+}
