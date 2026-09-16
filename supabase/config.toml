@@ -455,3 +455,52 @@ template = "Your code is {{ .Code }}"
 
 [remotes.staging.auth.mfa.phone]
 template = "Your code is {{ .Code }}"
+
+# -----------------------------------------------------------------------------
+# Mumbai — ap-south-1, organisation `gogulf-co` (zckqnevnrpwhidnmzbqp).
+#
+# The migration target. Co-located with Vercel's bom1 functions, which is the
+# point of the move: RLS-heavy admin screens make several round trips per
+# request, and Mumbai -> Tokyo pays for each one.
+#
+# A new project ships with email signups OPEN. On a project that is about to
+# hold passport scans that is not acceptable for even a short window, so this is
+# applied as the FIRST provisioning step, ahead of the schema.
+#
+# Closing signups does not block staff onboarding — verified on staging, see
+# docs/SECURITY-MODEL.md §3. A pre-created, email-confirmed user signs in
+# normally; only self-registration is refused. Staff are created through the
+# admin API and their first Google sign-in links to the existing row.
+# -----------------------------------------------------------------------------
+[remotes.mumbai]
+project_id = "exsnksrmkycloxiajwmx"
+
+[remotes.mumbai.auth]
+site_url = "https://www.gogulf.co"
+additional_redirect_urls = ["https://www.gogulf.co/**"]
+# No self-registration, ever. Staff arrive through the admin API.
+enable_signup = false
+enable_anonymous_sign_ins = false
+# Nobody should be linking arbitrary identities onto a staff account.
+enable_manual_linking = false
+
+[remotes.mumbai.auth.email]
+# Hosted defaults stated explicitly: `config push` sends every setting in this
+# file, and the local stack relaxes these for convenience.
+enable_confirmations = true
+max_frequency = "1m0s"
+otp_length = 8
+
+# Break-glass access is TOTP-backed (is_break_glass + AAL2), so TOTP must be
+# available even though day-to-day staff sign-in is Google Workspace.
+[remotes.mumbai.auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+# Both channels are disabled; these keep the templates valid for hosted auth,
+# which takes the plain Go template rather than the local stack's escaped form.
+[remotes.mumbai.auth.sms]
+template = "Your code is {{ .Code }}"
+
+[remotes.mumbai.auth.mfa.phone]
+template = "Your code is {{ .Code }}"
