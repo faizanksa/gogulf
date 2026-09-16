@@ -33,7 +33,8 @@
     "perf:axe-summary": "node scripts/perf/axe-summary.mjs",
     "analyze": "cross-env PLATFORM_MODE=server next experimental-analyze --output",
     "check:isolation": "node scripts/check-staging-isolation.mjs",
-    "db:validate": "node scripts/validate-migrations.mjs"
+    "db:validate": "node scripts/validate-migrations.mjs",
+    "backup:prod": "node scripts/backup-production.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.6",
