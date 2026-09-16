@@ -28,7 +28,10 @@ import { join } from "node:path";
 // the duration of the Tokyo -> Mumbai migration: once Mumbai holds live data a
 // one-ref guard would wave it through as if it were staging. Keep this in step
 // with PRODUCTION_PROJECT_REFS in scripts/check-staging-isolation.mjs.
-const PRODUCTION_REFS = ["julbqkeyvzwluayokcdi", "exsnksrmkycloxiajwmx"];
+// Tokyo production is live and is never a target of this script, whatever an
+// env file says. It is not in TARGETS and it is refused again here, because the
+// cost of the two checks is nothing and the cost of missing is the real one.
+const NEVER_A_TARGET = ["julbqkeyvzwluayokcdi"];
 const CONTAINER = "supabase_db_go-gulf";
 const TEST_DIR = "supabase/tests";
 
@@ -40,12 +43,26 @@ const TARGETS = {
   staging: {
     label: "TOKYO STAGING",
     envFile: ".env.staging.local",
+    expectRef: "wxolbnhyzktfjdvcnixc",
     vars: { ref: "STAGING_SUPABASE_REF", host: "STAGING_DB_HOST", password: "STAGING_DB_PASSWORD" },
   },
   "mumbai-staging": {
     label: "MUMBAI STAGING (rehearsal)",
     envFile: ".env.mumbai-staging.local",
+    expectRef: "noxireidrbeqcvsirjec",
     vars: { ref: "MUMBAI_STAGING_REF", host: "MUMBAI_STAGING_DB_HOST", password: "MUMBAI_STAGING_DB_PASSWORD" },
+  },
+  "mumbai-production": {
+    label: "MUMBAI PRODUCTION",
+    envFile: ".env.prod-supabase.local",
+    expectRef: "exsnksrmkycloxiajwmx",
+    // Derived from the project URL in that file rather than stored twice.
+    vars: { url: "NEXT_PUBLIC_SUPABASE_URL", host: null, password: "MUMBAI_DB_PASSWORD" },
+    host: "aws-0-ap-south-1.pooler.supabase.com",
+    // This project becomes production at cutover. After that, a push here is a
+    // production schema change, which is not something a mistyped --target
+    // should be able to start.
+    requiresConfirmation: "--yes-i-am-provisioning-production",
   },
 };
 
@@ -58,6 +75,10 @@ const fail = (msg) => {
 
 const target = TARGETS[targetName];
 if (!target) fail(`unknown target "${targetName}". Known: ${Object.keys(TARGETS).join(", ")}.`);
+if (target.requiresConfirmation && !process.argv.includes(target.requiresConfirmation)) {
+  fail(`"${targetName}" is the project that becomes production. Re-run with ${target.requiresConfirmation} if that is what you mean.`);
+}
+
 if (!existsSync(target.envFile)) fail(`${target.envFile} not found. See docs/STAGING.md.`);
 const env = Object.fromEntries(
   readFileSync(target.envFile, "utf8")
@@ -65,20 +86,31 @@ const env = Object.fromEntries(
     .filter((l) => /^[A-Z_]+=/.test(l))
     .map((l) => [l.slice(0, l.indexOf("=")), l.slice(l.indexOf("=") + 1).trim()]),
 );
-const ref = env[target.vars.ref] ?? "";
-const host = env[target.vars.host] ?? "";
+const ref = target.vars.ref
+  ? env[target.vars.ref] ?? ""
+  : (env[target.vars.url] ?? "").match(/https:\/\/([a-z0-9]{20})\.supabase\./i)?.[1] ?? "";
+const host = target.host ?? env[target.vars.host] ?? "";
 const password = env[target.vars.password] ?? "";
 
-if (!/^[a-z]{20}$/.test(ref)) fail(`${target.vars.ref} is missing or malformed.`);
-for (const prodRef of PRODUCTION_REFS) {
-  if (ref === prodRef || host.includes(prodRef)) fail(`the configured target is PRODUCTION (${prodRef}). Refusing.`);
+if (!/^[a-z]{20}$/.test(ref)) fail(`could not read a project ref for target "${targetName}" from ${target.envFile}.`);
+
+// Pinned allow-list, not a block-list. Each target may reach exactly one project
+// and no other, so a credentials file that has been swapped, edited or pointed
+// somewhere new is refused by name rather than being caught only if it happens
+// to match a known-production ref.
+if (ref !== target.expectRef) {
+  fail(`${target.envFile} resolves to ${ref}, but target "${targetName}" may only reach ${target.expectRef}. Refusing.`);
 }
-if (!/^aws-\d+-[a-z0-9-]+\.pooler\.supabase\.com$/.test(host)) fail(`${target.vars.host} must be a Supabase session-pooler host.`);
-if (!password) fail(`${target.vars.password} is missing.`);
+for (const banned of NEVER_A_TARGET) {
+  if (ref === banned || host.includes(banned)) fail(`${banned} is live production and is never a target of this script. Refusing.`);
+}
+if (!/^aws-\d+-[a-z0-9-]+\.pooler\.supabase\.com$/.test(host)) fail(`the pooler host for "${targetName}" is missing or malformed.`);
+if (!password) fail(`${target.vars.password} is missing from ${target.envFile}.`);
+
 
 const user = `postgres.${ref}`;
 const scrub = (s) => s.replaceAll(password, "[REDACTED]").replaceAll(encodeURIComponent(password), "[REDACTED]");
-const [command, ...args] = process.argv.slice(2).filter((a) => !a.startsWith("--target="));
+const [command, ...args] = process.argv.slice(2).filter((a) => !a.startsWith("--target=") && !a.startsWith("--yes-i-am"));
 console.log(`Target: ${target.label} ${ref} (${host})`);
 
 function psql(sql) {
