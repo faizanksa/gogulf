@@ -17,6 +17,24 @@ const staffClaims: AccessTokenClaims = {
   app_branch: "b-lko",
 };
 
+// The shape a real Google sign-in actually produces for a pre-created staff
+// member, observed on Mumbai staging 16 Sep 2026 for hello@gogulf.co.
+//
+// It differs from staffClaims in a way that matters: because onboarding creates
+// the auth.users row first (confirmed email, no password) and Google links to it
+// afterwards, `provider` stays "email" and Google only joins the `providers`
+// array. A guard that read `provider` alone would reject every real staff member
+// while passing the fixture above.
+const linkedGoogleStaffClaims: AccessTokenClaims = {
+  sub: "u-linked",
+  role: "authenticated",
+  amr: [{ method: "oauth", timestamp: 1758029861 }],
+  app_metadata: { provider: "email", providers: ["email", "google"] },
+  app_staff_id: "s-linked",
+  app_role: "SUPER_ADMIN",
+  app_branch: "b-lko",
+};
+
 const customerClaims: AccessTokenClaims = {
   sub: "u-customer",
   role: "authenticated",
@@ -71,6 +89,32 @@ describe("sessionKind", () => {
       staffId: "s-1",
       role: "HR_MANAGER",
       branchId: "b-lko",
+    });
+  });
+
+  it("recognises a pre-created staff member whose Google identity was linked later", () => {
+    // The onboarding path in scripts/bootstrap-super-admins.mjs: the account
+    // exists before its first sign-in, so "email" remains the primary provider
+    // and "google" is added alongside it.
+    expect(sessionKind(linkedGoogleStaffClaims)).toEqual({
+      kind: "staff",
+      userId: "u-linked",
+      staffId: "s-linked",
+      role: "SUPER_ADMIN",
+      branchId: "b-lko",
+    });
+  });
+
+  it("still blocks that account if it signs in by a non-Google route", () => {
+    // Same linked account, arriving by email instead. Having once linked Google
+    // must not make every later session acceptable.
+    const viaEmail = {
+      ...linkedGoogleStaffClaims,
+      amr: [{ method: "password", timestamp: 1758029861 }],
+    };
+    expect(sessionKind(viaEmail)).toMatchObject({
+      kind: "blocked",
+      reason: "staff-claims-without-staff-sign-in",
     });
   });
 
