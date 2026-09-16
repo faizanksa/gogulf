@@ -29,37 +29,57 @@ import { join } from "node:path";
 // one-ref guard would wave it through as if it were staging. Keep this in step
 // with PRODUCTION_PROJECT_REFS in scripts/check-staging-isolation.mjs.
 const PRODUCTION_REFS = ["julbqkeyvzwluayokcdi", "exsnksrmkycloxiajwmx"];
-const ENV_FILE = ".env.staging.local";
 const CONTAINER = "supabase_db_go-gulf";
 const TEST_DIR = "supabase/tests";
 
+// Each target names its own gitignored credentials file and the three variables
+// read from it. Stated in full rather than derived from a prefix: the variable
+// names already differ between files, and guessing them is how a target ends up
+// silently half-configured.
+const TARGETS = {
+  staging: {
+    label: "TOKYO STAGING",
+    envFile: ".env.staging.local",
+    vars: { ref: "STAGING_SUPABASE_REF", host: "STAGING_DB_HOST", password: "STAGING_DB_PASSWORD" },
+  },
+  "mumbai-staging": {
+    label: "MUMBAI STAGING (rehearsal)",
+    envFile: ".env.mumbai-staging.local",
+    vars: { ref: "MUMBAI_STAGING_REF", host: "MUMBAI_STAGING_DB_HOST", password: "MUMBAI_STAGING_DB_PASSWORD" },
+  },
+};
+
+const targetName = (process.argv.find((a) => a.startsWith("--target=")) ?? "--target=staging").split("=")[1];
+
 const fail = (msg) => {
-  console.error(`db:staging — ${msg}`);
+  console.error(`db:${targetName} — ${msg}`);
   process.exit(1);
 };
 
-if (!existsSync(ENV_FILE)) fail(`${ENV_FILE} not found. See docs/STAGING.md.`);
+const target = TARGETS[targetName];
+if (!target) fail(`unknown target "${targetName}". Known: ${Object.keys(TARGETS).join(", ")}.`);
+if (!existsSync(target.envFile)) fail(`${target.envFile} not found. See docs/STAGING.md.`);
 const env = Object.fromEntries(
-  readFileSync(ENV_FILE, "utf8")
+  readFileSync(target.envFile, "utf8")
     .split(/\r?\n/)
     .filter((l) => /^[A-Z_]+=/.test(l))
     .map((l) => [l.slice(0, l.indexOf("=")), l.slice(l.indexOf("=") + 1).trim()]),
 );
-const ref = env.STAGING_SUPABASE_REF ?? "";
-const host = env.STAGING_DB_HOST ?? "";
-const password = env.STAGING_DB_PASSWORD ?? "";
+const ref = env[target.vars.ref] ?? "";
+const host = env[target.vars.host] ?? "";
+const password = env[target.vars.password] ?? "";
 
-if (!/^[a-z]{20}$/.test(ref)) fail("STAGING_SUPABASE_REF is missing or malformed.");
+if (!/^[a-z]{20}$/.test(ref)) fail(`${target.vars.ref} is missing or malformed.`);
 for (const prodRef of PRODUCTION_REFS) {
   if (ref === prodRef || host.includes(prodRef)) fail(`the configured target is PRODUCTION (${prodRef}). Refusing.`);
 }
-if (!/^aws-\d+-[a-z0-9-]+\.pooler\.supabase\.com$/.test(host)) fail("STAGING_DB_HOST must be a Supabase session-pooler host.");
-if (!password) fail("STAGING_DB_PASSWORD is missing.");
+if (!/^aws-\d+-[a-z0-9-]+\.pooler\.supabase\.com$/.test(host)) fail(`${target.vars.host} must be a Supabase session-pooler host.`);
+if (!password) fail(`${target.vars.password} is missing.`);
 
 const user = `postgres.${ref}`;
 const scrub = (s) => s.replaceAll(password, "[REDACTED]").replaceAll(encodeURIComponent(password), "[REDACTED]");
-const [command, ...args] = process.argv.slice(2);
-console.log(`Target: STAGING ${ref} (${host})`);
+const [command, ...args] = process.argv.slice(2).filter((a) => !a.startsWith("--target="));
+console.log(`Target: ${target.label} ${ref} (${host})`);
 
 function psql(sql) {
   const ps = spawnSync("docker", ["ps", "--filter", `name=^${CONTAINER}$`, "--format", "{{.Names}}"], { encoding: "utf8" });
@@ -79,16 +99,48 @@ function psql(sql) {
 
 if (command === "push") {
   const url = `postgresql://${user}:${encodeURIComponent(password)}@${host}:5432/postgres`;
-  const r = spawnSync("npx", ["supabase", "db", "push", "--db-url", url, "--yes", ...args.filter((a) => a === "--dry-run")], {
+  const dryRun = args.includes("--dry-run");
+  const r = spawnSync("npx", ["supabase", "db", "push", "--db-url", url, "--yes", ...(dryRun ? ["--dry-run"] : [])], {
     encoding: "utf8",
     shell: process.platform === "win32",
   });
   console.log(scrub(`${r.stdout ?? ""}${r.stderr ?? ""}`).trim());
-  process.exit(r.status ?? 1);
+
+  // `supabase db push` cannot be trusted to report its own outcome. On this
+  // machine its pgdelta step fails reading a CA certificate from inside its
+  // container (`/workspace/supabase/.temp/pgdelta/pgdelta-target-ca.crt`) and
+  // exits non-zero — AFTER the migrations have been applied and recorded.
+  // Observed twice, on Tokyo staging and again on the empty Mumbai project.
+  //
+  // A migration tool that reports failure on success is worse than one that
+  // fails outright: during a cutover the natural response to that error is to
+  // re-run it, or to abandon and roll back something that in fact worked. So
+  // the exit code is not passed through. The database is asked directly, and
+  // what it says is what gets reported.
+  if (dryRun) process.exit(r.status ?? 1);
+
+  const check = psql("select version from supabase_migrations.schema_migrations order by version;");
+  if (check.status !== 0) {
+    console.error(scrub(`${check.stdout ?? ""}${check.stderr ?? ""}`).trim());
+    fail("migrations may or may not have applied — could not read schema_migrations to find out. Check before retrying.");
+  }
+  const applied = (check.stdout ?? "").split(/\r?\n/).map((l) => l.trim()).filter((l) => /^\d{4}$/.test(l));
+  const onDisk = readdirSync("supabase/migrations").filter((f) => f.endsWith(".sql")).map((f) => f.slice(0, 4)).sort();
+  const missing = onDisk.filter((v) => !applied.includes(v));
+
+  console.log(`\nVerified against the database, not the exit code:`);
+  console.log(`  applied  : ${applied.length ? applied.join(", ") : "(none)"}`);
+  if (missing.length === 0) {
+    if (r.status !== 0) console.log(`  note     : the CLI exited ${r.status}, but every migration on disk is applied.`);
+    console.log("\nPASS - the target carries every migration in supabase/migrations.");
+    process.exit(0);
+  }
+  console.error(`  MISSING  : ${missing.join(", ")}`);
+  fail(`${missing.length} migration(s) on disk are not applied to ${ref}.`);
 }
 
 if (command === "run") {
-  if (!args[0] || !existsSync(args[0])) fail("usage: npm run db:staging -- run <file.sql>");
+  if (!args[0] || !existsSync(args[0])) fail(`usage: npm run db:${targetName} -- run <file.sql>`);
   const r = psql(readFileSync(args[0], "utf8"));
   console.log(scrub(`${r.stdout ?? ""}${r.stderr ?? ""}`).trim());
   process.exit(r.status ?? 1);
@@ -112,13 +164,13 @@ if (command === "test") {
       if (!errors.length) console.log(`  FAIL  psql exited ${r.status}`);
     }
   }
-  console.log(`\n${totalPass} assertion(s) passed across ${files.length} file(s) on STAGING.`);
+  console.log(`\n${totalPass} assertion(s) passed across ${files.length} file(s) on ${target.label}.`);
   if (failedFiles) {
     console.log(`${failedFiles} file(s) FAILED — a failing file stops at its first failed assertion.`);
     process.exit(1);
   }
-  console.log("ALL SQL SUITES PASSED ON STAGING");
+  console.log(`ALL SQL SUITES PASSED ON ${target.label}`);
   process.exit(0);
 }
 
-fail("usage: npm run db:staging -- push [--dry-run] | test | run <file.sql>");
+fail(`usage: npm run db:${targetName} -- push [--dry-run] | test | run <file.sql>`);
