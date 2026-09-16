@@ -504,3 +504,40 @@ template = "Your code is {{ .Code }}"
 
 [remotes.mumbai.auth.mfa.phone]
 template = "Your code is {{ .Code }}"
+
+# -----------------------------------------------------------------------------
+# Mumbai STAGING — ap-south-1, organisation `gogulf-co`. The rehearsal project.
+#
+# Created 16 Sep 2026 so the Tokyo -> Mumbai migration can be practised end to
+# end without writing to the project that will become production. Same region,
+# same organisation and the same settings as [remotes.mumbai], so a rehearsal
+# here means something about production.
+#
+# The one deliberate difference is site_url: nothing is deployed against this
+# project yet, and pointing it at www.gogulf.co would put the production origin
+# in a rehearsal project's redirect allow-list.
+# -----------------------------------------------------------------------------
+[remotes.mumbai-staging]
+project_id = "noxireidrbeqcvsirjec"
+
+[remotes.mumbai-staging.auth]
+site_url = "https://staging.gogulf.co"
+additional_redirect_urls = ["https://staging.gogulf.co/**"]
+enable_signup = false
+enable_anonymous_sign_ins = false
+enable_manual_linking = false
+
+[remotes.mumbai-staging.auth.email]
+enable_confirmations = true
+max_frequency = "1m0s"
+otp_length = 8
+
+[remotes.mumbai-staging.auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+[remotes.mumbai-staging.auth.sms]
+template = "Your code is {{ .Code }}"
+
+[remotes.mumbai-staging.auth.mfa.phone]
+template = "Your code is {{ .Code }}"
