@@ -6,11 +6,21 @@
 -- claims, that the audit trail cannot be altered, and that deactivating a staff
 -- member takes effect immediately.
 --
--- RUN AGAINST A DISPOSABLE DATABASE ONLY — local `supabase start`, or the
--- staging project. It inserts and deletes test rows. Never run it against
--- production.
+-- NEVER RUN THIS AGAINST A DATABASE HOLDING REAL DATA. It inserts contacts and
+-- identities to prove the constraints actually fire. Each file runs inside a
+-- transaction and rolls back, so nothing should persist — but "should" is not
+-- the standard to apply to a database holding passport scans.
 --
---   supabase db reset            # applies 0001–0008 from empty
+-- An EMPTY project being provisioned is a different case and is explicitly fine:
+-- it holds nothing to damage, and provisioning is the right moment to prove the
+-- schema before it is trusted with anything. Mumbai production was verified this
+-- way on 16 Sep 2026, before any data or user existed on it. Once a project is
+-- live, use staging.
+--
+--   npm run db:test                     # local
+--   npm run db:staging -- test          # Tokyo staging
+--   npm run db:mumbai  -- test          # Mumbai rehearsal
+--   supabase db reset                   # applies 0001–0011 from empty, locally
 --   psql -v ON_ERROR_STOP=1 "$DB_URL" -f supabase/tests/rls.test.sql
 --
 -- ON_ERROR_STOP is passed on the command line rather than with a \set
@@ -277,9 +287,25 @@ select test_assert(
 do $$
 declare bad text;
 begin
+  -- Functions returning trigger or event_trigger are excluded throughout this
+  -- section. PostgreSQL refuses to invoke them from SQL at all -- "trigger
+  -- functions can only be called as triggers", SQLSTATE 0A000 -- so an EXECUTE
+  -- grant on one conveys nothing and is not attack surface. Verified as anon on
+  -- the Mumbai project.
+  --
+  -- This is not a convenience exemption. Mumbai production ships a Supabase
+  -- platform function, public.rls_auto_enable(), which backs the ensure_rls
+  -- event trigger: SECURITY DEFINER, search_path pinned, EXECUTE granted to
+  -- PUBLIC, and owned by the platform rather than by these migrations. Revoking
+  -- from it would drift from the platform's own expected state and be restored
+  -- by the next platform update. Narrowing the assertion to functions that can
+  -- actually be called states the real security property and is stable.
+  --
+  -- Our own trigger functions keep their explicit revokes in 0009 regardless.
   select string_agg(p.proname, ', ') into bad
     from pg_proc p join pg_namespace n on n.oid = p.pronamespace
    where n.nspname = 'public' and p.prosecdef
+     and p.prorettype not in ('pg_catalog.trigger'::regtype, 'pg_catalog.event_trigger'::regtype)
      and has_function_privilege('anon', p.oid, 'EXECUTE');
   perform test_assert(bad is null,
     coalesce('no SECURITY DEFINER function is executable by anon (found: ' || bad || ')',
@@ -288,6 +314,7 @@ begin
   select string_agg(p.proname, ', ') into bad
     from pg_proc p join pg_namespace n on n.oid = p.pronamespace
    where n.nspname = 'public' and p.prosecdef
+     and p.prorettype not in ('pg_catalog.trigger'::regtype, 'pg_catalog.event_trigger'::regtype)
      and has_function_privilege('authenticated', p.oid, 'EXECUTE')
      and p.proname not in ('has_perm', 'scope_allows', 'is_staff', 'current_contact_id');
   perform test_assert(bad is null,
