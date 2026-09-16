@@ -24,7 +24,11 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
-const PRODUCTION_REF = "julbqkeyvzwluayokcdi";
+// Every project that is, or is about to become, production. Both are listed for
+// the duration of the Tokyo -> Mumbai migration: once Mumbai holds live data a
+// one-ref guard would wave it through as if it were staging. Keep this in step
+// with PRODUCTION_PROJECT_REFS in scripts/check-staging-isolation.mjs.
+const PRODUCTION_REFS = ["julbqkeyvzwluayokcdi", "exsnksrmkycloxiajwmx"];
 const ENV_FILE = ".env.staging.local";
 const CONTAINER = "supabase_db_go-gulf";
 const TEST_DIR = "supabase/tests";
@@ -46,7 +50,9 @@ const host = env.STAGING_DB_HOST ?? "";
 const password = env.STAGING_DB_PASSWORD ?? "";
 
 if (!/^[a-z]{20}$/.test(ref)) fail("STAGING_SUPABASE_REF is missing or malformed.");
-if (ref === PRODUCTION_REF || host.includes(PRODUCTION_REF)) fail("the configured target is PRODUCTION. Refusing.");
+for (const prodRef of PRODUCTION_REFS) {
+  if (ref === prodRef || host.includes(prodRef)) fail(`the configured target is PRODUCTION (${prodRef}). Refusing.`);
+}
 if (!/^aws-\d+-[a-z0-9-]+\.pooler\.supabase\.com$/.test(host)) fail("STAGING_DB_HOST must be a Supabase session-pooler host.");
 if (!password) fail("STAGING_DB_PASSWORD is missing.");
 

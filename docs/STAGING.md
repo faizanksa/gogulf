@@ -97,10 +97,20 @@ Protection if it is ever exposed. Without it, the wall holds — verified.
 ## 4. Isolation — enforced, and proven on real Vercel
 
 `scripts/check-staging-isolation.mjs` runs as npm's `prebuild` hook, and
-`vercel.json` pins `buildCommand: npm run build` so Vercel always invokes it. It
-fails any non-production build whose Supabase URL or keys belong to the
-production project (`julbqkeyvzwluayokcdi`, hard-coded so an environment variable
-cannot defeat it). Vercel Production builds skip it.
+`vercel.json` pins `buildCommand: cross-env PLATFORM_MODE=server npm run build`
+so Vercel always invokes it — and so server mode is committed to the repository
+rather than left to a dashboard variable that can be deleted. It fails any
+non-production build whose Supabase URL or keys belong to a production project
+(`julbqkeyvzwluayokcdi` and, for the duration of the migration,
+`exsnksrmkycloxiajwmx` — both hard-coded so an environment variable cannot defeat
+it).
+
+**Vercel Production builds no longer skip the script.** They skip the *isolation*
+check, which is meaningless there, but are now checked for the opposite failure:
+that `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and
+`PLATFORM_MODE=server` are actually present. On 16 Sep production had none of the
+Supabase values and was one redeploy away from losing every job application
+silently; see the commit message on `4c6fcf6`.
 
 **Proof.** The first `staging` push happened before the overrides existed —
 Vercel rejects branch-scoped variables for a branch it has not seen yet. That
@@ -261,14 +271,28 @@ move of this form to a server route.
 
 | Check | Local | Staging |
 | --- | --- | --- |
-| `0001`–`0011` apply in order from an empty database | ✅ | `0001`–`0010` only |
-| `rls.test.sql` — catalogue, identity, audit, grants, side doors | ✅ 52 | ✅ 46 |
-| `rbac-behaviour.test.sql` — queries as each role, with positive controls | ✅ 84 | ✅ 83 |
-| **Total** | **136** | **129** |
+| `0001`–`0011` apply in order from an empty database | ✅ | ✅ |
+| `rls.test.sql` — catalogue, identity, audit, grants, side doors | ✅ 52 | ✅ 52 |
+| `rbac-behaviour.test.sql` — queries as each role, with positive controls | ✅ 84 | ✅ 84 |
+| **Total** | **136** | **136** |
 
-The staging column is the 11 Sep measurement and has not been re-run since; `0011` is not
-applied there yet. The local per-file split is counted from today's run — the earlier 46/83
-split was recorded slightly differently, so compare the totals rather than the columns.
+Re-measured 16 Sep 2026 after `0011` was pushed to staging. The earlier 46/83 split was
+counted slightly differently; compare totals rather than columns against older revisions.
+
+`0011` was verified against staging rather than only locally, because the starting state is
+what differs: staging began at `anon=arwdDxtm` — the hosted default, SELECT, DELETE and
+TRUNCATE included — where the local stack begins at `Dxtm`. After the push, through the live
+REST API with the published anon key:
+
+| Probe as anon on staging | Before `0011` | After |
+| --- | --- | --- |
+| `SELECT id,email,phone,passport_path` | `200` + `[]` | **`401`** `42501` |
+| `DELETE` | would have been permitted | **`401`** `42501` |
+| `INSERT` — the public applicant path | `201` | `201` |
+| `service_role` reads the row back | ✅ | ✅ |
+
+All 7 staging rows intact. The refusal now comes from the privilege layer, before RLS is
+consulted.
 | 23 public tables, all with RLS; 55 policies; 72 permissions; 12 roles | ✅ | ✅ |
 | Private `job-applications` bucket, 10 MB limit, anon insert-only policy | ✅ | ✅ |
 
