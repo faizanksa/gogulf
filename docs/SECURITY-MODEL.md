@@ -115,6 +115,45 @@ inside `has_perm()`, so deactivation takes effect on the **next query** rather t
 Kept modular: staff auth is behind the same session abstraction, so it can change later without
 touching the permission system.
 
+#### Onboarding with signups disabled — resolved 16 Sep 2026
+
+The open question (D10) was whether `enable_signup = false` is compatible with staff who are
+pre-created and then sign in with Google for the first time. It is, and the two halves were
+established separately.
+
+**Signups stay closed, but existing users still sign in.** Measured against staging, which has
+`disable_signup: true` live:
+
+| Attempt | Result |
+| --- | --- |
+| Public `/auth/v1/signup` with a new address | `422 signup_disabled` |
+| Admin API pre-creates a confirmed user | `200` |
+| That pre-created user then signs in | `200` + access token |
+
+So `enable_signup = false` bounds *self-registration*, not authentication. An account the admin API
+created is a normal account.
+
+**The first Google sign-in is a sign-in, not a signup.** Supabase Auth links identities
+automatically: *"When a new user signs in with OAuth, Supabase Auth will attempt to look for an
+existing user that uses the same email address. If a match is found, the new identity is linked to
+the user."* The flow therefore resolves to the existing row and never reaches the signup path.
+
+Two conditions make that safe, and both are requirements rather than details:
+
+1. **The pre-created user must have a confirmed email** (`email_confirm: true` on creation).
+   Supabase refuses to auto-link onto an unverified address precisely because it would be a
+   pre-account-takeover primitive — someone registers the address first and inherits the identity.
+2. **Supabase does not enforce the Workspace domain.** It matches on the email address alone and
+   does not check Google's `hd` claim. The `gogulf.co` restriction is ours to enforce, and it is
+   enforced where it belongs: a Google account that is not a pre-created staff member gets no
+   `staff_users` row, so the JWT hook issues no `app_staff_id` or `app_role`, `has_perm()` fails,
+   and the route guard rejects the session. Confirmed on staging — a user with no `staff_users`
+   row signed in and received a token carrying **no** staff claims.
+
+The onboarding procedure that follows from this: create the `auth.users` row with the admin API and
+`email_confirm: true`, create the matching `staff_users` row, and let the person's first Google
+sign-in link the identity. Never enable signups to onboard someone.
+
 ### Separation
 
 Customer sessions and staff sessions are distinct. A customer session can never satisfy
