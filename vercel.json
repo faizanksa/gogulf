@@ -1,5 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npm run build",
+  "buildCommand": "cross-env PLATFORM_MODE=server npm run build",
   "regions": ["bom1"]
 }

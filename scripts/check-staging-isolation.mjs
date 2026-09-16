@@ -18,13 +18,27 @@
  *   node scripts/check-staging-isolation.mjs                 # as `next build` sees env
  *   node scripts/check-staging-isolation.mjs --mode=development   # as `next dev` sees env
  *
- * Exit 0 = isolated (or a genuine production deploy). Exit 1 = production is
- * reachable from somewhere it must not be.
+ * A production deploy is checked too, for the opposite failure: that it carries
+ * the Supabase configuration and server mode it needs. See the isProductionDeploy
+ * branch — a production build missing NEXT_PUBLIC_SUPABASE_* ships a site that
+ * loses every job application without logging anything.
+ *
+ * Exit 0 = isolated, and correctly configured if this is production. Exit 1 =
+ * production is reachable from somewhere it must not be, or a production build
+ * is missing configuration it cannot work without.
  */
 
-// The live production project. Hard-coded on purpose: this guard must not be
-// defeatable by editing an environment variable.
-const PRODUCTION_PROJECT_REF = "julbqkeyvzwluayokcdi";
+// The live production projects. Hard-coded on purpose: this guard must not be
+// defeatable by editing an environment variable. Both refs are listed for the
+// duration of the Tokyo -> Mumbai migration, so neither can leak into a
+// non-production environment while the two run side by side. Drop the Tokyo ref
+// when it is decommissioned.
+const PRODUCTION_PROJECT_REFS = new Map([
+  ["julbqkeyvzwluayokcdi", "PRODUCTION Tokyo, ap-northeast-1"],
+  ["exsnksrmkycloxiajwmx", "PRODUCTION Mumbai, ap-south-1"],
+]);
+
+const isProductionRef = (ref) => ref !== null && PRODUCTION_PROJECT_REFS.has(ref);
 
 const mode = (process.argv.find((a) => a.startsWith("--mode=")) ?? "--mode=production").split("=")[1];
 
@@ -53,7 +67,52 @@ const label = appEnv || vercelEnv || "local";
 console.log(`Environment: ${label}`);
 
 if (isProductionDeploy) {
-  console.log("Production deploy — the production database is expected here. Skipping.");
+  console.log("Production deploy — the production database is expected here.");
+
+  // Skipping the isolation check is not the same as skipping every check. The
+  // likelier production failure is the opposite one, and it is silent: a build
+  // with no Supabase configuration at all.
+  //
+  // NEXT_PUBLIC_* values are frozen into the browser bundle by `next build` and
+  // never re-read afterwards, so a missing variable here is not a runtime
+  // warning — it ships. `lib/supabase.js` then reports isSupabaseConfigured
+  // false, submitJobApplication throws before uploading, and ApplyForm returns
+  // from its catch *before* the Resend call. The applicant sees an upload error
+  // and the application is lost whole: no row, no document, no notification,
+  // and nothing server-side to alert anyone.
+  //
+  // On 16 Sep 2026 production was in exactly this state and kept working only
+  // because the deployed artifact still carried keys from an earlier build.
+  const required = {
+    NEXT_PUBLIC_SUPABASE_URL: "the applications database and document storage",
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: "the applications database and document storage",
+    PLATFORM_MODE: "server mode — without it the build falls back to a static export",
+  };
+  const missing = Object.entries(required).filter(([name]) => !process.env[name]);
+
+  if (missing.length > 0) {
+    console.error("\nFAIL — production build is missing required configuration:\n");
+    for (const [name, why] of missing) console.error(`  ${name} — ${why}`);
+    console.error(
+      "\nSet these in the Vercel Production environment before deploying:\n\n" +
+        "  npx vercel env add <NAME> production\n\n" +
+        "A production build without them deploys a site that silently loses every\n" +
+        "job application. Environment changes only affect *future* builds, so the\n" +
+        "variables must exist before the build, not after it.\n",
+    );
+    process.exit(1);
+  }
+
+  if (process.env.PLATFORM_MODE !== "server") {
+    console.error(
+      `\nFAIL — PLATFORM_MODE is "${process.env.PLATFORM_MODE}", not "server".\n\n` +
+        "A static export drops /admin, /portal and every /api/forms route.\n",
+    );
+    process.exit(1);
+  }
+
+  console.log(`Supabase API: ${describe(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "")}`);
+  console.log("PASS — production build carries its required configuration.");
   process.exit(0);
 }
 
@@ -72,7 +131,7 @@ function describe(url) {
   // Loopback in any URL form: http://127.0.0.1:54321 or postgresql://…@127.0.0.1:54322/…
   if (/(^[a-z]+:\/\/|@)(127\.0\.0\.1|localhost)(:\d+)?([/?]|$)/i.test(url)) return "LOCAL Supabase";
   const ref = refOf(url);
-  if (ref === PRODUCTION_PROJECT_REF) return `PRODUCTION (${ref})`;
+  if (isProductionRef(ref)) return `${PRODUCTION_PROJECT_REFS.get(ref)} (${ref})`;
   if (ref) return `project ${ref}`;
   return "non-Supabase value (storage disabled)";
 }
@@ -80,10 +139,10 @@ function describe(url) {
 console.log(`Supabase API: ${describe(supabaseUrl)}`);
 if (dbUrl) console.log(`Supabase DB:  ${describe(dbUrl.replace(/:[^:@/]+@/, ":***@"))}`);
 
-if (refOf(supabaseUrl) === PRODUCTION_PROJECT_REF) {
+if (isProductionRef(refOf(supabaseUrl))) {
   failures.push("NEXT_PUBLIC_SUPABASE_URL points at the PRODUCTION Supabase project.");
 }
-if (refOf(dbUrl) === PRODUCTION_PROJECT_REF) {
+if (isProductionRef(refOf(dbUrl))) {
   failures.push("SUPABASE_DB_URL points at the PRODUCTION Supabase project.");
 }
 
@@ -99,7 +158,7 @@ for (const [name, value] of Object.entries({
     const payload = JSON.parse(
       Buffer.from(String(value).split(".")[1] ?? "", "base64url").toString("utf8"),
     );
-    if (payload?.ref === PRODUCTION_PROJECT_REF) failures.push(`${name} is a PRODUCTION key.`);
+    if (isProductionRef(payload?.ref ?? null)) failures.push(`${name} is a PRODUCTION key.`);
   } catch {
     // Not a decodable JWT (newer publishable key format). The URL check is the
     // primary guard; this is a secondary one.
