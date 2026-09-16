@@ -73,7 +73,9 @@ const env = Object.fromEntries(
     }),
 );
 
-const url = (env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(/\/+$/, "");
+// Either spelling. This file is written by hand under time pressure and the
+// project URL is not a NEXT_PUBLIC_ concern here — nothing in the app reads it.
+const url = (env.SUPABASE_URL ?? env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(/\/+$/, "");
 const key = env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 const refInUrl = url.match(/https:\/\/([a-z0-9]{20})\.supabase\./i)?.[1] ?? null;
 

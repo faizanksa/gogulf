@@ -35,7 +35,8 @@
     "analyze": "cross-env PLATFORM_MODE=server next experimental-analyze --output",
     "check:isolation": "node scripts/check-staging-isolation.mjs",
     "db:validate": "node scripts/validate-migrations.mjs",
-    "backup:prod": "node scripts/backup-production.mjs"
+    "backup:prod": "node scripts/backup-production.mjs",
+    "restore": "node scripts/restore-backup.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.6",
