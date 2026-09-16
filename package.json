@@ -36,7 +36,8 @@
     "check:isolation": "node scripts/check-staging-isolation.mjs",
     "db:validate": "node scripts/validate-migrations.mjs",
     "backup:prod": "node scripts/backup-production.mjs",
-    "restore": "node scripts/restore-backup.mjs"
+    "restore": "node scripts/restore-backup.mjs",
+    "bootstrap:admins": "node scripts/bootstrap-super-admins.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.6",

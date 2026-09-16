@@ -541,3 +541,28 @@ template = "Your code is {{ .Code }}"
 
 [remotes.mumbai-staging.auth.mfa.phone]
 template = "Your code is {{ .Code }}"
+
+# Google Workspace SSO for staff. Credentials never appear here: `env(...)` is
+# substituted by the CLI at push time, so the values live only in a gitignored
+# file and in Supabase's own config.
+#
+# NOT YET APPLIED. `config push` sends every setting in this file, so pushing
+# while GOGULF_GOOGLE_CLIENT_ID / GOGULF_GOOGLE_SECRET are unset would write an
+# empty client id and break the provider. Export both first:
+#
+#   set -a && . ./.env.google-oauth.local && set +a
+#   npx supabase config push --project-ref noxireidrbeqcvsirjec
+#
+# Supabase does NOT enforce the Workspace domain: it matches on the email
+# address and ignores Google's `hd` claim. @gogulf.co is enforced in two other
+# places, and both are required — see docs/GOOGLE-OAUTH.md.
+[remotes.mumbai-staging.auth.external.google]
+enabled = true
+client_id = "env(GOGULF_GOOGLE_CLIENT_ID)"
+secret = "env(GOGULF_GOOGLE_SECRET)"
+# Supabase derives the callback from the project URL; stated here so the value
+# registered in Google Cloud is visible in the repository rather than only in a
+# console someone else administers.
+redirect_uri = ""
+skip_nonce_check = false
+email_optional = false
