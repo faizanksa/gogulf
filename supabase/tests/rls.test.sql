@@ -1,5 +1,5 @@
 -- =============================================================================
--- Semantic validation for migrations 0002–0008.
+-- Semantic validation for migrations 0002–0011.
 --
 -- The parser check (libpg_query) proves syntax only. This proves BEHAVIOUR:
 -- that policies filter the way they claim to, that the JWT hook populates
@@ -268,8 +268,11 @@ select test_assert(
   'case numbers are unique across calls');
 
 -- ---------------------------------------------------------------------------
--- 9. No side doors reachable through the API (regression guard for 0009)
---    job_applications is the legacy table and keeps its own 0001 posture.
+-- 9. No side doors reachable through the API (regression guard for 0009, 0011)
+--    job_applications is excluded from the blanket "anon holds nothing" check
+--    only because anon legitimately holds INSERT there — the public applicant
+--    path. Section 9a pins that down exactly, so the table is covered more
+--    tightly than the platform tables rather than exempted from scrutiny.
 -- ---------------------------------------------------------------------------
 do $$
 declare bad text;
@@ -291,11 +294,13 @@ begin
     coalesce('authenticated can execute no system-only SECURITY DEFINER function (found: ' || bad || ')',
              'authenticated can execute no system-only SECURITY DEFINER function'));
 
-  -- TRUNCATE is not subject to RLS at all.
+  -- TRUNCATE is not subject to RLS at all. job_applications is included here:
+  -- 0011 removed the inherited TRUNCATE that let anon empty the applications
+  -- table outright, and no table in this schema should ever grant it back.
   select string_agg(distinct c.relname, ', ') into bad
     from pg_class c join pg_namespace n on n.oid = c.relnamespace
     cross join (values ('anon'), ('authenticated')) r(role)
-   where n.nspname = 'public' and c.relkind in ('r', 'p') and c.relname <> 'job_applications'
+   where n.nspname = 'public' and c.relkind in ('r', 'p')
      and has_table_privilege(r.role, c.oid, 'TRUNCATE');
   perform test_assert(bad is null,
     coalesce('no API role can TRUNCATE a platform table (found: ' || bad || ')',
@@ -325,6 +330,68 @@ begin
     'authenticated holds SELECT on contacts, so its RLS policies are reachable');
   perform test_assert(has_table_privilege('service_role', 'public.contacts', 'INSERT'),
     'service_role holds INSERT on contacts for webhooks and jobs');
+end $$;
+
+-- ---------------------------------------------------------------------------
+-- 9a. job_applications privileges (0011)
+--
+--     The one table holding applicant PII and passport/CV paths. 0001 granted
+--     nothing explicitly and inherited the platform default, which differed per
+--     environment: arwdDxtm for anon on both hosted projects, Dxtm locally.
+--     These assertions pin the end state so it can no longer drift, and so the
+--     difference cannot reappear in a newly created project.
+-- ---------------------------------------------------------------------------
+do $$
+declare bad text;
+begin
+  -- The public applicant path must keep working. This is the assertion that
+  -- would have caught the local stack being unable to accept an application.
+  perform test_assert(has_table_privilege('anon', 'public.job_applications', 'INSERT'),
+    'anon can INSERT a job application — the public applicant path');
+
+  -- ...and must hold nothing else. SELECT is the one that matters most: it is
+  -- all that stands between a mistaken policy and every applicant's PII.
+  select string_agg(p.priv, ', ') into bad
+    from (values ('SELECT'), ('UPDATE'), ('DELETE'), ('TRUNCATE'), ('REFERENCES'), ('TRIGGER')) p(priv)
+   where has_table_privilege('anon', 'public.job_applications', p.priv);
+  perform test_assert(bad is null,
+    coalesce('anon holds INSERT and nothing else on job_applications (also found: ' || bad || ')',
+             'anon holds INSERT and nothing else on job_applications'));
+
+  -- authenticated has no policy on this table, so it must hold no privilege
+  -- either. The Applications inbox will grant SELECT back together with the
+  -- policy that scopes it.
+  select string_agg(p.priv, ', ') into bad
+    from (values ('SELECT'), ('INSERT'), ('UPDATE'), ('DELETE'), ('TRUNCATE')) p(priv)
+   where has_table_privilege('authenticated', 'public.job_applications', p.priv);
+  perform test_assert(bad is null,
+    coalesce('authenticated holds no privilege on job_applications (found: ' || bad || ')',
+             'authenticated holds no privilege on job_applications'));
+
+  -- The back-office path must be able to read and triage applications, and must
+  -- be identical locally and on a hosted project.
+  select string_agg(p.priv, ', ') into bad
+    from (values ('SELECT'), ('INSERT'), ('UPDATE'), ('DELETE')) p(priv)
+   where not has_table_privilege('service_role', 'public.job_applications', p.priv);
+  perform test_assert(bad is null,
+    coalesce('service_role can read and triage job applications (missing: ' || bad || ')',
+             'service_role can read and triage job applications'));
+
+  perform test_assert(
+    not has_table_privilege('service_role', 'public.job_applications', 'TRUNCATE'),
+    'service_role cannot TRUNCATE job_applications');
+
+  -- RLS is the second layer and must still be the one deciding rows.
+  perform test_assert(
+    (select relrowsecurity from pg_class where oid = 'public.job_applications'::regclass),
+    'job_applications still has RLS enabled');
+
+  select string_agg(policyname || ':' || cmd, ', ') into bad
+    from pg_policies
+   where schemaname = 'public' and tablename = 'job_applications' and cmd <> 'INSERT';
+  perform test_assert(bad is null,
+    coalesce('job_applications has no policy other than the anon INSERT (found: ' || bad || ')',
+             'job_applications has no policy other than the anon INSERT'));
 end $$;
 
 drop function test_assert(boolean, text);

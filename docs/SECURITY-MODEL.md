@@ -45,12 +45,24 @@ Measured against production on 5 Sep 2026 (`LEGACY-DATA-INSPECTION.md` §8). All
 anon-key model as a concern; on the read side that concern was unfounded, and the original
 developer's work stands.
 
+**Corrected 16 Sep 2026 — the probe above was right, the conclusion drawn from it was too
+strong.** `SELECT … → 0 rows` is an HTTP 200 with an empty array, not a refusal. PostgREST
+answers 401 when the role lacks the privilege, so a 200 proves the opposite: `anon` *held*
+`SELECT` and RLS alone was filtering the rows away. The measured ACL was `anon=arwdDxtm` on
+both hosted projects — SELECT, UPDATE, DELETE and TRUNCATE included — because `0001` created
+the table without issuing a single `GRANT` and inherited the platform default. Nothing leaked,
+but the most sensitive table in the system was standing on one layer, and TRUNCATE is not
+subject to RLS at all. `0011_job_applications_privileges.sql` grants `anon` exactly `INSERT`
+and nothing else, so the same probe now returns **401**, refused at the privilege layer before
+RLS is consulted. The lesson is in the table above, not the fix: *an empty result is not a
+denial — check the status code.*
+
 ### What does not
 
 | Issue | Severity | Detail | Closes |
 | --- | --- | --- | --- |
-| `anon` may INSERT rows and upload files, `with check (true)` | **High** | Unlimited unauthenticated writes. No rate limit, no CAPTCHA, no server validation | Phase 1 — writes move behind rate-limited server routes; anon INSERT revoked |
-| Bucket accepts **any MIME type**, 10 MB | Medium | Malicious upload / storage-fill vector | Phase 1 — new bucket restricts types, server sniffs content |
+| `anon` may INSERT rows and upload files, `with check (true)` | **High** | Unlimited unauthenticated writes. No rate limit, no CAPTCHA, no server validation | Phase 1 — writes move behind rate-limited server routes. **Not** by revoking anon INSERT: that is the one privilege the public form legitimately needs, and `0011` keeps it while removing the other four. It can only be withdrawn once intake is server-side |
+| Bucket accepts **any MIME type**, 10 MB | Medium | Malicious upload / storage-fill vector | **Still open.** `0011` deliberately left the bucket alone — a MIME allowlist changes what the public form accepts, so it belongs with the intake work (`0015`) and needs sign-off, not a silent tightening |
 | All validation is client-side | Medium | Trivially bypassed | Phase 1 — Zod on the server |
 | Storage objects have no backup | **High** | Database backups exclude Storage (see `MIGRATION-PLAN.md` §6) | Phase 1 — independent mirror |
 | No audit trail | Medium | Nothing records who accessed what | Phase 1 |

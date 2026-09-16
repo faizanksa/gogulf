@@ -1,0 +1,72 @@
+-- Go Gulf — 0011: explicit privileges on job_applications.
+--
+-- 0001 created this table and wrote its RLS policy, but issued no GRANT at all.
+-- The effective privileges were therefore left to whatever the platform's
+-- default happened to be, and that default is not the same everywhere. Measured
+-- 16 Sep 2026:
+--
+--   production  julbqkeyvzwluayokcdi   anon = arwdDxtm
+--   staging     wxolbnhyzktfjdvcnixc   anon = arwdDxtm
+--   local       supabase start         anon = Dxtm
+--
+-- On both hosted projects anon therefore holds SELECT, UPDATE, DELETE and
+-- TRUNCATE on the one table in this system that stores applicant PII and the
+-- paths to their passport and CV scans. Nothing is leaking today: the only
+-- policy is INSERT-only, so RLS filters every read to zero rows — an anon
+-- request for id, email, phone and passport_path returns HTTP 200 and an empty
+-- array. But that is a single-layer defence on the most sensitive table we
+-- have. Any permissive SELECT policy added later — by a migration, by the
+-- Applications inbox, or from the dashboard — exposes every applicant record
+-- immediately, with no second control to stop it. TRUNCATE is worse in kind:
+-- it is not subject to RLS at all.
+--
+-- Locally the same omission has the opposite effect. anon has no INSERT, so the
+-- public application flow cannot be exercised end to end at all: the insert
+-- fails with 42501, which is why that path has only ever been tested by hand
+-- against a hosted project.
+--
+-- A newly created project inherits the hosted default again, so provisioning
+-- Mumbai from these migrations would reproduce the exposure. Hence this runs
+-- ahead of the branch work: it is a prerequisite for standing up a new project
+-- safely, not a follow-up to it.
+--
+-- What this changes in behaviour: nothing on the public path. anon keeps
+-- exactly the INSERT it uses and loses the four privileges it never used.
+-- Locally it gains the INSERT it was missing, so the applicant flow becomes
+-- testable against `supabase start` for the first time.
+--
+-- service_role is made explicit for the same reason, not because it is exposed:
+-- locally it holds Dxtm and on the hosted projects arwdDxtm, so the back-office
+-- path would read applications fine in production and fail against
+-- `supabase start`. The Applications inbox is the first thing to depend on it,
+-- so the drift is worth removing now rather than discovering it there.
+--
+-- Deliberately NOT changed here:
+--   * authenticated is revoked rather than granted. No policy grants it rows
+--     today, so this removes a privilege it cannot use. The Applications inbox
+--     will grant SELECT back alongside the policy that scopes it, which is the
+--     right order: privilege and policy introduced together.
+--   * storage.objects grants are untouched. Supabase grants arwdDxtm there to
+--     anon and authenticated by design and relies on RLS as the boundary for
+--     every bucket; revoking would break storage across the project, not just
+--     for this one bucket. The bucket's own INSERT-only policy from 0001 is the
+--     control, and the MIME allowlist belongs with the intake work in 0015.
+
+-- -----------------------------------------------------------------------------
+-- 1. Reset to nothing, then grant back only what the public flow uses.
+--    Written as revoke-then-grant rather than a targeted revoke so the end state
+--    is the same whichever default the project started from.
+-- -----------------------------------------------------------------------------
+revoke all on table public.job_applications from anon, authenticated, service_role;
+
+-- The public applicant path: components/jobs/ApplyForm.tsx uploads the
+-- documents, then inserts one row describing the application. Bounded by the
+-- "anon can insert job applications" policy from 0001.
+grant insert on table public.job_applications to anon;
+
+-- The back-office path. service_role bypasses RLS, so this is the whole of its
+-- boundary on this table and it is stated rather than inherited. DELETE is
+-- included deliberately: an applicant asking for their record and documents to
+-- be erased is a DPDP obligation, and there is no other role that can carry it
+-- out. TRUNCATE, REFERENCES and TRIGGER are not granted to anyone.
+grant select, insert, update, delete on table public.job_applications to service_role;

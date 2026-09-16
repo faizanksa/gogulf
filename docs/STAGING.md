@@ -261,10 +261,14 @@ move of this form to a server route.
 
 | Check | Local | Staging |
 | --- | --- | --- |
-| `0001`–`0010` apply in order from an empty database | ✅ | ✅ |
-| `rls.test.sql` — catalogue, identity, audit, grants, side doors | ✅ 46 | ✅ 46 |
-| `rbac-behaviour.test.sql` — queries as each role, with positive controls | ✅ 83 | ✅ 83 |
-| **Total** | **129** | **129** |
+| `0001`–`0011` apply in order from an empty database | ✅ | `0001`–`0010` only |
+| `rls.test.sql` — catalogue, identity, audit, grants, side doors | ✅ 52 | ✅ 46 |
+| `rbac-behaviour.test.sql` — queries as each role, with positive controls | ✅ 84 | ✅ 83 |
+| **Total** | **136** | **129** |
+
+The staging column is the 11 Sep measurement and has not been re-run since; `0011` is not
+applied there yet. The local per-file split is counted from today's run — the earlier 46/83
+split was recorded slightly differently, so compare the totals rather than the columns.
 | 23 public tables, all with RLS; 55 policies; 72 permissions; 12 roles | ✅ | ✅ |
 | Private `job-applications` bucket, 10 MB limit, anon insert-only policy | ✅ | ✅ |
 
@@ -377,7 +381,11 @@ Production cutover, when approved:
    the production database is in Tokyo. Staging reproduces exactly that, so its
    form latency is the preview of production's. Either accept it, pin functions
    to `hnd1` (Tokyo), or plan a database move.
-2. Apply `0002`–`0010` to production — a separate, approved change with a backup.
+2. Apply `0002`–`0011` to production — a separate, approved change with a backup.
+   Superseded in part: production is moving Tokyo → Mumbai (`exsnksrmkycloxiajwmx`,
+   `ap-south-1`), so the platform tables land in the new project rather than being
+   added to the Tokyo one. `0011` is the exception — it hardens `job_applications`,
+   which already holds live applicant data, and applies wherever production is.
 3. Set Production variables `PLATFORM_MODE=server`, `NEXT_PUBLIC_SITE_URL=https://www.gogulf.co`,
    `RESEND_*` — **values set in the dashboard, never committed**.
 4. Merge the redesign into `main` and deploy.
