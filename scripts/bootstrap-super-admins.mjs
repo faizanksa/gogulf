@@ -1,12 +1,12 @@
 /**
- * Create the two initial SUPER_ADMIN identities on a named Supabase project.
+ * Create the Go Gulf staff identities on a named Supabase project.
  *
  *   npm run bootstrap:admins -- --target=mumbai-staging
  *   npm run bootstrap:admins -- --target=mumbai-staging --report
  *
- * Creates, for each of admin@gogulf.co and hello@gogulf.co:
+ * For each person on the STAFF roster below:
  *   - an auth.users row, email confirmed, WITH NO PASSWORD
- *   - a staff_users row: SUPER_ADMIN, Lucknow branch, active
+ *   - a staff_users row with their catalogue role, Lucknow branch, active
  *
  * WHY NO PASSWORD
  *
@@ -18,17 +18,20 @@
  * Supabase refuses to auto-link onto an unverified address, and doing so would
  * be a pre-account-takeover primitive. See docs/SECURITY-MODEL.md section 3.
  *
- * These are two independent identities. There is no shared administrator
- * account, and neither is a fallback for the other: each is created, claimed and
- * tested separately, because one working login proves nothing about the other.
+ * Every person is an independent identity. There is no shared administrator
+ * account and no one is a fallback for anyone else: each is created, claimed and
+ * tested separately, because one working login proves nothing about the others.
+ * The script fails outright if two people ever resolve to the same record.
  *
  * WHAT THIS DOES NOT DO
  *
  * It grants nothing directly. Authority comes from the staff_users row, which
  * the JWT hook reads to populate app_role, and from there RLS and has_perm()
  * decide everything. This script cannot widen a permission or weaken a policy —
- * it can only state that a person is SUPER_ADMIN and let the existing
- * architecture draw the consequences.
+ * it can only state which catalogue role a person holds and let the existing
+ * architecture draw the consequences. Roles come from the seeded catalogue; a
+ * role that is not already in public.roles is refused rather than created, so
+ * nobody gets a bespoke role shaped around what they happened to need.
  *
  * SAFETY
  *
@@ -57,12 +60,16 @@ const TARGETS = {
   },
 };
 
-const ADMINS = [
-  { email: "admin@gogulf.co", full_name: "Go Gulf Administrator" },
-  { email: "hello@gogulf.co", full_name: "Go Gulf Operations" },
+// The staff roster, with each person's role stated next to them. Roles are keys
+// from the seeded RBAC catalogue — never invented here, and never a bespoke role
+// created to fit one person. If a role does not exist in public.roles the script
+// refuses rather than falling back to something broader.
+const STAFF = [
+  { email: "admin@gogulf.co", full_name: "Go Gulf Administrator", role: "SUPER_ADMIN" },
+  { email: "hello@gogulf.co", full_name: "Go Gulf Operations", role: "SUPER_ADMIN" },
+  { email: "careers@gogulf.co", full_name: "Go Gulf Careers", role: "ADMIN" },
 ];
 
-const ROLE = "SUPER_ADMIN";
 const BRANCH = "Lucknow";
 
 const argv = process.argv.slice(2);
@@ -110,7 +117,9 @@ async function api(path, init = {}) {
 }
 
 console.log(`Target : ${target.label} ${ref}`);
-console.log(`Role   : ${ROLE}, branch ${BRANCH}\n`);
+console.log(`Branch : ${BRANCH}`);
+console.log(`Roster : ${STAFF.map((p) => `${p.email}=${p.role}`).join(", ")}`);
+console.log("");
 
 // The branch must already exist — it is seeded by migration, not invented here.
 const branches = await api(`/rest/v1/branches?select=id,name&name=eq.${encodeURIComponent(BRANCH)}`);
@@ -119,15 +128,19 @@ if (!branches.ok || !Array.isArray(branches.body) || branches.body.length !== 1)
 }
 const branchId = branches.body[0].id;
 
-const roles = await api(`/rest/v1/roles?select=key,is_super&key=eq.${ROLE}`);
-if (!roles.ok || roles.body?.length !== 1 || !roles.body[0].is_super) {
-  fail(`role ${ROLE} is missing or not flagged is_super. Is the RBAC seed applied?`);
+// Every role on the roster must already exist in the seeded catalogue.
+const wanted = [...new Set(STAFF.map((p) => p.role))];
+const roles = await api(`/rest/v1/roles?select=key,is_super&key=in.(${wanted.join(",")})`);
+if (!roles.ok) fail(`could not read roles: HTTP ${roles.status}`);
+const known = new Map((roles.body ?? []).map((r) => [r.key, r.is_super]));
+for (const roleKey of wanted) {
+  if (!known.has(roleKey)) fail(`role ${roleKey} is not in the RBAC catalogue. Is the seed applied? Roles are never created here.`);
 }
 
 const results = [];
 
-for (const admin of ADMINS) {
-  const line = { email: admin.email, auth: null, staff: null, authUserId: null, staffId: null };
+for (const admin of STAFF) {
+  const line = { email: admin.email, role: admin.role, auth: null, staff: null, authUserId: null, staffId: null };
 
   // --- auth.users -----------------------------------------------------------
   // Adopt an existing user rather than failing or replacing it: re-running this
@@ -165,7 +178,7 @@ for (const admin of ADMINS) {
   if (staff.body.length > 0) {
     const row = staff.body[0];
     line.staffId = row.id;
-    const correct = row.role_key === ROLE && row.branch_id === branchId && row.is_active === true;
+    const correct = row.role_key === admin.role && row.branch_id === branchId && row.is_active === true;
     if (correct) {
       line.staff = "existing (correct)";
     } else {
@@ -173,7 +186,7 @@ for (const admin of ADMINS) {
       const upd = await api(`/rest/v1/staff_users?id=eq.${row.id}`, {
         method: "PATCH",
         headers: { Prefer: "return=representation" },
-        body: JSON.stringify({ role_key: ROLE, branch_id: branchId, is_active: true }),
+        body: JSON.stringify({ role_key: admin.role, branch_id: branchId, is_active: true }),
       });
       line.staff = upd.ok
         ? `existing (corrected from role=${row.role_key} active=${row.is_active})`
@@ -187,7 +200,7 @@ for (const admin of ADMINS) {
         auth_user_id: line.authUserId,
         email: admin.email,
         full_name: admin.full_name,
-        role_key: ROLE,
+        role_key: admin.role,
         branch_id: branchId,
         is_active: true,
       }),
@@ -205,15 +218,15 @@ console.log("Result:\n");
 for (const r of results) {
   console.log(`  ${r.email}`);
   console.log(`    auth.users  : ${r.auth}`);
-  console.log(`    staff_users : ${r.staff}`);
+  console.log(`    staff_users : ${r.staff} — ${r.role}`);
   console.log(`    ids         : auth=${r.authUserId}  staff=${r.staffId}`);
 }
 
 const distinctAuth = new Set(results.map((r) => r.authUserId));
 const distinctStaff = new Set(results.map((r) => r.staffId));
 console.log("");
-if (distinctAuth.size !== ADMINS.length || distinctStaff.size !== ADMINS.length) {
-  fail("the two administrators do not have independent identities. They must never share a record.");
+if (distinctAuth.size !== STAFF.length || distinctStaff.size !== STAFF.length) {
+  fail("staff members do not have independent identities. They must never share a record.");
 }
-console.log(`PASS - ${ADMINS.length} independent SUPER_ADMIN identities on ${ref}.`);
-console.log("Neither can sign in yet: no password exists by design, and Google must be configured and claimed.");
+console.log(`PASS - ${STAFF.length} independent staff identities on ${ref}.`);
+console.log("Anyone newly created cannot sign in yet: no password exists by design, and their first Google sign-in must link the identity.");
