@@ -98,6 +98,22 @@ provider, so export them first and confirm a second push reports no changes.
 Production is deliberately absent from that command. It gets the same treatment
 at cutover, not before.
 
+## 4a. The sign-in flow in the app (Phase 3)
+
+1. `/admin/login` — "Sign in with Google" posts to a Server Action
+   (`app/(admin)/admin/login/actions.ts`), which calls `signInWithOAuth` with PKCE and
+   `redirectTo = <NEXT_PUBLIC_SITE_URL>/auth/callback?next=/admin…`. The site URL must be
+   covered by `additional_redirect_urls` (`https://staging.gogulf.co/**` on staging).
+2. Google → `https://<ref>.supabase.co/auth/v1/callback` → `/auth/callback?code=…`.
+3. `app/auth/callback/route.ts` exchanges the code for a session and redirects to `next`,
+   which `safeStaffNext()` restricts to `/admin` paths (no open redirect).
+4. `/admin`'s guard classifies the session (`amr` oauth + provider google + staff claims)
+   and asks `is_staff()` live. A Google account without an active `staff_users` row is
+   sent back to the sign-in page.
+
+`hd=gogulf.co` is passed to Google as a hint only — see §1 for the real controls.
+There is no password form: staff sessions signed in any other way are refused by the guard.
+
 ## 5. Verifying a sign-in actually worked
 
 A 200 and a session are not proof. Check the claims:
