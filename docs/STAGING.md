@@ -1,5 +1,12 @@
 # Staging Environment
 
+> **17 Sep 2026 — staging moved to Mumbai.** `staging.gogulf.co` now runs against
+> **Mumbai staging, `noxireidrbeqcvsirjec`** (`gogulf-staging` in the `gogulf-co` org,
+> `ap-south-1`), carrying migrations `0001`–`0013` and the STAGING TEST jobs. Only the two
+> branch-scoped Preview variables for `staging` changed (§1a). Tokyo staging
+> (`wxolbnhyzktfjdvcnixc`) is no longer used by the web app and stays at `0011`. The
+> sections below describe the original Tokyo setup; where they differ, §1a wins.
+
 **Status (11 Sep 2026): provisioned and validated.** Staging runs server-mode on
 the existing Vercel project at **https://staging.gogulf.co**, sends email through
 Resend, and stores applications and documents in its own Supabase project,
@@ -33,6 +40,24 @@ feature/*  → Vercel Preview    → *.vercel.app      → fails closed unless i
 configuration and nowhere to forget a variable.
 
 ---
+
+## 1a. Mumbai staging (current)
+
+| Item | Value |
+| --- | --- |
+| Supabase | `noxireidrbeqcvsirjec`, org `gogulf-co` (`zckqnevnrpwhidnmzbqp`), `ap-south-1` |
+| Credentials | `.env.mumbai-staging.local` (gitignored) |
+| Migrations | `npm run db:mumbai -- push` (verified against `schema_migrations`, not the CLI exit code) |
+| SQL suites | `npm run db:mumbai -- test` — 280 assertions, 17 Sep 2026 |
+| Test jobs | `npm run db:mumbai -- seed-jobs` (refused for every other target) |
+| Auth | site URL and redirect allow-list `https://staging.gogulf.co/**`, sign-ups closed, Google on, JWT hook on — read back from the Management API, no `config push` needed |
+| Vercel | `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`, **Preview (staging) only**, replaced 17 Sep 2026. No Production variable was touched |
+| Proof | `node scripts/verify-staging-deployment.mjs` — the deployed bundle names exactly one project, Mumbai staging, and the server renders its test jobs |
+
+**Rollback to Tokyo staging** (no production impact): replace the same two Preview (staging)
+variables with `STAGING_SUPABASE_URL` / `STAGING_ANON_KEY` from `.env.staging.local`, then
+redeploy the `staging` branch. Tokyo staging lacks `0012`/`0013`, so the jobs pages would
+fail their queries until `npm run db:staging -- push` is run there too.
 
 ## 2. Why a branch Preview, not a Custom Environment
 
