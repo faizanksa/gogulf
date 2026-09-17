@@ -1,5 +1,5 @@
 -- =============================================================================
--- Semantic validation for migrations 0002–0011.
+-- Semantic validation for migrations 0002–0013.
 --
 -- The parser check (libpg_query) proves syntax only. This proves BEHAVIOUR:
 -- that policies filter the way they claim to, that the JWT hook populates
@@ -316,7 +316,9 @@ begin
    where n.nspname = 'public' and p.prosecdef
      and p.prorettype not in ('pg_catalog.trigger'::regtype, 'pg_catalog.event_trigger'::regtype)
      and has_function_privilege('authenticated', p.oid, 'EXECUTE')
-     and p.proname not in ('has_perm', 'scope_allows', 'is_staff', 'current_contact_id');
+     -- record_document_access (0013) is staff-facing by design: it re-checks the caller's
+     -- scope and document permission itself and writes only an attributed audit entry.
+     and p.proname not in ('has_perm', 'scope_allows', 'is_staff', 'current_contact_id', 'record_document_access');
   perform test_assert(bad is null,
     coalesce('authenticated can execute no system-only SECURITY DEFINER function (found: ' || bad || ')',
              'authenticated can execute no system-only SECURITY DEFINER function'));
@@ -333,11 +335,18 @@ begin
     coalesce('no API role can TRUNCATE a platform table (found: ' || bad || ')',
              'no API role can TRUNCATE a platform table'));
 
+  -- The three tables the public website touches are pinned exactly in 9a and 9b
+  -- instead: job_applications (the applicant's INSERT), jobs and job_categories
+  -- (the public job listings). Every other table must be closed to anon, at the
+  -- table AND the column level — a column grant is as much a door as a table one.
   select string_agg(c.relname, ', ') into bad
     from pg_class c join pg_namespace n on n.oid = c.relnamespace
-   where n.nspname = 'public' and c.relkind in ('r', 'p') and c.relname <> 'job_applications'
+   where n.nspname = 'public' and c.relkind in ('r', 'p')
+     and c.relname not in ('job_applications', 'jobs', 'job_categories')
      and (has_table_privilege('anon', c.oid, 'SELECT') or has_table_privilege('anon', c.oid, 'INSERT')
-       or has_table_privilege('anon', c.oid, 'UPDATE') or has_table_privilege('anon', c.oid, 'DELETE'));
+       or has_table_privilege('anon', c.oid, 'UPDATE') or has_table_privilege('anon', c.oid, 'DELETE')
+       or has_any_column_privilege('anon', c.oid, 'SELECT') or has_any_column_privilege('anon', c.oid, 'INSERT')
+       or has_any_column_privilege('anon', c.oid, 'UPDATE'));
   perform test_assert(bad is null,
     coalesce('anon holds no privilege on any platform table (found: ' || bad || ')',
              'anon holds no privilege on any platform table'));
@@ -373,27 +382,52 @@ declare bad text;
 begin
   -- The public applicant path must keep working. This is the assertion that
   -- would have caught the local stack being unable to accept an application.
-  perform test_assert(has_table_privilege('anon', 'public.job_applications', 'INSERT'),
-    'anon can INSERT a job application — the public applicant path');
+  -- 0013 narrowed the grant from the table to the columns the form sends.
+  select string_agg(col, ', ') into bad
+    from unnest(array['id', 'job_id', 'job_title', 'job_country', 'full_name', 'email', 'phone',
+                      'experience', 'message', 'cv_path', 'passport_path', 'other_paths', 'page_source']) col
+   where not has_column_privilege('anon', 'public.job_applications', col, 'INSERT');
+  perform test_assert(bad is null,
+    coalesce('anon can INSERT every column the public application form sends (missing: ' || bad || ')',
+             'anon can INSERT every column the public application form sends'));
+
+  -- ...and cannot write any triage field onto its own application.
+  select string_agg(col, ', ') into bad
+    from unnest(array['status', 'assignee_id', 'branch_id', 'contact_id', 'case_id',
+                      'created_at', 'updated_at', 'status_changed_at']) col
+   where has_column_privilege('anon', 'public.job_applications', col, 'INSERT');
+  perform test_assert(bad is null,
+    coalesce('anon cannot set status, assignee, branch, contact or case on an application (found: ' || bad || ')',
+             'anon cannot set status, assignee, branch, contact or case on an application'));
 
   -- ...and must hold nothing else. SELECT is the one that matters most: it is
   -- all that stands between a mistaken policy and every applicant's PII.
   select string_agg(p.priv, ', ') into bad
     from (values ('SELECT'), ('UPDATE'), ('DELETE'), ('TRUNCATE'), ('REFERENCES'), ('TRIGGER')) p(priv)
-   where has_table_privilege('anon', 'public.job_applications', p.priv);
+   where has_table_privilege('anon', 'public.job_applications', p.priv)
+      or (p.priv in ('SELECT', 'UPDATE') and has_any_column_privilege('anon', 'public.job_applications', p.priv));
   perform test_assert(bad is null,
     coalesce('anon holds INSERT and nothing else on job_applications (also found: ' || bad || ')',
              'anon holds INSERT and nothing else on job_applications'));
 
-  -- authenticated has no policy on this table, so it must hold no privilege
-  -- either. The Applications inbox will grant SELECT back together with the
-  -- policy that scopes it.
+  -- authenticated reads applications (scoped by the policy below) and may change
+  -- triage fields only. What the applicant submitted is not editable.
+  perform test_assert(has_table_privilege('authenticated', 'public.job_applications', 'SELECT'),
+    'authenticated holds SELECT on job_applications, so the scoped staff policy is reachable');
   select string_agg(p.priv, ', ') into bad
-    from (values ('SELECT'), ('INSERT'), ('UPDATE'), ('DELETE'), ('TRUNCATE')) p(priv)
-   where has_table_privilege('authenticated', 'public.job_applications', p.priv);
+    from (values ('INSERT'), ('DELETE'), ('TRUNCATE')) p(priv)
+   where has_table_privilege('authenticated', 'public.job_applications', p.priv)
+      or (p.priv = 'INSERT' and has_any_column_privilege('authenticated', 'public.job_applications', 'INSERT'));
   perform test_assert(bad is null,
-    coalesce('authenticated holds no privilege on job_applications (found: ' || bad || ')',
-             'authenticated holds no privilege on job_applications'));
+    coalesce('authenticated cannot insert, delete or truncate job applications (found: ' || bad || ')',
+             'authenticated cannot insert, delete or truncate job applications'));
+  select string_agg(col, ', ') into bad
+    from unnest(array['full_name', 'email', 'phone', 'cv_path', 'passport_path', 'other_paths',
+                      'job_id', 'job_title', 'message', 'created_at']) col
+   where has_column_privilege('authenticated', 'public.job_applications', col, 'UPDATE');
+  perform test_assert(bad is null,
+    coalesce('staff cannot edit what an applicant submitted (found: ' || bad || ')',
+             'staff cannot edit what an applicant submitted'));
 
   -- The back-office path must be able to read and triage applications, and must
   -- be identical locally and on a hosted project.
@@ -413,12 +447,74 @@ begin
     (select relrowsecurity from pg_class where oid = 'public.job_applications'::regclass),
     'job_applications still has RLS enabled');
 
-  select string_agg(policyname || ':' || cmd, ', ') into bad
+  -- Exactly three doors: the applicant's INSERT, and the staff read and triage
+  -- policies, both scoped by applications.screen. No DELETE, no ALL.
+  select string_agg(policyname || ':' || cmd || ':' || array_to_string(roles, '+'), ', ' order by policyname) into bad
     from pg_policies
-   where schemaname = 'public' and tablename = 'job_applications' and cmd <> 'INSERT';
+   where schemaname = 'public' and tablename = 'job_applications';
+  perform test_assert(
+    bad = 'anon can insert job applications:INSERT:anon, staff read applications:SELECT:authenticated, staff triage applications:UPDATE:authenticated',
+    'job_applications has exactly the anon INSERT and the scoped staff SELECT and UPDATE policies (found: ' || coalesce(bad, 'none') || ')');
+  perform test_assert(
+    (select qual from pg_policies where schemaname = 'public' and tablename = 'job_applications'
+       and policyname = 'staff read applications') like '%applications.screen%',
+    'staff read applications only under applications.screen');
+end $$;
+
+-- ---------------------------------------------------------------------------
+-- 9b. Public job listings (0012)
+--
+--     anon reads categories and the PUBLIC columns of published and closed jobs.
+--     Internal notes, branch and authorship are staff-only; the drafts, jobs in
+--     review and archived jobs are not visible at all (behaviour: jobs.test.sql).
+-- ---------------------------------------------------------------------------
+do $$
+declare bad text;
+begin
+  perform test_assert(has_table_privilege('anon', 'public.job_categories', 'SELECT'),
+    'anon can read job categories');
+  select string_agg(p.priv, ', ') into bad
+    from (values ('INSERT'), ('UPDATE'), ('DELETE'), ('TRUNCATE')) p(priv)
+   where has_table_privilege('anon', 'public.job_categories', p.priv)
+      or (p.priv in ('INSERT', 'UPDATE') and has_any_column_privilege('anon', 'public.job_categories', p.priv));
   perform test_assert(bad is null,
-    coalesce('job_applications has no policy other than the anon INSERT (found: ' || bad || ')',
-             'job_applications has no policy other than the anon INSERT'));
+    coalesce('anon cannot change job categories (found: ' || bad || ')', 'anon cannot change job categories'));
+
+  perform test_assert(not has_table_privilege('anon', 'public.jobs', 'SELECT'),
+    'anon holds no table-wide SELECT on jobs — only named public columns');
+  select string_agg(col, ', ') into bad
+    from unnest(array['internal_notes', 'branch_id', 'created_by', 'updated_by', 'duplicated_from',
+                      'created_at', 'last_published_at', 'closed_at', 'archived_at']) col
+   where has_column_privilege('anon', 'public.jobs', col, 'SELECT');
+  perform test_assert(bad is null,
+    coalesce('anon cannot read internal job columns (found: ' || bad || ')', 'anon cannot read internal job columns'));
+  select string_agg(col, ', ') into bad
+    from unnest(array['reference', 'slug', 'title', 'summary', 'status', 'availability', 'closes_on',
+                      'promotion', 'featured_until', 'application_access', 'published_at', 'updated_at']) col
+   where not has_column_privilege('anon', 'public.jobs', col, 'SELECT');
+  perform test_assert(bad is null,
+    coalesce('anon can read the columns a job listing shows (missing: ' || bad || ')',
+             'anon can read the columns a job listing shows'));
+  select string_agg(p.priv, ', ') into bad
+    from (values ('INSERT'), ('UPDATE'), ('DELETE'), ('TRUNCATE')) p(priv)
+   where has_table_privilege('anon', 'public.jobs', p.priv)
+      or (p.priv in ('INSERT', 'UPDATE') and has_any_column_privilege('anon', 'public.jobs', p.priv));
+  perform test_assert(bad is null,
+    coalesce('anon cannot write jobs (found: ' || bad || ')', 'anon cannot write jobs'));
+
+  perform test_assert(not has_table_privilege('authenticated', 'public.jobs', 'DELETE'),
+    'no API user role can delete a job — jobs are archived, never deleted');
+  perform test_assert(
+    not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'jobs' and cmd in ('DELETE', 'ALL')),
+    'jobs has no DELETE or ALL policy');
+  perform test_assert(
+    (select qual from pg_policies where schemaname = 'public' and tablename = 'jobs'
+       and policyname = 'public reads live jobs') = '(status = ANY (ARRAY[''published''::job_status, ''closed''::job_status]))',
+    'anon sees published and closed jobs only');
+  perform test_assert(
+    exists (select 1 from pg_constraint where conname = 'jobs_paid_application_not_public'
+              and conrelid = 'public.jobs'::regclass and contype = 'c'),
+    'paid application access cannot be public: enforced by a CHECK constraint, not a setting');
 end $$;
 
 drop function test_assert(boolean, text);
