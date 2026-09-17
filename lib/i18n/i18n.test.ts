@@ -2,7 +2,6 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { IntlMessageFormat } from "intl-messageformat";
 import { describe, expect, it } from "vitest";
-import { formatSalary, JOBS, reviewedTranslation, type Job } from "@/content/jobs";
 import { FOOTER_GROUPS, LEGAL_LINKS, NAV_ITEMS, PRIMARY_CTA } from "@/content/navigation";
 import { PAGES } from "@/content/pages";
 import { contactSchema, toFieldErrors } from "@/lib/forms/schemas";
@@ -217,11 +216,9 @@ describe("interface text", () => {
 });
 
 describe("language-neutral facts", () => {
-  const withSalary = JOBS.filter((j): j is Job & { salary: NonNullable<Job["salary"]> } => Boolean(j.salary));
-
-  it("writes salaries in English exactly as before", () => {
+  it("writes salaries with the currency code untranslated and grouped digits", () => {
     const en = createTranslator("en");
-    for (const job of withSalary) expect(salaryText(job.salary, en)).toBe(formatSalary(job.salary));
+    expect(salaryText({ currency: "SAR", min: 3500, max: 4500, period: "month" }, en)).toBe("SAR 3,500 – 4,500 / month");
   });
 
   it("formats dates per language, with Western digits", () => {
@@ -229,22 +226,23 @@ describe("language-neutral facts", () => {
     expect(formatDate("2026-08-01", "ar")).toMatch(/1.*2026/);
   });
 
-  it("names countries from CLDR, not a hand translation", () => {
-    expect(countryName("Qatar", "en")).toBe("Qatar");
-    const hindi = countryName("Saudi Arabia", "hi");
+  it("names countries from CLDR by ISO code, not a hand translation", () => {
+    expect(countryName("QA", "en")).toBe("Qatar");
+    expect(countryName("AE", "en")).toBe("United Arab Emirates");
+    const hindi = countryName("SA", "hi");
     expect(hindi).not.toBe("Saudi Arabia");
     expect(hindi.length).toBeGreaterThan(0);
   });
 
-  it("uses a job's translation only once it is reviewed", () => {
-    const base = JOBS[0]!;
-    const draft: Job = {
-      ...base,
-      translations: [{ locale: "hi", title: "पर्यवेक्षक", summary: "x".repeat(30), requirements: [], benefits: [], status: "draft", reviewedBy: null, reviewedOn: null }],
-    };
-    expect(reviewedTranslation(draft, "hi")).toBeNull();
-    expect(jobText(draft, "hi").title).toBe(base.title);
-    const reviewed: Job = { ...base, translations: [{ ...draft.translations[0]!, status: "reviewed", reviewedBy: "Reviewer", reviewedOn: "2026-09-12" }] };
-    expect(jobText(reviewed, "hi").title).toBe("पर्यवेक्षक");
+  it("writes a job in English, pseudo-localised only in the pseudo-locales, and never machine-translated", () => {
+    const job = {
+      title: "Accountant", summary: "Keeps the ledgers.", category: { slug: "accountant", name: "Accountant" }, city: "Riyadh",
+      experience: null, education: null, languages: null, responsibilities: ["Ledgers"], requirements: [], benefits: [], additionalInfo: null,
+    } as unknown as Parameters<typeof jobText>[0];
+    expect(jobText(job, "hi").title).toBe("Accountant");
+    expect(jobText(job, "en-XA").title).not.toBe("Accountant");
+    expect(jobText(job, "en-XA").experience).toBeNull();
+    expect(pathLocales("/jobs/accountant-gg-job-2026-00001")).toEqual(["en", "en-XA", "ar-XB"]);
+    expect(multilingualPaths()["/jobs/accountant-gg-job-2026-00001"]).toBeUndefined();
   });
 });

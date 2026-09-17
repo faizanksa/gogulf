@@ -22,6 +22,7 @@ import {
 export function jobApplicationInternalEmail(input: JobApplicationInput) {
   const rows = [
     { label: "Role", value: input.service_type },
+    { label: "Job reference", value: input.job_reference },
     { label: "Country", value: input.country },
     { label: "Name", value: input.from_name },
     { label: "Email", value: input.reply_to },
@@ -62,6 +63,7 @@ export function jobApplicationAcknowledgementEmail(input: JobApplicationInput) {
   const firstName = input.from_name.split(" ")[0] ?? input.from_name;
   const summary = [
     { label: "Role", value: input.service_type },
+    { label: "Job reference", value: input.job_reference },
     { label: "Country", value: input.country },
     { label: "Documents received", value: input.documents },
     { label: "Reference", value: input.submission_id },

@@ -1,4 +1,5 @@
-import { COUNTRY_CODES, type Job } from "@/content/jobs";
+import { countryNameOf } from "@/lib/jobs/model";
+import type { PublicJob } from "@/lib/jobs/public-job";
 import { DEFAULT, isPseudo, LOCALES, type AnyLocale } from "./locales";
 import { pseudoLocalize } from "./pseudo";
 import type { Translator } from "./translator";
@@ -30,15 +31,19 @@ export function formatNumber(value: number, locale: AnyLocale): string {
   return new Intl.NumberFormat(formatTag(locale), NUMBERING).format(value);
 }
 
-/** A job's country in `locale`, from the Unicode CLDR names built into the runtime — not a hand translation. */
-export function countryName(country: Job["country"], locale: AnyLocale): string {
-  if (locale === DEFAULT) return country;
-  if (isPseudo(locale)) return pseudoLocalize(country, locale);
-  return new Intl.DisplayNames([LOCALES[locale].tag], { type: "region" }).of(COUNTRY_CODES[country]) ?? country;
+/**
+ * A country (by ISO 3166-1 code) in `locale`, from the Unicode CLDR names built into the
+ * runtime — not a hand translation. English uses the names the business uses.
+ */
+export function countryName(code: string, locale: AnyLocale): string {
+  const english = countryNameOf(code) ?? code;
+  if (locale === DEFAULT) return english;
+  if (isPseudo(locale)) return pseudoLocalize(english, locale);
+  return new Intl.DisplayNames([LOCALES[locale].tag], { type: "region" }).of(code) ?? english;
 }
 
 /** "SAR 3,500 – 4,500 / month" in the translator's language. The currency code is never translated. */
-export function salaryText(salary: NonNullable<Job["salary"]>, t: Translator): string {
+export function salaryText(salary: NonNullable<PublicJob["salary"]>, t: Translator): string {
   return t("jobs.salaryRange", {
     currency: salary.currency,
     min: formatNumber(salary.min, t.locale),

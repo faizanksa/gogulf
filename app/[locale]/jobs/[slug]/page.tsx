@@ -1,23 +1,28 @@
 import { isActiveLocale } from "@/lib/i18n/locales";
-import { jobSlugsIn } from "@/lib/i18n/pages";
+import { jobLocales } from "@/lib/i18n/pages";
+import { listOpenJobs } from "@/lib/jobs/public-data";
 
 /**
  * /<locale>/jobs/<slug> — a job page in another language. One implementation, in
- * app/(marketing)/jobs/[slug]/page.tsx. Built only for jobs with a reviewed translation
- * into this language (content/jobs.ts), and for every job in the pseudo-locales.
+ * app/(marketing)/jobs/[slug]/page.tsx. Jobs are written in English and have no reviewed
+ * translations yet, so only the pseudo-locales (outside production) have job pages.
  */
 export { default, generateMetadata } from "@/app/(marketing)/jobs/[slug]/page";
 
-export const dynamicParams = false;
-export const revalidate = 3600;
+export const revalidate = 600;
 
 /**
+ * app/[locale]/layout.tsx sets dynamicParams = false, and that wins over this segment: a
+ * slug not listed here is a 404 (found by the e2e suite, 17 Sep 2026). So the open jobs
+ * are listed at build, for the languages that have job pages. A job published after the
+ * build gets its pseudo-locale page at the next deploy; its English page, which is what
+ * the public uses, is generated on request at once.
+ *
  * The language comes from the parent's params (a plain object), not the next/root-params
- * getter. In production no language is published, so the [locale] layout generates no
- * params, and Next still calls this once without one: the getter throws there and fails
- * the build (found by `npm run build:production-stage`, 12 Sep 2026).
+ * getter, which throws when Next calls this without one.
  */
-export function generateStaticParams({ params }: { params?: { locale?: string } }) {
+export async function generateStaticParams({ params }: { params?: { locale?: string } }) {
   const value = params?.locale;
-  return isActiveLocale(value) ? jobSlugsIn(value).map((slug) => ({ slug })) : [];
+  if (!isActiveLocale(value) || !jobLocales().includes(value)) return [];
+  return (await listOpenJobs()).map((job) => ({ slug: job.slug }));
 }

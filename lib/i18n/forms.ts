@@ -2,13 +2,12 @@ import type { EmployerFormCopy } from "@/components/forms/EmployerRequirementFor
 import type { ServiceInquiryCopy } from "@/components/forms/ServiceInquiryForm";
 import { WHATSAPP } from "@/content/channels";
 import { COMPANY } from "@/content/company";
-import { COUNTRY_CODES, type Job } from "@/content/jobs";
 import { SERVICES, type Service } from "@/content/services";
+import { COUNTRIES } from "@/lib/jobs/model";
 import { countryName } from "./format";
 import { hrefIn, serviceText } from "./pages";
 import { getTranslator } from "./server";
 
-const GULF_COUNTRIES = Object.keys(COUNTRY_CODES) as Job["country"][];
 
 /**
  * Every word the contact form shows, in the page's language, built on the server and
@@ -69,6 +68,7 @@ export async function applyFormCopy() {
     target: {
       applyingFor: t("apply.target.applyingFor"),
       general: t("apply.target.general"),
+      reference: t("apply.target.reference"),
       // What the staff email records when no job was chosen; English, as before.
       generalValue: "General Application",
     },
@@ -108,6 +108,7 @@ export async function applyFormCopy() {
       route: t("apply.receipt.route", { from: "%1", to: "%2" }),
       gulf: t("apply.receipt.gulf"),
       job: t("apply.receipt.job"),
+      jobReference: t("apply.receipt.jobReference"),
       country: t("apply.receipt.country"),
       documents: t("apply.receipt.documents"),
       confirmationSent: t("apply.receipt.confirmationSent"),
@@ -155,7 +156,8 @@ export async function serviceInquiryCopy(): Promise<ServiceInquiryCopy> {
     groups: { seekers: t("forms.inquiry.seekers"), employers: t("forms.inquiry.employers") },
     // "Other / Not Sure" is the value staff already know from the pre-redesign form.
     services: { seekers: forAudience("job-seekers"), employers: forAudience("employers"), other: { value: "Other / Not Sure", label: t("forms.inquiry.other") } },
-    countries: GULF_COUNTRIES.map((c) => ({ value: c, label: countryName(c, t.locale) })),
+    // The value stays the English name staff read in the notification email.
+    countries: COUNTRIES.map((c) => ({ value: c.name, label: countryName(c.code, t.locale) })),
     anyCountry: t("forms.inquiry.anyCountry"),
     submit: t("forms.inquiry.submit"),
     sending: t("forms.sending"),
@@ -207,7 +209,7 @@ export async function employerFormCopy(): Promise<EmployerFormCopy> {
       phoneHint: t("forms.contact.phoneHint"),
     },
     services: SERVICES.filter((s) => s.audience === "employers" && s.inquiryOption).map((s) => ({ value: s.inquiryOption!, label: serviceText(s, t.locale).name })),
-    countries: [...GULF_COUNTRIES.map((c) => ({ value: c, label: countryName(c, t.locale) })), { value: "Other", label: t("forms.employer.countryOther") }],
+    countries: [...COUNTRIES.map((c) => ({ value: c.name, label: countryName(c.code, t.locale) })), { value: "Other", label: t("forms.employer.countryOther") }],
     countryPlaceholder: t("forms.employer.countryPlaceholder"),
     timelines: [
       { value: "As soon as possible", label: t("forms.employer.timelineAsap") },

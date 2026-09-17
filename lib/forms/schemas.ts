@@ -134,6 +134,7 @@ export const jobApplicationSchema = z.object({
   reply_to: emailField,
   phone: phoneField,
   service_type: requiredText(160, "forms.validation.roleRequired"), // job title, per the existing template
+  job_reference: optionalText(40),
   country: optionalText(80),
   experience: optionalText(80),
   message: optionalText(5000),

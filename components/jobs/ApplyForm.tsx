@@ -24,7 +24,9 @@ const loadUploader = () => import("@/lib/supabase");
  *   2. /api/forms/job-application re-validates and sends the notification and the
  *      acknowledgement through Resend. Files are never part of that payload: it is a
  *      plain object, not a FormData scan.
- * The ?job=&country=&type= prefill contract used by every Apply link is unchanged.
+ * The job comes from the page, resolved on the server from the link's ?ref= (the job's
+ * reference) — so what the applicant sees is the database's job, and the row records its
+ * id. A link to a job that has closed never reaches this form with that job attached.
  *
  * What changed is the experience: one form, labelled fields with hints, errors in text
  * tied to their fields and summarised at the top, fields that stay usable while
@@ -45,10 +47,18 @@ const IDS: Record<string, string> = {
   other: "a_other",
 };
 
+/** The job being applied for. Null for a general application. */
+export interface ApplyTarget {
+  jobId: string | null;
+  job: string;
+  country: string;
+  reference: string | null;
+}
+
 interface Target {
   job: string;
   country: string;
-  type: string;
+  reference: string | null;
 }
 
 interface Done {
@@ -60,22 +70,15 @@ interface Done {
 
 const fill = (template: string, ...values: string[]) => values.reduce((s, v, i) => s.replaceAll(`%${i + 1}`, v), template);
 
-export function ApplyForm({ copy }: { copy: ApplyFormCopy }) {
+export function ApplyForm({ copy, target: initial }: { copy: ApplyFormCopy; target: ApplyTarget | null }) {
   const formRef = useRef<HTMLFormElement>(null);
-  const [target, setTarget] = useState<Target>({ job: "", country: "", type: "" });
+  const target: Target = { job: initial?.job ?? "", country: initial?.country ?? "", reference: initial?.reference ?? null };
   const [errors, setErrors] = useState<FormError[]>([]);
   const [attempt, setAttempt] = useState(0);
   const [status, setStatus] = useState<{ state: "idle" | "sending" | "success" | "error"; message: string }>({ state: "idle", message: "" });
   const [done, setDone] = useState<Done | null>(null);
   const sending = status.state === "sending";
   const errorFor = (name: string) => errors.find((e) => e.name === name)?.message;
-
-  useEffect(() => {
-    // The job comes from the link's query string, which exists only in the browser.
-    const p = new URLSearchParams(window.location.search);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setTarget({ job: p.get("job") ?? "", country: p.get("country") ?? "", type: p.get("type") ?? "" });
-  }, []);
 
   useEffect(() => {
     if (done) document.getElementById("apply-receipt-heading")?.focus();
@@ -130,6 +133,7 @@ export function ApplyForm({ copy }: { copy: ApplyFormCopy }) {
     try {
       const { submitJobApplication } = await loadUploader();
       saved = await submitJobApplication({
+        jobId: initial?.jobId ?? null,
         jobTitle,
         jobCountry: target.country,
         fullName: values.from_name,
@@ -156,6 +160,7 @@ export function ApplyForm({ copy }: { copy: ApplyFormCopy }) {
       {
         ...values,
         service_type: jobTitle,
+        job_reference: target.reference ?? "",
         country: target.country,
         documents,
         submission_id: saved.submissionId,
@@ -196,6 +201,7 @@ export function ApplyForm({ copy }: { copy: ApplyFormCopy }) {
           to={to}
           rows={[
             { label: copy.receipt.job, value: done.target.job },
+            ...(done.target.reference ? [{ label: copy.receipt.jobReference, value: done.target.reference }] : []),
             ...(done.target.country ? [{ label: copy.receipt.country, value: done.target.country }] : []),
             { label: copy.receipt.documents, value: done.documents },
           ]}
@@ -233,6 +239,11 @@ export function ApplyForm({ copy }: { copy: ApplyFormCopy }) {
           {jobLabel}
           {target.country ? <span className={styles.targetCountry}> — {target.country}</span> : null}
         </p>
+        {target.reference ? (
+          <p className={styles.targetCountry}>
+            {copy.target.reference}: <span translate="no">{target.reference}</span>
+          </p>
+        ) : null}
       </div>
 
       {/* Honeypot — hidden from people, filled by naive bots. */}

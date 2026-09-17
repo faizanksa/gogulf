@@ -4,4 +4,4 @@
  */
 export { default, generateMetadata } from "@/app/(marketing)/jobs/page";
 
-export const revalidate = 3600;
+export const revalidate = 600;

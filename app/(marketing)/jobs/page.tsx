@@ -14,26 +14,29 @@ import styles from "./jobs.module.css";
 
 const PATH = "/jobs";
 
-// Open and closed follow the calendar without a deploy.
-export const revalidate = 3600;
+// Jobs come from the database. A staff change refreshes this page at once
+// (lib/jobs/revalidate.ts); closing dates and featured periods pass on their own, so it
+// also regenerates every ten minutes.
+export const revalidate = 600;
 
 export async function generateMetadata() {
   return localizedPageMetadata(PATH);
 }
 
 /**
- * The jobs list (2C-1). Every open job is rendered on the server — crawlable, and
- * complete without JavaScript — and the filter island adds search and filters. No
+ * The jobs list. Every open job is rendered on the server — crawlable, and complete
+ * without JavaScript — grouped into featured opportunities, ongoing and general hiring,
+ * and professional opportunities; the filter island adds search and filters. No
  * JobPosting here: Google accepts it only on each job's own page.
  *
- * With no jobs listed (production today: none is confirmed yet, decision D4) the page
- * says so plainly and offers the general application and WhatsApp instead.
+ * Only published jobs that are accepting applications appear (lib/jobs/public-data.ts).
+ * With none, the page says so plainly and offers the general application and WhatsApp.
  */
 export default async function JobsPage() {
   const locale = await requireAvailable(PATH);
   const t = await getTranslator();
   const href = (path: string) => hrefIn(path, locale);
-  const cards = jobsIn(locale).map((job) => jobCardData(job, t));
+  const cards = (await jobsIn(locale)).map((job) => jobCardData(job, t));
   const whatsapp = whatsappLink(t("jobsPage.whatsappGreeting"));
 
   return (
@@ -69,14 +72,26 @@ export default async function JobsPage() {
                 searchPlaceholder: t("jobsPage.filters.searchPlaceholder"),
                 country: t("jobsPage.filters.country"),
                 allCountries: t("jobsPage.filters.allCountries"),
-                industry: t("jobsPage.filters.industry"),
-                allIndustries: t("jobsPage.filters.allIndustries"),
+                category: t("jobsPage.filters.category"),
+                allCategories: t("jobsPage.filters.allCategories"),
                 type: t("jobsPage.filters.type"),
                 allTypes: t("jobsPage.filters.allTypes"),
+                availability: t("jobsPage.filters.availability"),
+                allAvailability: t("jobsPage.filters.allAvailability"),
+                ongoing: t("jobsPage.filters.ongoing"),
+                timeLimited: t("jobsPage.filters.timeLimited"),
                 clear: t("jobsPage.filters.clear"),
                 counts: Array.from({ length: cards.length + 1 }, (_, n) => t("jobsPage.count", { count: n })),
                 noMatchTitle: t("jobsPage.noMatchTitle"),
                 noMatchBody: t("jobsPage.noMatchBody"),
+                sections: {
+                  featured: t("jobsPage.sections.featured"),
+                  featuredLead: t("jobsPage.sections.featuredLead"),
+                  general: t("jobsPage.sections.general"),
+                  generalLead: t("jobsPage.sections.generalLead"),
+                  professional: t("jobsPage.sections.professional"),
+                  professionalLead: t("jobsPage.sections.professionalLead"),
+                },
               }}
             />
           ) : (

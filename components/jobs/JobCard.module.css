@@ -15,6 +15,35 @@
   border-color: var(--color-border);
 }
 
+/* General hiring: the quiet surface tone. */
+.general {
+  background: var(--color-bg-subtle);
+}
+
+/* Professional opportunities: white, with a firmer frame. */
+.professional {
+  background: var(--color-bg);
+  border-color: var(--gg-line-200);
+  box-shadow: var(--shadow-raised);
+}
+
+/* Featured: an accent on the leading edge, beside the text label. */
+.featured {
+  border-inline-start: 4px solid var(--color-action);
+  padding-inline-start: calc(var(--space-5) - 3px);
+}
+
+.track {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-text-secondary);
+  font-weight: var(--weight-semibold);
+}
+.professional .track {
+  color: var(--color-text);
+}
+
 .top {
   display: flex;
   flex-wrap: wrap;
@@ -89,11 +118,23 @@
   color: var(--color-text-muted);
 }
 
-.flag {
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
   margin: 0;
-  color: var(--gg-warning-700);
+  padding: 0;
+  list-style: none;
+  color: var(--color-text-secondary);
   font-size: var(--text-small);
-  font-weight: var(--weight-semibold);
+}
+.facts li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.facts svg {
+  color: var(--color-action);
 }
 
 .bottom {
@@ -117,10 +158,33 @@
   font-size: var(--text-small);
 }
 
+.reference {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-4);
+  margin: 0;
+}
+
+.view,
 .apply {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
   min-height: var(--target-min);
   font-weight: var(--weight-semibold);
+}
+.view {
+  color: var(--color-text);
+}
+
+@media (forced-colors: active) {
+  .featured {
+    border-inline-start-color: Highlight;
+  }
 }

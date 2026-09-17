@@ -20,8 +20,9 @@ import styles from "./home.module.css";
 
 const PATH = "/";
 
-// The jobs preview follows the calendar (new, closing) without a deploy.
-export const revalidate = 3600;
+// The jobs preview reads the database: refreshed by staff changes, and every ten minutes
+// so closing dates and featured periods pass without a deploy.
+export const revalidate = 600;
 
 export async function generateMetadata() {
   return localizedPageMetadata(PATH);
@@ -46,9 +47,8 @@ export default async function HomePage() {
   const locale = await requireAvailable(PATH);
   const t = await getTranslator();
   const href = (path: string) => hrefIn(path, locale);
-  const jobs = jobsIn(locale)
-    .slice(0, 3)
-    .map((job) => jobCardData(job, t));
+  // Featured jobs first (the listing order), then the newest.
+  const jobs = (await jobsIn(locale)).slice(0, 3).map((job) => jobCardData(job, t));
   const cardText = jobCardText(t);
   const whatsapp = whatsappLink(t("home.whatsappGreeting"));
   const opensWhatsApp = t("common.opensWhatsApp");

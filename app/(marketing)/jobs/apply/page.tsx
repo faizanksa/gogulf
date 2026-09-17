@@ -1,12 +1,15 @@
 import Link from "next/link";
-import { ApplyForm } from "@/components/jobs/ApplyForm";
+import { ApplyForm, type ApplyTarget } from "@/components/jobs/ApplyForm";
 import { PageHeader } from "@/components/site/PageHeader";
+import { Alert } from "@/components/ui/Alert";
 import { Icon } from "@/components/ui/Icon";
 import { Container, Section } from "@/components/ui/Layout";
 import { pageEntry } from "@/content/pages";
 import { applyFormCopy } from "@/lib/i18n/forms";
 import { hrefIn, pageText } from "@/lib/i18n/pages";
 import { getTranslator, localizedPageMetadata, requireAvailable } from "@/lib/i18n/server";
+import { getPublicJobByReference } from "@/lib/jobs/public-data";
+import { jobIsOpen, jobUsesOnlineForm } from "@/lib/jobs/public-job";
 import styles from "./apply.module.css";
 
 const PATH = "/jobs/apply";
@@ -17,14 +20,27 @@ export async function generateMetadata() {
 }
 
 /**
- * The application page (2C-1): the form beside what you need and what happens next —
- * the two questions a first-time applicant has before they start typing.
+ * The application page: the form beside what you need and what happens next — the two
+ * questions a first-time applicant has before they start typing.
+ *
+ * ?ref=<job reference> names the job. It is looked up here, on the server: the form is
+ * attached to the job only while that job is published, free to apply for, open and
+ * taken through this form. Otherwise the page says the job is not accepting applications
+ * and offers a general application instead. The database checks the same thing again
+ * when the application is saved (0013).
  */
-export default async function ApplyPage() {
+export default async function ApplyPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const locale = await requireAvailable(PATH);
   const t = await getTranslator();
   const href = (path: string) => hrefIn(path, locale);
   const copy = await applyFormCopy();
+  const query = await searchParams;
+  const ref = typeof query.ref === "string" ? query.ref : null;
+  const job = ref ? await getPublicJobByReference(ref) : null;
+  const open = job !== null && jobIsOpen(job) && jobUsesOnlineForm(job);
+  const target: ApplyTarget | null =
+    job && open ? { jobId: job.id, job: job.title, country: job.country ?? "", reference: job.reference } : null;
+  const notOpen = ref !== null && !open;
 
   return (
     <>
@@ -42,7 +58,14 @@ export default async function ApplyPage() {
         <Container>
           <div className={styles.layout}>
             <div className={styles.form}>
-              <ApplyForm copy={copy} />
+              {notOpen ? (
+                <div className={styles.notice}>
+                  <Alert tone="warning" title={t("apply.notOpen.title")}>
+                    <p>{t.rich("apply.notOpen.body", { jobs: (chunks) => <Link href={href("/jobs")}>{chunks}</Link> })}</p>
+                  </Alert>
+                </div>
+              ) : null}
+              <ApplyForm copy={copy} target={target} />
             </div>
 
             <aside className={styles.aside} aria-labelledby="apply-docs-heading">

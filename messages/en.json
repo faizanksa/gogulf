@@ -260,16 +260,46 @@
       "phase2": "Selection",
       "phase3": "Documents and visa",
       "phase4": "Departure",
-      "s1": { "title": "Job enquiry", "body": "You apply for a job or send us an enquiry." },
-      "s2": { "title": "Registration", "body": "Your profile and documents are registered." },
-      "s3": { "title": "Consultation", "body": "Our team looks at the role, the country and your fit." },
-      "s4": { "title": "Shortlisting", "body": "Your profile is matched and shortlisted for the employer." },
-      "s5": { "title": "Employer interview", "body": "The interview is arranged between you and the employer." },
-      "s6": { "title": "Selection and offer", "body": "If you are selected, the employer issues an offer letter." },
-      "s7": { "title": "Medical and documents", "body": "Your medical test is done and your documents are checked." },
-      "s8": { "title": "Visa and attestation", "body": "Agreement, document attestation (including MOFA) and visa processing." },
-      "s9": { "title": "Departure", "body": "Immigration clearance and your flight ticket." },
-      "s10": { "title": "Joining and support", "body": "You join the employer abroad, with support after joining." },
+      "s1": {
+        "title": "Job enquiry",
+        "body": "You apply for a job or send us an enquiry."
+      },
+      "s2": {
+        "title": "Registration",
+        "body": "Your profile and documents are registered."
+      },
+      "s3": {
+        "title": "Consultation",
+        "body": "Our team looks at the role, the country and your fit."
+      },
+      "s4": {
+        "title": "Shortlisting",
+        "body": "Your profile is matched and shortlisted for the employer."
+      },
+      "s5": {
+        "title": "Employer interview",
+        "body": "The interview is arranged between you and the employer."
+      },
+      "s6": {
+        "title": "Selection and offer",
+        "body": "If you are selected, the employer issues an offer letter."
+      },
+      "s7": {
+        "title": "Medical and documents",
+        "body": "Your medical test is done and your documents are checked."
+      },
+      "s8": {
+        "title": "Visa and attestation",
+        "body": "Agreement, document attestation (including MOFA) and visa processing."
+      },
+      "s9": {
+        "title": "Departure",
+        "body": "Immigration clearance and your flight ticket."
+      },
+      "s10": {
+        "title": "Joining and support",
+        "body": "You join the employer abroad, with support after joining."
+      },
       "more": "More about how it works"
     },
     "money": {
@@ -590,7 +620,7 @@
   "jobsPage": {
     "kicker": "Jobs",
     "title": "Gulf job openings",
-    "lead": "Read what each job involves, then apply online. Every fee is quoted in writing before you pay.",
+    "lead": "Read what each job involves, then apply online. Applying is free. Every fee for a service is quoted in writing before you pay.",
     "stepsHeading": "How applying works",
     "step1": "Choose a job and apply online with your CV and a copy of your passport.",
     "step2": "Our team contacts you about the next step.",
@@ -599,13 +629,17 @@
     "filters": {
       "label": "Filter jobs",
       "search": "Search",
-      "searchPlaceholder": "Job title or industry",
+      "searchPlaceholder": "Job title, category or reference",
       "country": "Country",
       "allCountries": "All countries",
-      "industry": "Industry",
-      "allIndustries": "All industries",
-      "type": "Contract",
-      "allTypes": "All contracts",
+      "category": "Category",
+      "allCategories": "All categories",
+      "type": "Employment type",
+      "allTypes": "All employment types",
+      "availability": "Availability",
+      "allAvailability": "Ongoing and time-limited",
+      "ongoing": "Ongoing hiring",
+      "timeLimited": "With a closing date",
       "clear": "Clear filters"
     },
     "count": "{count, plural, =0 {No jobs match} one {# job} other {# jobs}}",
@@ -617,7 +651,15 @@
     "generalBody": "Send a general application with your CV. Tell us the work you do and the country you would like to work in.",
     "general": "Send a general application",
     "ask": "Ask on WhatsApp",
-    "whatsappGreeting": "Hello Go Gulf, I would like to ask about jobs."
+    "whatsappGreeting": "Hello Go Gulf, I would like to ask about jobs.",
+    "sections": {
+      "featured": "Featured opportunities",
+      "featuredLead": "Jobs the Go Gulf team is highlighting.",
+      "general": "Ongoing and general hiring",
+      "generalLead": "Roles we recruit for regularly. Ongoing jobs have no closing date.",
+      "professional": "Professional opportunities",
+      "professionalLead": "Specific professional vacancies. Check each job's requirements and closing date."
+    }
   },
   "apply": {
     "kicker": "Apply",
@@ -625,7 +667,8 @@
     "lead": "Fill in your details and attach your CV and a copy of your passport. You get a confirmation email with a reference number.",
     "target": {
       "applyingFor": "You are applying for",
-      "general": "General application"
+      "general": "General application",
+      "reference": "Job reference"
     },
     "groups": {
       "you": "About you",
@@ -667,7 +710,8 @@
       "safety": "Every fee is quoted to you in writing before you pay. If anyone asks you to pay without a written quote, contact us first.",
       "otherJobs": "See other jobs",
       "ask": "Ask about your application",
-      "whatsappMessage": "Hello Go Gulf, I have a question about my application (reference {reference})."
+      "whatsappMessage": "Hello Go Gulf, I have a question about my application (reference {reference}).",
+      "jobReference": "Job reference"
     },
     "aside": {
       "docsHeading": "What you need",
@@ -679,61 +723,86 @@
       "next2": "Our team contacts you about the next step.",
       "next3": "Any fee is quoted to you in writing before you pay.",
       "privacy": "Your documents go to private storage — they are not sent by email. See our <privacy>Privacy policy</privacy>."
+    },
+    "notOpen": {
+      "title": "This job is not accepting applications",
+      "body": "It may have closed, or the link may be out of date. <jobs>See current openings</jobs>, or send a general application below."
     }
   },
   "jobs": {
     "breadcrumb": "Jobs",
     "details": "Job details",
+    "keyFacts": "Key facts",
     "location": "Location",
-    "industry": "Industry",
-    "contract": "Contract",
+    "category": "Category",
+    "opportunity": "Type of opportunity",
+    "general": "General hiring",
+    "professional": "Professional opportunity",
+    "contract": "Employment type",
     "salary": "Salary",
     "salaryNotStated": "Not stated",
     "salaryRange": "{currency} {min} – {max} / {period}",
-    "posted": "Posted",
-    "closes": "Closes",
-    "noClosingDate": "No closing date given",
-    "openings": "Openings",
-    "aboutRole": "About the role",
-    "fees": "Fees",
-    "feesBody": "Every fee is quoted to you in writing before you pay. See <pricing>Pricing & fees</pricing>, and <verify>how to check you are dealing with Go Gulf</verify>.",
-    "closedTitle": "This position has closed",
-    "closedBody": "It is no longer accepting applications. <jobs>See current openings</jobs>.",
-    "closedBadge": "Closed",
-    "apply": "Apply for this job",
-    "askWhatsApp": "Ask on WhatsApp",
-    "askMessage": "Hello Go Gulf, I would like to know more about the {title} job in {where} (ref {slug}).",
-    "place": "{city}, {country}",
-    "metaTitle": "{title} in {where}",
-    "metaDescription": "{title} job in {where} listed by Go Gulf. {summary}",
+    "openings": "Vacancies",
     "experience": "Experience",
+    "education": "Education",
+    "languages": "Languages",
     "employer": "Employer",
     "employerConfidential": "The employer has asked not to be named on this page.",
+    "availability": "Availability",
+    "ongoing": "Ongoing hiring — no closing date",
+    "timeLimited": "Open until the closing date",
+    "closes": "Applications close",
+    "posted": "Published",
+    "updated": "Last updated",
+    "application": "Application",
+    "applicationFree": "Free — there is no fee to apply for this job",
     "reference": "Reference",
-    "keyFacts": "Key facts",
+    "featured": "Featured",
+    "aboutRole": "About the role",
+    "responsibilities": "Responsibilities",
     "requirements": "Requirements",
     "requirementsMissing": "The full requirements for this job are not listed here yet. Ask us before you apply.",
     "benefits": "What the job offers",
     "benefitsMissing": "What this job offers beyond the salary is not listed here yet. Ask us before you apply.",
+    "additionalInfo": "Additional information",
+    "closedTitle": "This position has closed",
+    "closedBody": "It is no longer accepting applications. <jobs>See current openings</jobs>.",
+    "closedBadge": "Closed",
+    "apply": "Apply for this job",
+    "applyWhatsApp": "Apply on WhatsApp",
+    "askWhatsApp": "Ask on WhatsApp",
+    "askMessage": "Hello Go Gulf, I would like to know more about the {title} job in {where} (ref {reference}).",
+    "applyMessage": "Hello Go Gulf, I would like to apply for the {title} job in {where} (ref {reference}).",
+    "place": "{city}, {country}",
+    "metaTitle": "{title} in {where}",
+    "metaDescription": "{title} job in {where} listed by Go Gulf. {summary}",
     "howToApply": "How to apply",
     "applyStep1": "Apply online with your CV and a copy of your passport.",
     "applyStep2": "Our team contacts you about the next step.",
     "applyStep3": "Any fee is quoted to you in writing before you pay.",
+    "applyStepWhatsApp": "Send us a message on WhatsApp with the job reference.",
     "safety": "Fees and safety",
+    "feesBody": "Every fee is quoted to you in writing before you pay. See <pricing>Pricing & fees</pricing>, and <verify>how to check you are dealing with Go Gulf</verify>.",
     "related": "Other open jobs",
     "allJobs": "See all jobs",
     "card": {
       "salaryNotStated": "Salary not stated",
-      "posted": "Posted {date}",
-      "closes": "Closes {date}",
-      "new": "New",
-      "closingSoon": "Closes soon",
+      "ongoing": "Ongoing hiring",
+      "applyBy": "Apply by {date}",
+      "updated": "Updated {date}",
+      "reference": "Ref {reference}",
+      "featured": "Featured",
+      "free": "Free to apply",
+      "professional": "Professional",
+      "general": "General hiring",
+      "view": "View job",
       "apply": "Apply",
+      "applyWhatsApp": "Apply on WhatsApp",
       "applyHidden": "for {title}"
     },
     "type": {
-      "fullTime": "Full-Time",
-      "partTime": "Part-Time",
+      "full_time": "Full-time",
+      "part_time": "Part-time",
       "contract": "Contract",
       "temporary": "Temporary"
     },

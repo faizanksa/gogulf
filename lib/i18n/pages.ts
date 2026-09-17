@@ -1,5 +1,5 @@
-import { getJob, reviewedTranslation, visibleJobs, type Job } from "@/content/jobs";
 import { PAGES, type PageEntry } from "@/content/pages";
+import type { PublicJob } from "@/lib/jobs/public-job";
 import type { Service } from "@/content/services";
 import { CATALOGS, lookup } from "./catalogs";
 import { activeLocales, DEFAULT, isPseudo, localizedPath, type AnyLocale, type LocaleCode } from "./locales";
@@ -11,8 +11,13 @@ import { pseudoLocalize } from "./pseudo";
  *
  * A page is available in a language when the language is active (its catalogue is
  * published, or it is a pseudo-locale outside production) AND the page's own words exist
- * in it: a localizable registry page whose `locales` lists the language, or a job with a
- * reviewed translation. Pseudo-locales get every localizable page, for testing.
+ * in it: a localizable registry page whose `locales` lists the language. Pseudo-locales
+ * get every localizable page, for testing.
+ *
+ * Jobs come from the database and are written in English. Until a reviewed translation
+ * of a job can be stored (a job_translations table, docs/I18N.md), a job page exists in
+ * English — and in the pseudo-locales outside production, so right-to-left layout stays
+ * testable. No listing is ever machine-translated.
  */
 
 export function pageLocales(entry: PageEntry): AnyLocale[] {
@@ -21,8 +26,9 @@ export function pageLocales(entry: PageEntry): AnyLocale[] {
   );
 }
 
-export function jobLocales(job: Job): AnyLocale[] {
-  return activeLocales().filter((l) => l === DEFAULT || isPseudo(l) || reviewedTranslation(job, l) !== null);
+/** Languages a job page exists in. Knowing the job is not needed while no job has a translation. */
+export function jobLocales(): AnyLocale[] {
+  return activeLocales().filter((l) => l === DEFAULT || isPseudo(l));
 }
 
 const JOB_PATH = /^\/jobs\/([^/]+)$/;
@@ -31,16 +37,9 @@ const JOB_PATH = /^\/jobs\/([^/]+)$/;
 export function pathLocales(path: string): AnyLocale[] {
   const entry = PAGES.find((p) => p.path === path);
   if (entry) return pageLocales(entry);
-  const slug = JOB_PATH.exec(path)?.[1];
-  const job = slug ? getJob(slug) : null;
-  return job ? jobLocales(job) : [DEFAULT];
-}
-
-/** Job slugs with a page in `locale` — generateStaticParams for app/[locale]/jobs/[slug]. */
-export function jobSlugsIn(locale: AnyLocale): string[] {
-  return visibleJobs()
-    .filter((j) => jobLocales(j).includes(locale))
-    .map((j) => j.slug);
+  // Whether the job exists is the job page's own question (it 404s); which languages a
+  // job page is written in does not depend on the job yet.
+  return JOB_PATH.test(path) ? jobLocales() : [DEFAULT];
 }
 
 export function isAvailableIn(path: string, locale: AnyLocale): boolean {
@@ -70,10 +69,8 @@ export function multilingualPaths(): Record<string, AnyLocale[]> {
     const langs = pageLocales(entry);
     if (langs.length > 1) out[entry.path] = langs;
   }
-  for (const job of visibleJobs()) {
-    const langs = jobLocales(job);
-    if (langs.length > 1) out[`/jobs/${job.slug}`] = langs;
-  }
+  // Job pages are not listed: jobs are English-only today, so no real language menu
+  // could offer one. (Pseudo-locale job pages remain reachable by URL for testing.)
   return out;
 }
 
@@ -118,50 +115,50 @@ export function serviceText(service: Service, locale: AnyLocale): ServiceText {
   return { name: field("name") ?? service.name, summary: field("summary") ?? service.summary };
 }
 
+/** The words a person wrote for a job — the only parts of a listing that are ever translated. */
 export interface JobText {
   title: string;
-  summary: string;
-  industry: string;
-  city?: string;
-  experience?: string;
+  summary: string | null;
+  category: string | null;
+  city: string | null;
+  experience: string | null;
+  education: string | null;
+  languages: string | null;
+  responsibilities: string[];
   requirements: string[];
   benefits: string[];
+  additionalInfo: string | null;
 }
 
-/** A job's words in `locale`: its reviewed translation, pseudo-localised English for testing, or the English. */
-export function jobText(job: Job, locale: AnyLocale): JobText {
+/** A job's words in `locale`: pseudo-localised English for testing, otherwise the English. */
+export function jobText(job: PublicJob, locale: AnyLocale): JobText {
   const english: JobText = {
     title: job.title,
     summary: job.summary,
-    industry: job.industry,
+    category: job.category?.name ?? null,
     city: job.city,
     experience: job.experience,
+    education: job.education,
+    languages: job.languages,
+    responsibilities: job.responsibilities,
     requirements: job.requirements,
     benefits: job.benefits,
+    additionalInfo: job.additionalInfo,
   };
-  if (locale === DEFAULT) return english;
-  if (isPseudo(locale)) {
-    const p = (s: string) => pseudoLocalize(s, locale);
-    return {
-      title: p(job.title),
-      summary: p(job.summary),
-      industry: p(job.industry),
-      city: job.city && p(job.city),
-      experience: job.experience && p(job.experience),
-      requirements: job.requirements.map(p),
-      benefits: job.benefits.map(p),
-    };
-  }
-  const tr = reviewedTranslation(job, locale);
-  if (!tr) return english;
-  // content/jobs.ts guarantees a reviewed translation carries every list entry and the experience line.
+  if (!isPseudo(locale)) return english;
+  const p = (s: string) => pseudoLocalize(s, locale);
+  const pn = (s: string | null) => (s === null ? null : p(s));
   return {
-    title: tr.title,
-    summary: tr.summary,
-    industry: tr.industry ?? job.industry,
-    city: tr.city ?? job.city,
-    experience: tr.experience ?? job.experience,
-    requirements: tr.requirements,
-    benefits: tr.benefits,
+    title: p(english.title),
+    summary: pn(english.summary),
+    category: pn(english.category),
+    city: pn(english.city),
+    experience: pn(english.experience),
+    education: pn(english.education),
+    languages: pn(english.languages),
+    responsibilities: english.responsibilities.map(p),
+    requirements: english.requirements.map(p),
+    benefits: english.benefits.map(p),
+    additionalInfo: pn(english.additionalInfo),
   };
 }

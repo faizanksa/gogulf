@@ -15,6 +15,10 @@
   min-width: 0;
 }
 
+.notice {
+  margin-bottom: var(--space-5);
+}
+
 .aside {
   display: grid;
   gap: var(--space-4);
