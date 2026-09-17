@@ -38,3 +38,33 @@ test("a successful application ends on a receipt carrying the reference the serv
   expect(body.submission_id).toMatch(/^[0-9a-f-]{36}$/);
   await expect(page.getByRole("main")).toContainText(body.submission_id!);
 });
+
+test("an application to a listed job records the job, and the receipt names its reference", async ({ page }) => {
+  let row: Record<string, unknown> = {};
+  let body: Record<string, string> = {};
+  await page.route("**/storage/v1/object/**", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ Key: "job-applications/test", Id: "test" }) }),
+  );
+  await page.route("**/rest/v1/job_applications**", (route) => {
+    row = route.request().postDataJSON();
+    return route.fulfill({ status: 201, body: "" });
+  });
+  await page.route("**/api/forms/job-application", (route) => {
+    body = route.request().postDataJSON();
+    return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, acknowledgementSent: true }) });
+  });
+
+  await page.goto("/jobs/apply?ref=STG-JOB-002");
+  await page.locator("#a_name").fill("Test Person");
+  await page.locator("#a_email").fill("test@example.com");
+  await page.locator("#a_phone").fill("+91 98765 43210");
+  await page.locator("#a_cv").setInputFiles({ name: "cv.pdf", mimeType: "application/pdf", buffer: PDF });
+  await page.locator("#a_passport").setInputFiles({ name: "passport.png", mimeType: "image/png", buffer: PNG });
+  await page.locator("main form button[type=submit]").click();
+
+  await expect(page.getByRole("heading", { name: "We have your application" })).toBeVisible();
+  expect(row.job_id).toMatch(/^[0-9a-f-]{36}$/);
+  expect(row.job_title).toBe("STAGING TEST — Mall Cleaner");
+  expect(body).toMatchObject({ service_type: "STAGING TEST — Mall Cleaner", job_reference: "STG-JOB-002", country: "Qatar" });
+  await expect(page.getByRole("main")).toContainText("STG-JOB-002");
+});

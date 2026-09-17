@@ -178,6 +178,21 @@ if (command === "run") {
   process.exit(r.status ?? 1);
 }
 
+// Synthetic STAGING TEST jobs for manual QA (supabase/seeds/staging-jobs.sql). Refused for
+// any target that is, or becomes, production — whatever flags are passed. The seed file
+// also refuses to run unless app.seed_target is "staging", which only this command sets.
+const SEEDABLE = ["staging", "mumbai-staging"];
+if (command === "seed-jobs") {
+  if (!SEEDABLE.includes(targetName) || target.requiresConfirmation) {
+    fail(`seed-jobs writes synthetic test jobs and is refused for "${targetName}". Allowed: ${SEEDABLE.join(", ")}.`);
+  }
+  const seed = "supabase/seeds/staging-jobs.sql";
+  const r = psql(`set app.seed_target = 'staging';
+${readFileSync(seed, "utf8")}`);
+  console.log(scrub(`${r.stdout ?? ""}${r.stderr ?? ""}`).trim());
+  process.exit(r.status ?? 1);
+}
+
 if (command === "test") {
   const files = readdirSync(TEST_DIR).filter((f) => f.endsWith(".sql")).sort();
   let totalPass = 0;
@@ -205,4 +220,4 @@ if (command === "test") {
   process.exit(0);
 }
 
-fail(`usage: npm run db:${targetName} -- push [--dry-run] | test | run <file.sql>`);
+fail(`usage: npm run db:${targetName} -- push [--dry-run] | test | run <file.sql> | seed-jobs`);

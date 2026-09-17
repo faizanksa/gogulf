@@ -176,7 +176,7 @@ test.describe("jobs and forms in other languages", () => {
     const response = await page.goto(`/ar-XB${SAMPLE_JOB}`);
     expect(response?.status()).toBe(200);
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
-    await expect(page.locator("main")).toContainText("3,500");
+    await expect(page.locator("main")).toContainText("6,000");
     const data = await page.locator('script[type="application/ld+json"]').allTextContents();
     expect(data.join("\n")).not.toContain("JobPosting");
   });

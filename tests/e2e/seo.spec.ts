@@ -1,4 +1,4 @@
-import { SAMPLE_JOB } from "./a11y-routes";
+import { ARCHIVED_JOB, CLOSED_JOB, DRAFT_JOB, SAMPLE_JOB } from "./a11y-routes";
 import { expect, test } from "./fixtures";
 import { PRODUCTION_ROUTES } from "./routes";
 
@@ -26,13 +26,21 @@ async function jsonLd(page: import("@playwright/test").Page) {
   return (await page.locator('script[type="application/ld+json"]').allTextContents()).map((t) => JSON.parse(t));
 }
 
-test("JobPosting never appears on the list page, nor for an unconfirmed job", async ({ page }) => {
+test("JobPosting appears only on an open job's own page, stating only what the job states", async ({ page }) => {
   await page.goto("/jobs");
   expect(JSON.stringify(await jsonLd(page))).not.toContain("JobPosting");
+
   await page.goto(SAMPLE_JOB);
+  const posting = (await jsonLd(page)).find((d) => d["@type"] === "JobPosting");
+  expect(posting).toMatchObject({ title: "STAGING TEST — Accountant", identifier: { value: "STG-JOB-003" }, employmentType: "FULL_TIME" });
+  expect(posting.validThrough).toMatch(/T23:59:59\+05:30$/);
+  expect(posting.baseSalary.currency).toBe("SAR");
+  const canonical = await page.locator('link[rel="canonical"]').getAttribute("href");
+  expect(new URL(canonical!).pathname).toBe(SAMPLE_JOB);
+
+  // A closed job keeps its page, without JobPosting and out of the index.
+  await page.goto(CLOSED_JOB);
   expect(JSON.stringify(await jsonLd(page))).not.toContain("JobPosting");
-  // …and the unconfirmed job is flagged and kept out of the index.
-  await expect(page.getByText(/Unconfirmed — not shown in production/).first()).toBeVisible();
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
 });
 
@@ -58,7 +66,9 @@ test("sitemap lists indexable pages with content dates, and nothing unpublished"
   expect(xml).toContain("/verify</loc>");
   expect(xml).not.toContain("/travel");
   expect(xml).not.toContain("/admin");
-  expect(xml).not.toContain(SAMPLE_JOB); // unconfirmed
+  // An open published job is listed; a closed, draft or archived one never is.
+  expect(xml).toContain(`${SAMPLE_JOB}</loc>`);
+  for (const hidden of [CLOSED_JOB, DRAFT_JOB, ARCHIVED_JOB]) expect(xml).not.toContain(hidden);
   const dates = [...xml.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map((m) => m[1]!.slice(0, 10));
   expect(new Set(dates).size).toBeGreaterThan(1); // real content dates, not one build date
 });

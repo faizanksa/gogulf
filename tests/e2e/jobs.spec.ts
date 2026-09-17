@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { SAMPLE_JOB } from "./a11y-routes";
+import { ARCHIVED_JOB, CLOSED_JOB, DRAFT_JOB, FEATURED_JOB, SAMPLE_JOB, WHATSAPP_JOB } from "./a11y-routes";
 import { expect, test } from "./fixtures";
 
 /**
@@ -23,6 +23,32 @@ test.describe("home", () => {
 });
 
 test.describe("jobs list", () => {
+  test("groups open jobs into featured, general and professional, and hides what is not open", async ({ page }) => {
+    await page.goto("/jobs");
+    const main = page.getByRole("main");
+    await expect(main.getByRole("heading", { level: 2, name: "Featured opportunities" })).toBeVisible();
+    await expect(main.getByRole("heading", { level: 2, name: "Ongoing and general hiring" })).toBeVisible();
+    await expect(main.getByRole("heading", { level: 2, name: "Professional opportunities" })).toBeVisible();
+
+    const featured = main.getByRole("region", { name: "Featured opportunities" });
+    await expect(featured.getByRole("heading", { level: 3, name: "STAGING TEST — Site Supervisor" })).toBeVisible();
+    await expect(featured.getByText("Featured", { exact: true })).toBeVisible();
+
+    // A featured period that has ended leaves the job listed, as standard, still free to apply for.
+    const general = main.getByRole("region", { name: "Ongoing and general hiring" });
+    const labour = general.locator("article").filter({ hasText: "STAGING TEST — Labour" });
+    await expect(labour).toBeVisible();
+    await expect(labour.getByText("Featured", { exact: true })).toHaveCount(0);
+    await expect(labour.getByText("Free to apply")).toBeVisible();
+
+    // Drafts, jobs in review, closed and archived jobs are not listed.
+    for (const hidden of ["HVAC Technician", "Sales Executive", "STAGING TEST — Helper", "Civil Engineer", "Operations Manager", "paid access"]) {
+      await expect(main.getByText(hidden, { exact: false }), hidden).toHaveCount(0);
+    }
+    // No urgency devices.
+    await expect(main.getByText(/closes soon|only \d+ left|hurry/i)).toHaveCount(0);
+  });
+
   test("filters narrow the list, announce the count and survive a reload", async ({ page }) => {
     await page.goto("/jobs");
     const cards = page.getByRole("main").locator("article");
@@ -32,7 +58,7 @@ test.describe("jobs list", () => {
     await page.getByLabel("Country", { exact: true }).selectOption({ label: "Qatar" });
     await expect(cards).toHaveCount(1);
     await expect(page.getByRole("status").filter({ hasText: /job/ })).toHaveText("1 job");
-    await expect(page).toHaveURL(/country=Qatar/);
+    await expect(page).toHaveURL(/country=QA/);
 
     await page.reload();
     await expect(cards).toHaveCount(1);
@@ -53,25 +79,59 @@ test.describe("jobs list", () => {
 test.describe("job page", () => {
   test("puts the facts first and links to the form for this job", async ({ page }) => {
     await page.goto(SAMPLE_JOB);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("STAGING TEST — Accountant");
     const facts = page.getByRole("complementary", { name: "Key facts" });
-    await expect(facts).toContainText("SAR 3,500 – 4,500 / month");
-    await expect(facts).toContainText("site-supervisor-saudi-arabia");
-    await expect(page.getByRole("link", { name: "Apply for this job" }).first()).toHaveAttribute(
-      "href",
-      /\/jobs\/apply\?job=Site\+Supervisor&country=Saudi\+Arabia&type=Full-Time$/,
-    );
-    // Nothing is listed for this job, and the page says so instead of inventing it.
-    await expect(page.getByText("The full requirements for this job are not listed here yet.")).toBeVisible();
+    await expect(facts).toContainText("SAR 6,000 – 8,000 / month");
+    await expect(facts).toContainText("STG-JOB-003");
+    await expect(facts).toContainText("Professional opportunity");
+    await expect(facts).toContainText("Free — there is no fee to apply for this job");
+    await expect(facts).toContainText("Applications close");
+    await expect(page.getByRole("link", { name: "Apply for this job" }).first()).toHaveAttribute("href", "/jobs/apply?ref=STG-JOB-003");
+    await expect(page.getByRole("heading", { name: "Responsibilities" })).toBeVisible();
+  });
+
+  test("an ongoing job says it has no closing date, and states no salary it was not given", async ({ page }) => {
+    await page.goto(FEATURED_JOB);
+    await expect(page.getByRole("complementary", { name: "Key facts" })).toContainText("Ongoing hiring — no closing date");
+    await page.goto(CLOSED_JOB);
+    await expect(page.getByRole("complementary", { name: "Key facts" })).toContainText("Not stated");
+  });
+
+  test("a closed job explains itself and offers no way to apply", async ({ page }) => {
+    const response = await page.goto(CLOSED_JOB);
+    expect(response?.status()).toBe(200);
+    await expect(page.getByText("This position has closed")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Apply for this job" })).toHaveCount(0);
+  });
+
+  test("drafts and archived jobs do not exist publicly", async ({ page }) => {
+    expect((await page.goto(DRAFT_JOB))?.status()).toBe(404);
+    expect((await page.goto(ARCHIVED_JOB))?.status()).toBe(404);
+  });
+
+  test("a job taken on WhatsApp applies there, not through the form", async ({ page }) => {
+    await page.goto(WHATSAPP_JOB);
+    await expect(page.getByRole("link", { name: /Apply on WhatsApp/ }).first()).toHaveAttribute("href", /wa\.me|whatsapp/);
+    await expect(page.getByRole("link", { name: "Apply for this job" })).toHaveCount(0);
   });
 });
 
 test.describe("application form", () => {
-  test("shows the job being applied for, taken from the link", async ({ page }) => {
-    await page.goto("/jobs/apply?job=Site%20Supervisor&country=Saudi%20Arabia&type=Full-Time");
+  test("shows the job being applied for, looked up from its reference", async ({ page }) => {
+    await page.goto("/jobs/apply?ref=STG-JOB-002");
     const form = page.locator("form#apply-form");
     await expect(form.getByText("You are applying for")).toBeVisible();
-    await expect(form).toContainText("Site Supervisor");
-    await expect(form).toContainText("Saudi Arabia");
+    await expect(form).toContainText("STAGING TEST — Mall Cleaner");
+    await expect(form).toContainText("Qatar");
+    await expect(form).toContainText("STG-JOB-002");
+  });
+
+  test("a link to a job that is not open says so and offers a general application", async ({ page }) => {
+    for (const ref of ["STG-JOB-007", "STG-JOB-005", "STG-JOB-011", "NO-SUCH-REF"]) {
+      await page.goto(`/jobs/apply?ref=${ref}`);
+      await expect(page.getByText("This job is not accepting applications"), ref).toBeVisible();
+      await expect(page.locator("form#apply-form"), ref).toContainText("General application");
+    }
   });
 
   test("an empty submit lists every problem, focuses the summary and sends nothing", async ({ page }) => {

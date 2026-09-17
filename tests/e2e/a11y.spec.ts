@@ -36,7 +36,8 @@ for (const { path, expectStatus } of A11Y_ROUTES) {
     }));
 
     mkdirSync(OUT, { recursive: true });
-    const slug = path === "/" ? "home" : path.replaceAll("/", "-").replace(/^-/, "");
+    // Query strings (?ref=…) are not valid in Windows file names.
+    const slug = path === "/" ? "home" : path.replace(/[^A-Za-z0-9._-]+/g, "-").replace(/^-/, "");
     writeFileSync(join(OUT, `${info.project.name}--${slug}.json`), JSON.stringify({ route: path, project: info.project.name, violations: summary }, null, 2));
 
     if (!REPORT_ONLY) {

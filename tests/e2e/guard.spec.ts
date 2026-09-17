@@ -25,8 +25,10 @@ function env(file: string): Record<string, string> {
 
 function supabaseFor(baseURL: string | undefined) {
   if (baseURL?.includes("staging.gogulf.co")) {
-    const s = env(".env.staging.local");
-    return { url: s.STAGING_SUPABASE_URL!, anon: s.STAGING_ANON_KEY!, service: s.STAGING_SERVICE_ROLE_KEY! };
+    // staging.gogulf.co runs against Mumbai staging (noxireidrbeqcvsirjec) since Phase 3.
+    const s = env(".env.mumbai-staging.local");
+    if (!s.MUMBAI_STAGING_URL?.includes("noxireidrbeqcvsirjec")) throw new Error("Staging tests must target Mumbai staging");
+    return { url: s.MUMBAI_STAGING_URL!, anon: s.MUMBAI_STAGING_ANON_KEY!, service: s.MUMBAI_STAGING_SERVICE_ROLE_KEY! };
   }
   const l = env(".env.production.local"); // written by `npm run env:local` — the LOCAL stack
   if (!/127\.0\.0\.1|localhost/.test(l.NEXT_PUBLIC_SUPABASE_URL ?? "")) throw new Error("Local tests must target local Supabase");
@@ -49,6 +51,11 @@ test.describe("anonymous visitors", () => {
   for (const [path, login] of [
     ["/admin", "/admin/login"],
     ["/admin/users", "/admin/login"],
+    ["/admin/jobs", "/admin/login"],
+    ["/admin/jobs/new", "/admin/login"],
+    ["/admin/applications", "/admin/login"],
+    ["/admin/contacts", "/admin/login"],
+    ["/admin/cases", "/admin/login"],
     ["/portal", "/portal/login"],
     ["/portal/cases", "/portal/login"],
   ] as const) {
@@ -59,6 +66,22 @@ test.describe("anonymous visitors", () => {
       expect(res.headers()["x-robots-tag"]).toContain("noindex");
     });
   }
+
+  test("an applicant document link needs a staff session", async ({ page }) => {
+    const path = "/admin/applications/11111111-0000-4000-8000-000000000001/document?kind=passport";
+    const res = await page.request.get(path, { maxRedirects: 0 });
+    expect(res.status()).toBe(307);
+    expect(res.headers().location).toMatch(/^\/admin\/login\?next=/);
+  });
+
+  test("the sign-in callback without a code goes back to sign-in, and never off-site", async ({ page }) => {
+    const res = await page.request.get("/auth/callback?next=https://evil.example/admin", { maxRedirects: 0 });
+    expect(res.status()).toBe(303);
+    const location = new URL(res.headers().location!, "https://placeholder.invalid");
+    expect(location.pathname).toBe("/admin/login");
+    expect(location.searchParams.get("reason")).toBe("sign-in-failed");
+    expect(location.searchParams.get("next")).toBe("/admin");
+  });
 
   test("the sign-in pages are reachable and never indexed", async ({ page }) => {
     for (const path of ["/admin/login", "/portal/login"]) {
