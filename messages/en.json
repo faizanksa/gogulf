@@ -213,25 +213,27 @@
     }
   },
   "home": {
-    "kicker": "Gulf jobs from India",
     "title": "Work in the Gulf, with a company you can check.",
     "lead": "We help job seekers from India apply for jobs in the Gulf, and help employers there hire from India. Every fee is quoted in writing before you pay.",
     "findJob": "Find a job",
     "hire": "Hire from India",
     "askFirst": "Have a question first? <wa>Ask us on WhatsApp</wa>",
     "whatsappGreeting": "Hello Go Gulf, I have a question about working in the Gulf.",
+    "record": {
+      "copy": "Copy CIN",
+      "copied": "CIN copied"
+    },
     "jobs": {
-      "kicker": "Open jobs",
       "title": "Jobs you can apply for now",
       "lead": "Each job has its own page with the place, the details and how to apply.",
       "all": "See all jobs",
+      "allCount": "{count, plural, one {See the # open job} other {See all # open jobs}}",
       "emptyTitle": "No jobs are listed right now",
       "emptyBody": "New jobs appear here once they are confirmed. You can still send a general application, or ask us a question on WhatsApp.",
       "general": "Send a general application",
       "ask": "Ask on WhatsApp"
     },
     "doors": {
-      "kicker": "Two ways we help",
       "title": "Start where you are",
       "seekers": {
         "title": "Looking for work in the Gulf?",
@@ -253,7 +255,6 @@
       }
     },
     "process": {
-      "kicker": "How it works",
       "title": "From your first enquiry to joining, in ten steps",
       "lead": "The same ten steps for every candidate, from the first enquiry to joining the employer.",
       "phase1": "Apply",
@@ -303,7 +304,6 @@
       "more": "More about how it works"
     },
     "money": {
-      "kicker": "Fees and safety",
       "title": "How we handle money",
       "lead": "Rules you can hold us to.",
       "rule1Title": "A written quote first",
@@ -316,14 +316,13 @@
       "verify": "How to verify Go Gulf"
     },
     "services": {
-      "kicker": "Services",
       "title": "What we help with",
       "seekers": "For job seekers",
       "employers": "For employers",
       "all": "See all services"
     },
     "cta": {
-      "title": "Start with a job — or a question",
+      "title": "Start with a job — or a question",
       "lead": "Apply online, or talk to us first on WhatsApp, phone or email.",
       "findJob": "Find a job",
       "contact": "Contact us"

@@ -1,3 +1,4 @@
+import { cx } from "@/components/ui/cx";
 import { getTranslator } from "@/lib/i18n/server";
 import type { MessageKey } from "@/lib/i18n/translator";
 import styles from "./ProcessSteps.module.css";
@@ -7,8 +8,11 @@ import styles from "./ProcessSteps.module.css";
  * docs/REDESIGN-PLAN.md §3), grouped into the four phases a candidate lives through.
  * Rendered on the home page and the job-seeker hub from this one source.
  *
- * Four columns on wide screens, two on tablets, one on phones — never a horizontal
- * scroller. Real ordered lists, numbered 1–10 across the phases.
+ * Real ordered lists, numbered 1–10 across the phases, in one of two layouts — never a
+ * horizontal scroller:
+ *   cards  a bordered panel per phase: four columns wide, two on tablets, one on phones
+ *   route  the phases as stops on one dotted line (the home page): across the page on
+ *          wide screens, down its leading edge below that
  */
 
 const PHASES: { title: MessageKey; steps: { title: MessageKey; body: MessageKey }[] }[] = [
@@ -47,10 +51,10 @@ const PHASES: { title: MessageKey; steps: { title: MessageKey; body: MessageKey 
 /** Where each phase's steps start in the 1–10 sequence, worked out once rather than during render. */
 const NUMBERED = PHASES.map((phase, i) => ({ ...phase, first: PHASES.slice(0, i).reduce((n, p) => n + p.steps.length, 0) + 1 }));
 
-export async function ProcessSteps({ tone = "on-subtle" }: { tone?: "on-subtle" | "on-white" }) {
+export async function ProcessSteps({ tone = "on-subtle", layout = "cards" }: { tone?: "on-subtle" | "on-white"; layout?: "cards" | "route" }) {
   const t = await getTranslator();
   return (
-    <ol className={`${styles.phases} ${tone === "on-white" ? styles.onWhite : ""}`}>
+    <ol className={cx(styles.phases, layout === "route" ? styles.route : styles.cards, tone === "on-white" && styles.onWhite)}>
       {NUMBERED.map((phase, i) => (
         <li key={phase.title} className={styles.phase}>
           <p className={styles.phaseName}>

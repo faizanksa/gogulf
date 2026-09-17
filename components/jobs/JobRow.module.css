@@ -1,0 +1,201 @@
+/* A line on the board. Phones: place, job, then pay and the way in on one line.
+   Tablets: the same, wider. Wide screens: one row of columns — place | job | pay |
+   dates | apply — so the eye can run down any one of them. */
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "place  place"
+    "main   main"
+    "facts  facts"
+    "salary action";
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  padding-block: var(--space-5);
+}
+
+.place {
+  grid-area: place;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.1875rem;
+  font-weight: 650;
+  line-height: var(--leading-heading);
+  letter-spacing: -0.01em;
+}
+
+/* A short dotted route ending in a stop — the line from the process diagram, in little. */
+.marker {
+  position: relative;
+  flex: none;
+  width: 2.25rem;
+  height: 12px;
+}
+.marker::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  inset-inline: 0 15px;
+  height: 4px;
+  background: radial-gradient(circle, var(--gg-blue-600) 1.3px, transparent 1.7px) 0 50% / 7px 4px repeat-x;
+}
+.marker::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  inset-inline-end: 0;
+  width: 12px;
+  height: 12px;
+  border: 2.5px solid var(--color-action);
+  border-radius: 50%;
+}
+
+.main {
+  grid-area: main;
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.titleLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+  letter-spacing: 0;
+}
+
+.titleLink {
+  color: var(--color-text);
+  text-decoration-line: underline;
+  text-decoration-color: var(--color-divider);
+  text-decoration-thickness: 1px;
+}
+.titleLink:hover {
+  color: var(--color-link-hover);
+  text-decoration-color: currentColor;
+  text-decoration-thickness: 2px;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--space-3);
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-small);
+  line-height: var(--leading-snug);
+}
+.professional {
+  color: var(--color-text);
+  font-weight: var(--weight-semibold);
+}
+
+.reference {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.01em;
+}
+
+.salary,
+.salaryMissing {
+  grid-area: salary;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: var(--leading-snug);
+}
+.salaryMissing {
+  font-family: var(--font-body);
+  font-weight: var(--weight-regular);
+  color: var(--color-text-muted);
+}
+
+.facts {
+  grid-area: facts;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+  line-height: var(--leading-snug);
+}
+.facts li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.facts svg {
+  flex: none;
+  color: var(--color-action);
+}
+
+.action {
+  grid-area: action;
+  margin: 0;
+  justify-self: end;
+}
+
+@media (min-width: 640px) {
+  .row {
+    grid-template-areas:
+      "place salary"
+      "main  action"
+      "facts action";
+    gap: var(--space-2) var(--space-6);
+  }
+
+  .salary,
+  .salaryMissing {
+    justify-self: end;
+    text-align: end;
+  }
+}
+
+@media (min-width: 1024px) {
+  .row {
+    grid-template-columns: minmax(0, 14rem) minmax(0, 1fr) minmax(0, 13.5rem) minmax(0, 10.5rem) minmax(7rem, auto);
+    grid-template-areas: "place main salary facts action";
+    gap: var(--space-5);
+    padding-block: var(--space-4);
+  }
+
+  .place {
+    align-self: start;
+    padding-top: 0.125rem;
+  }
+
+  .salary,
+  .salaryMissing {
+    justify-self: start;
+    text-align: start;
+  }
+
+  .facts {
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+}
+
+@media (forced-colors: active) {
+  .marker::after {
+    border-color: CanvasText;
+  }
+}

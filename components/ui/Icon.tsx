@@ -71,6 +71,12 @@ const PATHS = {
       <path d="M14 3v5h5" />
     </>
   ),
+  copy: (
+    <>
+      <rect x="9" y="9" width="11" height="11" rx="2" />
+      <path d="M15 5.5V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h.5" />
+    </>
+  ),
   search: (
     <>
       <circle cx="11" cy="11" r="6.5" />

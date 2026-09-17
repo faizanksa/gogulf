@@ -5,28 +5,11 @@
   padding: 0;
   list-style: none;
 }
-@media (min-width: 768px) {
-  .phases {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-@media (min-width: 1100px) {
-  .phases {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
 
 .phase {
   display: grid;
   gap: var(--space-4);
   align-content: start;
-  padding: var(--space-5);
-  border: 1px solid var(--color-divider);
-  border-radius: var(--radius-card);
-  background: var(--color-bg);
-}
-.onWhite .phase {
-  background: var(--color-bg-subtle);
 }
 
 .phaseName {
@@ -41,6 +24,7 @@
 
 .phaseNum {
   display: grid;
+  flex: none;
   place-items: center;
   width: 2rem;
   height: 2rem;
@@ -85,4 +69,131 @@
   color: var(--color-text-secondary);
   font-size: var(--text-small);
   line-height: var(--leading-snug);
+}
+
+/* ---------------------------------------------------------------- cards */
+@media (min-width: 768px) {
+  .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1100px) {
+  .cards {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.cards .phase {
+  padding: var(--space-5);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+  background: var(--color-bg);
+}
+.cards.onWhite .phase {
+  background: var(--color-bg-subtle);
+}
+
+/* ---------------------------------------------------------------- route
+   One dotted line (route blue — travel) with the phases as stops on it. The line is a
+   repeating dot drawn as a background, so it needs no SVG and follows the writing
+   direction on its own. Below 1024px it runs down the leading edge; above, across. */
+.route {
+  --stop: 2.25rem;
+  --route-dots: radial-gradient(circle, var(--gg-blue-600) 1.3px, transparent 1.7px);
+  gap: 0;
+}
+
+.route .phase {
+  position: relative;
+  gap: var(--space-4);
+  padding-inline-start: calc(var(--stop) + var(--space-4));
+  padding-bottom: var(--space-6);
+}
+.route .phase::before {
+  content: "";
+  position: absolute;
+  top: var(--stop);
+  bottom: 0;
+  inset-inline-start: calc(var(--stop) / 2 - 2px);
+  width: 4px;
+  background: var(--route-dots) 50% 0 / 4px 9px repeat-y;
+}
+.route .phase:last-child {
+  padding-bottom: 0;
+}
+.route .phase:last-child::before {
+  display: none;
+}
+
+.route .phaseName {
+  min-height: var(--stop);
+  font-size: 1.375rem;
+  letter-spacing: -0.012em;
+}
+
+.route .phaseNum {
+  position: absolute;
+  top: 0;
+  inset-inline-start: 0;
+  width: var(--stop);
+  height: var(--stop);
+  font-size: 0.9375rem;
+  box-shadow: 0 0 0 6px var(--color-bg-subtle);
+}
+.route.onWhite .phaseNum {
+  box-shadow: 0 0 0 6px var(--color-bg);
+}
+
+.route .steps {
+  gap: var(--space-3);
+}
+
+.route .step {
+  grid-template-columns: 2rem minmax(0, 1fr);
+}
+
+@media (min-width: 1024px) {
+  .route {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    column-gap: var(--space-6);
+  }
+
+  .route .phase {
+    align-content: start;
+    padding-inline-start: 0;
+    padding-top: calc(var(--stop) + var(--space-5));
+    padding-bottom: 0;
+  }
+
+  /* The line leaves each stop and runs to the next one, across the column gap. */
+  .route .phase::before,
+  .route .phase:last-child::before {
+    display: block;
+    top: calc(var(--stop) / 2 - 2px);
+    bottom: auto;
+    inset-inline-start: var(--stop);
+    inset-inline-end: calc(-1 * var(--space-6));
+    width: auto;
+    height: 4px;
+    background: var(--route-dots) 0 50% / 9px 4px repeat-x;
+  }
+  /* After the last stop the line runs on to the column's edge and stops. */
+  .route .phase:last-child::before {
+    inset-inline-end: 0;
+    -webkit-mask-image: linear-gradient(to var(--route-fade, right), #000 55%, transparent);
+    mask-image: linear-gradient(to var(--route-fade, right), #000 55%, transparent);
+  }
+  :global([dir="rtl"]) .route {
+    --route-fade: left;
+  }
+
+  .route .phaseName {
+    min-height: 0;
+  }
+}
+
+@media (forced-colors: active) {
+  .route .phaseNum {
+    border: 2px solid CanvasText;
+  }
 }
