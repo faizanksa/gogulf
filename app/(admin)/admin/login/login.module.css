@@ -1,0 +1,25 @@
+.panel {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 34rem;
+  padding: var(--space-6);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+  background: var(--color-bg);
+  box-shadow: var(--shadow-card);
+}
+
+.panel p {
+  margin: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--text-h2);
+  line-height: var(--leading-heading);
+}
+
+.note {
+  color: var(--color-text-muted);
+  font-size: var(--text-small);
+}
