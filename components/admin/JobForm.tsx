@@ -127,7 +127,7 @@ export function JobForm({
       <fieldset className={styles.section}>
         <legend>Basic information</legend>
         {f("title", "Job title", <Input name="title" defaultValue={values.title} maxLength={120} required />, {
-          hint: "As a candidate would search for it. Staging test jobs start with “STAGING TEST —”.",
+          hint: "As a candidate would search for it.",
         })}
         <div className={styles.fields2}>
           {f(

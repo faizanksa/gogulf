@@ -21,7 +21,9 @@
  * A production deploy is checked too, for the opposite failure: that it carries
  * the Supabase configuration and server mode it needs. See the isProductionDeploy
  * branch — a production build missing NEXT_PUBLIC_SUPABASE_* ships a site that
- * loses every job application without logging anything.
+ * loses every job application without logging anything. It must also name a
+ * project that carries the platform schema (not Tokyo, which has 0001 only), and
+ * its URL, anon key and service-role key must all belong to that one project.
  *
  * Exit 0 = isolated, and correctly configured if this is production. Exit 1 =
  * production is reachable from somewhere it must not be, or a production build
@@ -39,6 +41,13 @@ const PRODUCTION_PROJECT_REFS = new Map([
 ]);
 
 const isProductionRef = (ref) => ref !== null && PRODUCTION_PROJECT_REFS.has(ref);
+
+// Tokyo production carries migration 0001 only. This build is the server-mode
+// platform: public job pages read `jobs` (0012), the apply form writes `job_id`
+// (0013) and /admin needs 0002–0014. A production build against Tokyo cannot work,
+// so it is refused by name until the cutover moves the Supabase URL, anon key and
+// service-role key to Mumbai together. Drop this with the Tokyo ref above.
+const PRE_PLATFORM_PRODUCTION_REF = "julbqkeyvzwluayokcdi";
 
 const mode = (process.argv.find((a) => a.startsWith("--mode=")) ?? "--mode=production").split("=")[1];
 
@@ -111,8 +120,36 @@ if (isProductionDeploy) {
     process.exit(1);
   }
 
-  console.log(`Supabase API: ${describe(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "")}`);
+  const productionUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  const urlRef = refOf(productionUrl);
+  console.log(`Supabase API: ${describe(productionUrl)}`);
   console.log(`Razorpay: ${razorpayMode()} key`);
+
+  if (urlRef === PRE_PLATFORM_PRODUCTION_REF) {
+    console.error(
+      `\nFAIL — NEXT_PUBLIC_SUPABASE_URL names Tokyo production (${urlRef}), which has migration 0001 only.\n\n` +
+        "This build reads jobs from the database and writes job_id on every application,\n" +
+        "so against Tokyo the job pages fail and applications are lost. It deploys only\n" +
+        "after the cutover switches NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY\n" +
+        "and SUPABASE_SERVICE_ROLE_KEY to Mumbai production together.\n" +
+        "See docs/MAIN-RELEASE-READINESS.md. The live deployment is unaffected by this failure.\n",
+    );
+    process.exit(1);
+  }
+
+  // The URL and both keys must name one project. A key from another project is
+  // refused by PostgREST (PGRST301) on every call that uses it — for the service-role
+  // key, on every webhook delivery. Only the `ref` claim is read, never printed beyond it.
+  const mismatched = ["NEXT_PUBLIC_SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"]
+    .map((name) => [name, jwtRef(process.env[name])])
+    .filter(([, ref]) => ref !== null && urlRef !== null && ref !== urlRef);
+  if (mismatched.length > 0) {
+    console.error(`\nFAIL — the Supabase keys do not belong to the project in NEXT_PUBLIC_SUPABASE_URL (${urlRef}):\n`);
+    for (const [name, ref] of mismatched) console.error(`  ${name} belongs to ${ref}`);
+    console.error("\nSwitch the URL, the anon key and the service-role key together, in one change.\n");
+    process.exit(1);
+  }
+
   console.log("PASS — production build carries its required configuration.");
   process.exit(0);
 }
@@ -155,23 +192,25 @@ if (isProductionRef(refOf(dbUrl))) {
   failures.push("SUPABASE_DB_URL points at the PRODUCTION Supabase project.");
 }
 
-// A production key pasted in by another route is the same failure. Supabase
-// legacy keys are JWTs carrying the project ref; only `ref` is decoded — nothing
-// else from the token is read, logged or kept.
-for (const [name, value] of Object.entries({
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
-})) {
-  if (!value) continue;
+/**
+ * The project ref inside a Supabase legacy key (a JWT), or null. Only `ref` is
+ * decoded — nothing else from the token is read, logged or kept. Newer
+ * publishable/secret keys are not JWTs and return null: the URL check is the
+ * primary guard, this is a secondary one.
+ */
+function jwtRef(value) {
+  if (!value) return null;
   try {
-    const payload = JSON.parse(
-      Buffer.from(String(value).split(".")[1] ?? "", "base64url").toString("utf8"),
-    );
-    if (isProductionRef(payload?.ref ?? null)) failures.push(`${name} is a PRODUCTION key.`);
+    const payload = JSON.parse(Buffer.from(String(value).split(".")[1] ?? "", "base64url").toString("utf8"));
+    return typeof payload?.ref === "string" ? payload.ref : null;
   } catch {
-    // Not a decodable JWT (newer publishable key format). The URL check is the
-    // primary guard; this is a secondary one.
+    return null;
   }
+}
+
+// A production key pasted in by another route is the same failure.
+for (const name of ["NEXT_PUBLIC_SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"]) {
+  if (isProductionRef(jwtRef(process.env[name]))) failures.push(`${name} is a PRODUCTION key.`);
 }
 
 // Razorpay keys carry their mode in the key id. A live key on a deployed

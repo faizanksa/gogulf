@@ -15,6 +15,8 @@
  *     payment, so a run against a configured environment records ignored events and
  *     changes no money state.
  *   - Uses the secret passed on the command line, never a live credential from a file.
+ *   - Against any origin that is not local or staging, refuses --secret, --order and
+ *     --failed-order outright: production only ever gets the unsigned probe.
  */
 
 import { createHmac, randomUUID } from "node:crypto";
@@ -32,6 +34,20 @@ const url = `${base}/api/razorpay/webhook`;
 // row through authorized → paid, and --failed-order to drive one to failed.
 const orderId = arg("order", "order_PROBE000000001");
 const failedOrderId = arg("failed-order", orderId);
+
+// Anything that is not this machine or staging is treated as production. There, the
+// only permitted probe is the unsigned one: it proves the endpoint is deployed and
+// closed (401/503) and cannot reach the database. A signed probe with the live secret
+// would write events into production, and with --order it would mark a real payment
+// paid or failed without any money moving. No flag overrides this.
+const isLocal = /^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(base);
+if (!isLocal && !base.startsWith(STAGING_ORIGIN) && (secret || process.argv.some((a) => /^--(failed-)?order=/.test(a)))) {
+  console.error(
+    `Refusing: ${base} is not local or staging. Against production only the unsigned probe runs —\n` +
+      "drop --secret, --order and --failed-order. It never signs or drives a production payment.",
+  );
+  process.exit(1);
+}
 
 // Staging sits behind Vercel deployment protection, which answers 401 to anything
 // without the bypass header. Without this, every probe result would be the wall's
