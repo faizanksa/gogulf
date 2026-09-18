@@ -38,10 +38,10 @@ purposes; that report remains the page-by-page record of the website release can
 
 | | |
 | --- | --- |
-| Branch / commit | `phase-2/redesign` @ **`COMMIT_SHA`** — see §14 |
-| `origin/staging` | **`COMMIT_SHA`** |
+| Branch / commit | `phase-2/redesign` @ **`8714b78`** ("feat(payments): Razorpay webhook infrastructure, and the staging hardening"), plus the documentation commit that records these results |
+| `origin/staging` | **`8714b78`** — fast-forward from `384f58a` |
 | `origin/main` (production) | **`519cb85`** — unchanged; no merge, no push, no tag |
-| Staging deployment | **`STAGING_DEPLOYMENT`** → `https://staging.gogulf.co` |
+| Staging deployment | **`dpl_Cjxt2BY9UWZX3ZyhuwgCzvqaCkJG`**, READY, branch `staging`, commit `8714b78` → `https://staging.gogulf.co` |
 | Production deployment (live now) | `dpl_9RaneE2dUCaRfmGifXYfumUjWDL9`, branch `main`, commit `519cb85`, created 2026-09-13T04:54:08Z |
 | Staging Supabase ref | **`noxireidrbeqcvsirjec`** (Mumbai staging, `ap-south-1`) — verified from the deployed bundle and the server-rendered page, not from a dashboard |
 | Mumbai production ref | **`exsnksrmkycloxiajwmx`** — inventoried directly this pass (§1) |
@@ -64,7 +64,8 @@ purposes; that report remains the page-by-page record of the website release can
 | Client bundle secret scan | `npm run check:secrets` | **PASS** — 134 files scanned against **10** distinct server-only secret values |
 | Repository secret exposure scan | `node scripts/check-secret-config.mjs` | **PASS** — 12 distinct secret values searched across **865** files (git-tracked, build output, docs, public assets, logs); none found |
 | Webhook behaviour, live HTTP | `node scripts/razorpay-webhook-probe.mjs` | **PASS — 9/9** cases (§11) |
-| Deployed staging | `node scripts/verify-staging-deployment.mjs` | **PASS — 14/14** |
+| Deployed staging | `node scripts/verify-staging-deployment.mjs` | **PASS — 14/14** on `8714b78` |
+| Deployed webhook (staging) | `razorpay-webhook-probe.mjs --base=https://staging.gogulf.co` | **PASS** — 9/9 deliveries answered **503 `not_configured`**: deployed, and closed until a webhook secret exists |
 | Tokyo backup + delta | `npm run backup:prod -- verify` | **PASS** — 34/34 SHA-256; live 14 rows / 34 documents = backup; **unchanged since the backup** |
 
 ---

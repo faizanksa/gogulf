@@ -18,12 +18,18 @@
  */
 
 import { createHmac, randomUUID } from "node:crypto";
+import { getStagingBypass, STAGING_ORIGIN } from "./perf/vercel-bypass.mjs";
 
 const arg = (name, fallback) => (process.argv.find((a) => a.startsWith(`--${name}=`)) ?? `--${name}=${fallback ?? ""}`).split("=").slice(1).join("=");
 
 const base = arg("base", "http://127.0.0.1:3100").replace(/\/$/, "");
 const secret = arg("secret", "");
 const url = `${base}/api/razorpay/webhook`;
+
+// Staging sits behind Vercel deployment protection, which answers 401 to anything
+// without the bypass header. Without this, every probe result would be the wall's
+// answer rather than the endpoint's — a test that passes while proving nothing.
+const bypass = base.startsWith(STAGING_ORIGIN) ? await getStagingBypass() : null;
 
 const sign = (body) => createHmac("sha256", secret).update(body, "utf8").digest("hex");
 
@@ -50,6 +56,7 @@ const post = async (label, { body, signature, eventId }) => {
     method: "POST",
     headers: {
       "content-type": "application/json",
+      ...(bypass ? { "x-vercel-protection-bypass": bypass } : {}),
       ...(signature ? { "x-razorpay-signature": signature } : {}),
       ...(eventId ? { "x-razorpay-event-id": eventId } : {}),
     },
@@ -98,9 +105,20 @@ results.failed = await post("signed payment.failed", { body: failed, signature: 
 
 console.log("");
 if (!secret) {
-  const ok = [results.signed, results.unsigned].every((s) => s === 503 || s === 401);
-  console.log(ok ? "PASS — the endpoint is deployed and refuses everything while unconfigured." : "FAIL — unexpected status for an unconfigured endpoint.");
-  process.exit(ok ? 0 : 1);
+  // With no secret to sign with, the only meaningful question is whether the
+  // endpoint is deployed and closed. 503 means deployed and not yet configured;
+  // 401 everywhere means it is configured (and correctly refusing unsigned input).
+  const all = Object.values(results);
+  if (all.every((s) => s === 503)) {
+    console.log("PASS — deployed, and not configured yet: every delivery is deferred with 503.");
+    process.exit(0);
+  }
+  if (all.every((s) => s === 401)) {
+    console.log("PASS — deployed and configured: unsigned and wrongly signed requests are refused with 401.");
+    process.exit(0);
+  }
+  console.log("FAIL — mixed statuses for an unsigned probe; the endpoint is neither cleanly unconfigured nor cleanly closed.");
+  process.exit(1);
 }
 
 const expected = {
