@@ -24,12 +24,31 @@ select 'rbac' as section,
        (select count(*) from public.permissions)::text || ' permissions, ' ||
        (select count(*) from public.role_permissions)::text || ' grants' as value;
 
+-- Counts for tables that exist in every migration state, then the ones `0012` adds —
+-- counted through dynamic SQL so this file also runs on a project that predates them
+-- (which is exactly the comparison being made before a cutover).
 select 'data' as section,
        (select count(*) from public.job_applications)::text || ' applications, ' ||
        (select count(*) from public.contacts)::text || ' contacts, ' ||
-       (select count(*) from public.cases)::text || ' cases, ' ||
-       (select count(*) from public.jobs)::text || ' jobs, ' ||
-       (select count(*) from public.job_categories)::text || ' categories' as value;
+       (select count(*) from public.cases)::text || ' cases' as value;
+
+do $inventory$
+declare
+  t text;
+  n bigint;
+  out text := '';
+begin
+  foreach t in array array['jobs', 'job_categories'] loop
+    if to_regclass('public.' || t) is null then
+      out := out || t || ': (table not present) ';
+    else
+      execute format('select count(*) from public.%I', t) into n;
+      out := out || t || ': ' || n || ' ';
+    end if;
+  end loop;
+  raise notice 'jobs module | %', out;
+end
+$inventory$;
 
 select 'identity' as section,
        (select count(*) from public.staff_users)::text || ' staff_users, ' ||

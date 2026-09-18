@@ -1135,6 +1135,153 @@ export type Database = {
           },
         ]
       }
+      payment_events: {
+        Row: {
+          error: string | null
+          event_id: string
+          event_type: string
+          id: string
+          payment_id: string | null
+          processed_at: string | null
+          provider: Database["public"]["Enums"]["payment_provider"]
+          provider_order_id: string | null
+          provider_payment_id: string | null
+          received_at: string
+          status: Database["public"]["Enums"]["payment_event_status"]
+          summary: Json
+        }
+        Insert: {
+          error?: string | null
+          event_id: string
+          event_type: string
+          id?: string
+          payment_id?: string | null
+          processed_at?: string | null
+          provider?: Database["public"]["Enums"]["payment_provider"]
+          provider_order_id?: string | null
+          provider_payment_id?: string | null
+          received_at?: string
+          status?: Database["public"]["Enums"]["payment_event_status"]
+          summary?: Json
+        }
+        Update: {
+          error?: string | null
+          event_id?: string
+          event_type?: string
+          id?: string
+          payment_id?: string | null
+          processed_at?: string | null
+          provider?: Database["public"]["Enums"]["payment_provider"]
+          provider_order_id?: string | null
+          provider_payment_id?: string | null
+          received_at?: string
+          status?: Database["public"]["Enums"]["payment_event_status"]
+          summary?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_events_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount_minor: number
+          authorized_at: string | null
+          branch_id: string | null
+          case_id: string | null
+          contact_id: string | null
+          created_at: string
+          currency: string
+          failed_at: string | null
+          failure_code: string | null
+          failure_reason: string | null
+          id: string
+          method: string | null
+          paid_at: string | null
+          provider: Database["public"]["Enums"]["payment_provider"]
+          provider_order_id: string
+          provider_payment_id: string | null
+          purpose: Database["public"]["Enums"]["payment_purpose"]
+          reference: string
+          refunded_at: string | null
+          status: Database["public"]["Enums"]["payment_status"]
+          updated_at: string
+        }
+        Insert: {
+          amount_minor: number
+          authorized_at?: string | null
+          branch_id?: string | null
+          case_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          currency?: string
+          failed_at?: string | null
+          failure_code?: string | null
+          failure_reason?: string | null
+          id?: string
+          method?: string | null
+          paid_at?: string | null
+          provider?: Database["public"]["Enums"]["payment_provider"]
+          provider_order_id: string
+          provider_payment_id?: string | null
+          purpose?: Database["public"]["Enums"]["payment_purpose"]
+          reference?: string
+          refunded_at?: string | null
+          status?: Database["public"]["Enums"]["payment_status"]
+          updated_at?: string
+        }
+        Update: {
+          amount_minor?: number
+          authorized_at?: string | null
+          branch_id?: string | null
+          case_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          currency?: string
+          failed_at?: string | null
+          failure_code?: string | null
+          failure_reason?: string | null
+          id?: string
+          method?: string | null
+          paid_at?: string | null
+          provider?: Database["public"]["Enums"]["payment_provider"]
+          provider_order_id?: string
+          provider_payment_id?: string | null
+          purpose?: Database["public"]["Enums"]["payment_purpose"]
+          reference?: string
+          refunded_at?: string | null
+          status?: Database["public"]["Enums"]["payment_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       permissions: {
         Row: {
           created_at: string
@@ -1538,6 +1685,7 @@ export type Database = {
         Returns: string
       }
       next_job_reference: { Args: never; Returns: string }
+      next_payment_reference: { Args: never; Returns: string }
       normalize_email: { Args: { raw: string }; Returns: string }
       normalize_phone_e164: {
         Args: { default_country_code?: string; raw: string }
@@ -1546,6 +1694,20 @@ export type Database = {
       normalize_wa_id: { Args: { raw: string }; Returns: string }
       note_view_permission: { Args: { p_visibility: string }; Returns: string }
       record_document_access: { Args: { p_path: string }; Returns: boolean }
+      record_payment_event: {
+        Args: {
+          p_amount?: number
+          p_currency?: string
+          p_error_code?: string
+          p_error_desc?: string
+          p_event_id: string
+          p_event_type: string
+          p_method?: string
+          p_order_id?: string
+          p_payment_id?: string
+        }
+        Returns: string
+      }
       redact_audit_payload: { Args: { payload: Json }; Returns: Json }
       resolve_contact: {
         Args: { p_email?: string; p_phone?: string; p_wa_id?: string }
@@ -1604,6 +1766,10 @@ export type Database = {
         | "customer"
         | "past_customer"
         | "disqualified"
+      payment_event_status: "received" | "processed" | "ignored" | "failed"
+      payment_provider: "razorpay"
+      payment_purpose: "consultation"
+      payment_status: "created" | "authorized" | "paid" | "failed" | "refunded"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1766,7 +1932,10 @@ export const Constants = {
         "past_customer",
         "disqualified",
       ],
+      payment_event_status: ["received", "processed", "ignored", "failed"],
+      payment_provider: ["razorpay"],
+      payment_purpose: ["consultation"],
+      payment_status: ["created", "authorized", "paid", "failed", "refunded"],
     },
   },
 } as const
-

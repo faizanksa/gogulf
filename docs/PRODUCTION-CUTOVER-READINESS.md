@@ -1,12 +1,33 @@
 # Production cutover readiness report — Tokyo → Mumbai, Phase 3
 
-Written 18 September 2026, after the user's manual Phase 3 staging QA.
+Written 18 September 2026, after the user's manual Phase 3 staging QA. **Second pass** the same
+day, after the staging hardening and Razorpay infrastructure work.
 
 **This report is not an approval and contains no go/no-go decision.** It records what was
 verified, by what method, and what remains outstanding, so the cutover decision can be made
-from evidence. Nothing in production was changed to produce it: no migration was applied, no
-data moved, no Vercel variable edited, no OAuth configuration touched, no staff account
-created, no DNS change. Every production interaction below was a read.
+from evidence.
+
+> ### PRODUCTION DATABASE CUTOVER HAS NOT BEEN PERFORMED.
+>
+> Three things are deliberately distinct throughout this document:
+>
+> | | State |
+> | --- | --- |
+> | **Production website deployment** | Live at `www.gogulf.co`, serving the Phase 2C build from `main` (`519cb85`). Untouched by this work |
+> | **Production Supabase** | **Tokyo** `julbqkeyvzwluayokcdi`. Still the live database. Untouched — no migration, no write, no data movement |
+> | **Future Mumbai cutover** | `exsnksrmkycloxiajwmx`. Provisioned, empty, at migration `0011`. Not connected to anything. Gated on the user's explicit approval |
+
+**What was changed outside the repository during this pass** (stated plainly, because the first
+pass could say "nothing"):
+
+| Change | Scope | Why |
+| --- | --- | --- |
+| Vercel automation-bypass secret **rotated** | Project deployment protection (preview access only) | The 10 Sep value leaked into a local Playwright log on 17 Sep and was still live |
+| Razorpay variables **unscoped from Preview** | Vercel env targets; **Production values untouched** | They were live-mode credentials attached to staging. Approved by the user before the change |
+| Migration `0014_payments.sql` applied to **Mumbai staging** and local | Staging and local databases only | Payments infrastructure. **Not applied to any production project** |
+
+No production Vercel variable was edited, no OAuth configuration created, no staff or auth user
+created, no data migrated, no DNS change, no merge to `main`.
 
 It supersedes `docs/PRODUCTION-READINESS-REPORT.md` (12 Sep, Phase 2C website) for cutover
 purposes; that report remains the page-by-page record of the website release candidate.
@@ -17,506 +38,426 @@ purposes; that report remains the page-by-page record of the website release can
 
 | | |
 | --- | --- |
-| Branch / commit | `phase-2/redesign` @ **`384f58a`** ("feat(home): redesign the home page…"); working tree clean apart from untracked `.claude/` |
-| `origin/staging` | **`384f58a`** — identical to the branch head |
+| Branch / commit | `phase-2/redesign` @ **`COMMIT_SHA`** — see §14 |
+| `origin/staging` | **`COMMIT_SHA`** |
 | `origin/main` (production) | **`519cb85`** — unchanged; no merge, no push, no tag |
-| Staging deployment | **`dpl_2qvaPGvcKZTGV17yiakPw47aXUzx`**, READY, branch `staging`, commit `384f58a`, created 2026-09-17T13:50:05Z → `https://staging.gogulf.co` |
-| Production deployment (live now) | `dpl_9RaneE2dUCaRfmGifXYfumUjWDL9`, target production, branch `main`, commit `519cb85`, created 2026-09-13T04:54:08Z |
-| Staging Supabase ref | **`noxireidrbeqcvsirjec`** (Mumbai staging, `ap-south-1`) — verified from the deployed bundle and the server-rendered page, not from the dashboard |
-| Production Supabase (live now) | **`julbqkeyvzwluayokcdi`** (Tokyo) — unchanged |
-| Mumbai production ref | **`exsnksrmkycloxiajwmx`** — empty of live data as last recorded; **not verifiable from this session** (§C) |
-| Manual QA | Completed by the user on the deployed staging site, 18 Sep 2026: all planned Phase 3 flows work, **no issues reported**, nothing to fix |
+| Staging deployment | **`STAGING_DEPLOYMENT`** → `https://staging.gogulf.co` |
+| Production deployment (live now) | `dpl_9RaneE2dUCaRfmGifXYfumUjWDL9`, branch `main`, commit `519cb85`, created 2026-09-13T04:54:08Z |
+| Staging Supabase ref | **`noxireidrbeqcvsirjec`** (Mumbai staging, `ap-south-1`) — verified from the deployed bundle and the server-rendered page, not from a dashboard |
+| Mumbai production ref | **`exsnksrmkycloxiajwmx`** — inventoried directly this pass (§1) |
+| Tokyo production ref | **`julbqkeyvzwluayokcdi`** — still live, still the source of truth |
+| Manual QA | Completed by the user on deployed staging, 18 Sep 2026: all planned Phase 3 flows work, **no issues reported** |
 
-### Checks run today (18 Sep 2026)
+### Test and check results (this pass, 18 September 2026)
 
 | Check | Command | Result |
 | --- | --- | --- |
-| Migration files parse | `npm run db:validate` | **PASS** — 13/13 files |
-| Unit tests | `npx vitest run` | **PASS** — 201/201, 15 files |
-| SQL assertions (Mumbai staging) | `db-remote --target=mumbai-staging test` | **PASS** — **280/280** (`jobs` 130, `rbac-behaviour` 84, `rls` 66) |
-| Client secret scan | `npm run check:secrets` | **PASS** — 134 files, no server-only secret in client output |
-| Deployed staging | `node scripts/verify-staging-deployment.mjs` | **PASS — 14/14**, including "exactly one Supabase project is referenced" and no trace of Tokyo staging, Tokyo production or Mumbai production |
-| Tokyo production backup + delta | `npm run backup:prod -- verify` | **PASS** — 34/34 SHA-256 match; live 14 rows / 34 documents = backup 14 / 34; **unchanged since the backup** |
-| Mumbai staging inventory | `db-remote … run supabase/snippets/readiness-inventory.sql` (read-only transaction) | migrations `0001`–`0013`; 25 tables, **all** RLS; 65 policies; 14 SECURITY DEFINER functions |
-| Live production identity | Public HTTP reads of `www.gogulf.co` | Static Phase 2C build; no Supabase ref in the eagerly loaded bundle (the uploader is loaded on demand); sitemap lists 14 URLs |
-
-Earlier results not re-run today, carried forward from the Phase 3 staging release (`5287b4a`,
-`docs/PHASE-3-STAGING-RELEASE.md`): **E2E 125 passed / 0 failed** and **axe 64/64 routes with no
-serious or critical violation**. After the home-page redesign (`384f58a`) a targeted subset was
-run — 14 tests (home content, landmarks, mobile menu, reduced motion) plus axe on `/`, `/ar-XB`
-and `/candidates` on both viewports — all passing, 0 violations. **The full E2E suite has not yet
-been run against `384f58a`** (§19, prerequisite P1).
+| Migration files parse | `npm run db:validate` | **PASS — 14/14 files** |
+| Unit tests | `npx vitest run` | **PASS — 223/223**, 16 files (was 201; +22 payment tests) |
+| SQL assertions (local, from empty) | `npm run db:test` | **PASS — 316/316** across 4 files (was 280; +36 payment assertions) |
+| SQL assertions (Mumbai staging) | `db-remote --target=mumbai-staging test` | **PASS — 316/316** |
+| E2E + accessibility (local production build) | `npx playwright test --workers=2` | **188 passed, 39 skipped, 1 flake** (228 total, 8.9 min). The one failure — `guard.spec` "email + password sessions reach neither area" — passes when re-run alone (14/14), a known timeout under parallel load on this machine, not a regression |
+| Accessibility (axe) | part of the E2E run | **PASS — 64/64 route scans**, mobile and desktop, no serious or critical violation |
+| Lint | `npm run lint` | **PASS** — clean |
+| Typecheck | `npm run typecheck` | **PASS** — clean |
+| Production build | `npm run build:server` | **PASS** — includes `ƒ /api/razorpay/webhook` |
+| Client bundle secret scan | `npm run check:secrets` | **PASS** — 134 files scanned against **10** distinct server-only secret values |
+| Repository secret exposure scan | `node scripts/check-secret-config.mjs` | **PASS** — 12 distinct secret values searched across **865** files (git-tracked, build output, docs, public assets, logs); none found |
+| Webhook behaviour, live HTTP | `node scripts/razorpay-webhook-probe.mjs` | **PASS — 9/9** cases (§11) |
+| Deployed staging | `node scripts/verify-staging-deployment.mjs` | **PASS — 14/14** |
+| Tokyo backup + delta | `npm run backup:prod -- verify` | **PASS** — 34/34 SHA-256; live 14 rows / 34 documents = backup; **unchanged since the backup** |
 
 ---
 
-## B. Production data state (from the verified backup and today's delta read)
+## B. Production data state (Tokyo, from the verified backup and today's delta read)
 
 | | |
 | --- | --- |
-| Tokyo production applications | **14** rows in `public.job_applications` |
-| Of which a test | **1** — created `2026-09-13T05:00:20.505Z`, "General Application", documents `cv-cutover-test-cv.pdf` and `passport-cutover-test-passport.png` — six minutes after that day's deploy. So **≈13 real applicants** |
-| Date range of applications | `2026-09-04T17:58:57Z` → `2026-09-15T06:31:10Z` |
+| Applications | **14** rows in `public.job_applications` |
+| Of which a test | **1** — `2026-09-13T05:00:20.505Z`, "General Application", documents `cv-cutover-test-cv.pdf` / `passport-cutover-test-passport.png`. So **≈13 real applicants** |
+| Date range | `2026-09-04T17:58:57Z` → `2026-09-15T06:31:10Z` |
 | Storage | bucket `job-applications`, **private**, 10 MiB limit, **34 objects**, **29,368,182 bytes** (28.01 MiB) |
-| Referenced vs present | 34 referenced paths, **0 missing** — no orphans in either direction |
+| Referenced vs present | 34 referenced paths, **0 missing** — no orphans either way |
 | Auth users in Tokyo production | **0** |
-| Backup location | `backups/julbqkeyvzwluayokcdi-2026-09-16T11-06-38-944Z/` (gitignored) |
-| **Exact backup timestamp** | **`2026-09-16T11:07:53.025Z`** (`manifest.json` → `taken_at`) |
-| Changed since the backup? | **No.** Re-verified today: row count, document count and every SHA-256 match |
+| Backup | `backups/julbqkeyvzwluayokcdi-2026-09-16T11-06-38-944Z/`, taken **`2026-09-16T11:07:53.025Z`** |
+| Changed since the backup? | **No** — re-verified today |
 
 ---
 
-## C. Verification limitations (read these before trusting anything below)
+## C. Verification limitations
 
-1. **Mumbai production could not be inspected from this session.** The read-only inventory
-   (`begin read only; …`) was refused by Claude Code's auto-mode classifier as a production
-   action, and the claude.ai Supabase connector authenticates to an unrelated organisation
-   (it lists only `sparqitservices` projects — confirmed today). Its state below is therefore
-   **last recorded on 16 Sep by an earlier session, not independently re-verified today**.
-   To close this gap yourself, run:
-
-   ```bash
-   node scripts/db-remote.mjs --target=mumbai-production \
-     --yes-i-am-provisioning-production run supabase/snippets/readiness-inventory.sql
-   ```
-
-   That snippet is new in this commit and runs entirely inside a read-only transaction, so it
-   cannot write even if something in it is wrong. Compare its output with the Mumbai staging
-   column in §1.
-2. **`supabase db push` reports failure on success** on this machine: its pgdelta step dies
-   reading a CA certificate inside its container and exits non-zero *after* applying and
-   recording the migrations. `scripts/db-remote.mjs` therefore ignores the exit code and reads
-   `supabase_migrations.schema_migrations` instead. Never conclude a push failed without asking
-   the database.
-3. **The Supabase CLI drifts between accounts mid-session.** Verify the org immediately before
-   any management command; `.env.supabase-token.local` holds a PAT that overrides the drift.
-   Database work through the pooler (`db-remote`) does not depend on CLI auth.
-4. **`/auth/v1/settings` is cached and not authoritative** — confirm auth configuration with a
-   real request (e.g. an actual `POST /auth/v1/signup` attempt that must be refused), not that
-   endpoint. Supabase also rejects `example.com`/`.test` addresses before the signup gate, so
-   probe with a `@gogulf.co` address.
-5. **Admin UI cannot be driven by an automated signed-in browser** — staff sessions need a real
-   Google consent. The authorisation underneath is proven by the SQL suites, a real ADMIN-shaped
-   token probe and hosted REST probes; the screens themselves rest on your manual QA.
+1. **Mumbai production is now inventoried** — the gap in the first pass is closed (§1). The
+   read-only snippet is `supabase/snippets/readiness-inventory.sql`; it runs inside a read-only
+   transaction and is version-tolerant, so it works on a project that predates `0012`.
+2. **`supabase db push` reports failure on success** on this machine (pgdelta certificate error
+   after applying). `scripts/db-remote.mjs` ignores the exit code and reads `schema_migrations`.
+3. **The Supabase CLI drifts between accounts mid-session.** Verify the org immediately before a
+   management command; database work through the pooler does not depend on CLI auth.
+4. **`/auth/v1/settings` is cached and not authoritative** — verify auth configuration with a real
+   refused `POST /auth/v1/signup` using an `@gogulf.co` address.
+5. **Vercel keeps secret values write-only.** `SUPABASE_SERVICE_ROLE_KEY` in Production is stored
+   as type `sensitive`, so its value cannot be read back through the API. Its **presence** is
+   verified; **which project it belongs to cannot be proved from here** (§10).
+6. **Admin UI still needs a human** — staff sessions require real Google consent, which cannot be
+   automated. The authorization underneath is proven by the SQL suites and REST probes.
 
 ---
 
-## 1. Mumbai production schema readiness
+## 1. Mumbai production schema readiness — verified directly this pass
 
-| | Mumbai staging (verified today) | Mumbai production (last recorded 16 Sep, **unverified today**) |
+Read-only inventory, `exsnksrmkycloxiajwmx`, 18 September 2026:
+
+| | Mumbai production (verified) | Mumbai staging (verified) |
 | --- | --- | --- |
-| Migrations | `0001`–`0013` | `0001`–`0011` |
-| Public tables | 25, **all** with RLS | 23, all with RLS |
-| RLS policies | 65 | 55 |
-| SECURITY DEFINER functions | 14 | 11 |
-| RBAC catalogue | 12 roles, 72 permissions, 364 grants | 12 roles, 72 permissions |
-| Storage | `job-applications`, private, 10 MiB, 34 objects (synthetic rehearsal data) | same bucket, private, 10 MiB, **0 objects** |
-| Live data | 14 synthetic applications, 12 test jobs, 14 categories, 3 staff | **0 applications, 0 contacts, 0 cases, 0 staff, 0 auth users** |
-| Audit rows | 389 (`system` + `staff`) | 370, all `actor_type=system` (364 from the `0008` RBAC seed, 6 from settings) |
+| Migrations | **`0001`–`0011`** | `0001`–`0014` |
+| Public tables | 23, **all** with RLS | 25 (+`payments`, `payment_events` = 27 after `0014`) |
+| RLS policies | 55 | 65 (+2) |
+| SECURITY DEFINER functions | 11 | 14 (+2) |
+| RBAC catalogue | 12 roles, 72 permissions, 364 grants | identical |
+| `jobs` / `job_categories` | **not present** | present |
+| Applications / contacts / cases | **0 / 0 / 0** | 14 / 0 / 0 (synthetic) |
+| staff_users / auth users / identities | **0 / 0 / 0** | 3 / 3 / 4 |
+| Audit rows | **370, all `actor_type=system`** — exactly the expected seed baseline | 389 (`system` + `staff`) |
+| Storage | `job-applications`, private, 10 MiB, **0 objects** | same bucket, 34 synthetic objects |
+| `job_applications` privileges | `anon=INSERT` (table-level, the `0011` state), `service_role=DISU` | `authenticated=SELECT`, `service_role=DISU`, **column-level** anon INSERT (`0013`) |
 
-**Gap to close at cutover: `0012_jobs.sql` and `0013_job_applications_bridge.sql`.** They add the
-`jobs` and `job_categories` tables (23 → 25), 10 policies, 3 SECURITY DEFINER functions, the paid-access
-CHECK constraint and the column-level `anon` INSERT grants on `job_applications`. Both are additive;
-neither drops or rewrites an existing object.
+**Gap to close at cutover: `0012`, `0013`, `0014`.** All three are additive — new tables, new
+policies, narrower privileges. `0013` also *narrows* anon's INSERT from the whole table to named
+columns, which is a security improvement, not a break.
 
-The tables on Mumbai staging, for comparison: `activities, audit_logs, audit_logs_2026,
-audit_logs_2027, audit_logs_default, branches, case_recruitment, case_travel, case_visa, cases,
-contact_identities, contact_merges, contacts, job_applications, job_categories, jobs, notes,
-permissions, pipeline_stages, pipelines, role_permissions, roles, settings, staff_users, tasks`.
+## 2. Migrations 0001–0014 readiness
 
-## 2. Migrations 0001–0013 readiness
-
-- All 13 files parse cleanly (`npm run db:validate`, today).
-- The same 13 have been applied and proven twice: on Mumbai staging, and from empty on a local
-  reset — 280/280 SQL assertions in both cases.
-- Numbering is gapless and each file is immutable once applied; nothing in `0012`/`0013` alters
-  the shape of `0001`'s `job_applications` data, so the Tokyo rows can be imported afterwards.
-- Applying to Mumbai production is a single command, and it is the only schema write the cutover
-  needs:
+- 14/14 files parse (`npm run db:validate`).
+- Applied and proven twice: Mumbai staging, and locally from empty (`supabase db reset`) — **316
+  assertions pass in both**.
+- Numbering gapless; each file immutable once applied. `0014` is new in this pass (§11).
+- The command, when approved:
 
   ```bash
   node scripts/db-remote.mjs --target=mumbai-production push --yes-i-am-provisioning-production
-  ```
-
-  The target refuses any project other than `exsnksrmkycloxiajwmx`, refuses Tokyo by name, and
-  verifies the outcome by reading `schema_migrations` rather than trusting the CLI exit code.
-- Immediately afterwards, run the suites there (each test rolls itself back):
-
-  ```bash
   node scripts/db-remote.mjs --target=mumbai-production test --yes-i-am-provisioning-production
   ```
 
-  Expect **280/280**. Run this **while the project still holds no live data**, or not at all.
+  Run the suites **only while the project holds no live data**. Expect 316/316.
 
 ## 3. Tokyo production backup and SHA-256 verification
 
-- Backup `backups/julbqkeyvzwluayokcdi-2026-09-16T11-06-38-944Z/`, taken **2026-09-16T11:07:53.025Z**,
-  contains `job_applications.json` (14 rows), `documents/` (34 files) and `manifest.json`.
-- Re-verified today: **34/34 documents match their recorded SHA-256**; 34 referenced paths, 0 missing.
-- The backup covers **both** Postgres rows and Storage objects. This matters because a Supabase
-  database backup does not include Storage — the CVs and passports exist only in the bucket.
-- The backup script is GET-only by construction and the production ref is hard-coded, so it cannot
-  write to or delete from the source project.
-- Re-run `npm run backup:prod -- verify` immediately before the cutover; it is also the delta check (§4).
+Unchanged from the first pass and re-verified today: 34/34 document hashes match, 14 rows and 34
+objects live and in the archive, 0 missing referenced paths, and the live project has not changed
+since `2026-09-16T11:07:53.025Z`. The backup covers Postgres **and** Storage; a Supabase database
+backup alone would omit every CV and passport.
 
 ## 4. Production delta-check procedure
 
-The window that matters is between the backup (16 Sep 11:07 UTC) and the moment Tokyo stops
-accepting applications. The live static site still writes applications and documents directly into
-Tokyo, so this window is not theoretical — row 14 arrived on 15 Sep.
+1. `npm run backup:prod -- verify` — prints live-vs-backup row and document counts and names
+   anything new.
+2. On a delta: take a fresh backup, re-verify, then migrate from the **archive**, never the live bucket.
+3. Repeat after Tokyo intake is closed; the final run must report zero delta.
+4. Keep the output of the final run with the cutover record.
 
-1. `npm run backup:prod -- verify` — prints `rows: backup N, live M` and `documents: …`, and names
-   any application that arrived since. Equal counts and "has not changed since the backup" means no delta.
-2. If it reports a delta, take a fresh backup (`npm run backup:prod`) so the archive and the live
-   project agree, and re-verify before going further.
-3. Migrate from the **verified archive**, never from the live bucket, so every byte is hash-checked.
-4. Repeat the check **after** Tokyo intake is closed and before the archive is declared final. The
-   last run must report zero delta.
-5. Keep the printed output of the final run with the cutover record.
+## 5. Rollback procedure and triggers
 
-## 5. Rollback procedure
-
-Rollback is cheap for as long as Tokyo keeps its data and its intake. The plan keeps it that way
-until the last step.
-
-| Stage | How to roll back | Data risk |
+| Stage | Rollback | Data risk |
 | --- | --- | --- |
-| Mumbai production migrated (`0012`/`0013`), nothing else changed | Nothing to undo: the project holds no live data and serves no traffic. Leave it, or leave it empty | None |
-| Vercel production variables switched, deployment promoted | In Vercel: promote `dpl_9RaneE2dUCaRfmGifXYfumUjWDL9` (commit `519cb85`) back to production, then restore the Supabase variables to their Tokyo values | None — Tokyo is untouched and still holds every row |
-| Traffic live on the new build, before Tokyo intake is revoked | Same promote + variable restore. Any application submitted to Mumbai during the window must be exported and replayed into Tokyo (or accepted as living only in Mumbai — decide before starting, not during) | The delta in the window |
-| After Tokyo `anon` INSERT is revoked | **This is the one-way door.** Rolling back now means restoring the Tokyo grant as well, and reconciling both directions | Real |
+| Mumbai production migrated only | Nothing to undo — it serves no traffic and holds no data | None |
+| Vercel variables switched, build promoted | Promote `dpl_9RaneE2dUCaRfmGifXYfumUjWDL9` (`519cb85`) back; restore Tokyo Supabase variables | None — Tokyo still holds every row |
+| Traffic live on the new build, Tokyo intake still open | Same promote + restore; replay any Mumbai-side applications into Tokyo (decide the policy **before** starting) | The switch-window delta |
+| After Tokyo `anon` INSERT is revoked | **One-way door.** Restore the grant and reconcile both directions | Real |
 
-Supporting conditions: DNS TTL lowered to 300 s at least 48 h before; the previous production
-deployment kept for 30 days; Tokyo kept read-only-but-alive through the soak; `main` only ever
-moved by a reviewed merge.
+Supporting conditions: DNS TTL 300 s at least 48 h ahead; previous production deployment kept 30
+days; Tokyo read-only-but-alive through the soak; `main` moved only by reviewed merge.
+
+Exact stop/rollback triggers are in §18.
 
 ## 6. Vercel production environment changes required
 
-Project `gogulf`, team `faizan-chaudhary`, production branch `main`, region `bom1`, Node 24.x.
-**Production environment variables today** (names only; no value was decrypted):
+Production variables **today** (names only; values are write-only or unread):
 `NEXT_PUBLIC_EMAIL_PROVIDER`, `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
-`NEXT_PUBLIC_SUPABASE_URL`, `PLATFORM_MODE`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `RESEND_REPLY_TO`.
+`NEXT_PUBLIC_SUPABASE_URL`, `PLATFORM_MODE`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`,
+`RESEND_REPLY_TO`, **`SUPABASE_SERVICE_ROLE_KEY` (added by the user this pass)**,
+**`RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` (added by the user this
+pass; now Production-only)**.
 
-| Change | Detail | Why |
-| --- | --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | → `https://exsnksrmkycloxiajwmx.supabase.co` | Point the live site at Mumbai production |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | → Mumbai production anon key | Same |
-| `SUPABASE_SERVICE_ROLE_KEY` | **Add** — absent from production today | `lib/supabase/admin.ts` requires it in server mode (document access, intake paths). Server-only; never `NEXT_PUBLIC_*` |
-| `PLATFORM_MODE` | Confirm it is `server` | Static export has no API routes; the forms post to `/api/forms/*` |
-| Build command | Comes with the merge: `main`'s `vercel.json` is `npm run build` (static export); the branch's is `cross-env PLATFORM_MODE=server npm run build` | The cutover commit is what turns production into a server build |
-| `APP_ENV` | **Not required** in production — `deploymentStage()` resolves production from `VERCEL_ENV=production`. Do not set `APP_ENV=staging` there | Unconfirmed content must stay hidden in production |
-| `NEXT_PUBLIC_EMAIL_PROVIDER` / `RESEND_*` | Already present; confirm the Resend values are the production sender and reply-to | Email is Resend-only; EmailJS is gone from the code |
-| `NEXT_PUBLIC_EMAILJS_*` | Retire if any still exist on the project | Dead after the cutover |
-| Razorpay variables | **Do not add.** No candidate payment flow exists (§14) | Adding keys would create a surface with nothing behind it |
+| Change still required at cutover | Detail |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | → `https://exsnksrmkycloxiajwmx.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | → Mumbai production anon key |
+| `SUPABASE_SERVICE_ROLE_KEY` | **Present.** Confirm it is Mumbai production's, not Tokyo's — see §10; it cannot be read back |
+| `PLATFORM_MODE` | Confirm `server` (production currently builds the static export from `main`, whose `vercel.json` is `npm run build`) |
+| Build command | Comes with the merge: the branch's `vercel.json` is `cross-env PLATFORM_MODE=server npm run build` |
+| `APP_ENV` | **Not required** — `deploymentStage()` resolves production from `VERCEL_ENV=production`. Never set `APP_ENV=staging` there |
+| `NEXT_PUBLIC_EMAILJS_*` | Retire if any remain |
 
-After the promote, re-run the deployed-bundle check against production (the staging script with
-`STAGING_ORIGIN` pointed at `https://www.gogulf.co`, or the equivalent manual grep) and confirm the
-live chunks name **exactly one** Supabase ref, `exsnksrmkycloxiajwmx`.
+After promoting, re-check the live bundle names exactly one Supabase ref: `exsnksrmkycloxiajwmx`.
 
 ## 7. Production Google OAuth configuration required
 
-Exact values are in `docs/GOOGLE-OAUTH.md` §3. Nothing here is applied yet.
+Unchanged and still outstanding. Exact values in `docs/GOOGLE-OAUTH.md` §3:
 
 | Setting | Production value |
 | --- | --- |
-| OAuth client | One **Web application** client, in a Google Cloud project owned by the `gogulf.co` Workspace |
-| Consent screen user type | **Internal** — not External |
+| OAuth client | One **Web application** client in a Google Cloud project owned by the `gogulf.co` Workspace |
+| Consent screen | **Internal** |
 | Authorized redirect URI | `https://exsnksrmkycloxiajwmx.supabase.co/auth/v1/callback` |
-| Authorized JavaScript origins | `https://www.gogulf.co` **and** `https://gogulf.co` (the apex 308-redirects) |
-| Supabase `site_url` | `https://www.gogulf.co` |
-| Supabase `additional_redirect_urls` | `https://www.gogulf.co/**` |
-| Supabase auth | Google provider on; **`enable_signup = false`**; JWT hook `custom_access_token_hook` on |
+| Authorized JavaScript origins | `https://www.gogulf.co` **and** `https://gogulf.co` |
+| Supabase `site_url` / redirects | `https://www.gogulf.co` / `https://www.gogulf.co/**` |
+| Supabase auth | Google on; **`enable_signup = false`**; JWT hook on |
 
-**Supabase ignores Google's `hd` claim.** The Workspace restriction comes from three independent
-controls: an Internal consent screen, signups disabled, and the `staff_users` row requirement in the
-JWT hook. The third is the real authorisation boundary — an authenticated `@gmail.com` identity was
-proven on Mumbai staging to receive no claims, no role and zero rows.
-
-Verify the signup gate with a real refused `POST /auth/v1/signup` using an `@gogulf.co` address, not
-with `/auth/v1/settings` (§C.4).
+Supabase ignores Google's `hd` claim: the Workspace restriction comes from the Internal consent
+screen, signups disabled, and the `staff_users` row requirement — the third being the real
+authorization boundary.
 
 ## 8. Production SUPER_ADMIN bootstrap plan
 
-Roster (from `scripts/bootstrap-super-admins.mjs`, not invented at run time):
 `admin@gogulf.co` and `hello@gogulf.co` → **SUPER_ADMIN**.
 
 ```bash
 npm run bootstrap:admins -- --target=mumbai-production --yes-bootstrap-production-admins
-npm run bootstrap:admins -- --target=mumbai-production --report   # read back
+npm run bootstrap:admins -- --target=mumbai-production --report
 ```
 
-- Creates an `auth.users` row with a **confirmed email and no password**, plus a `staff_users` row
-  with the catalogue role, Lucknow branch, active. No password means there is no second, weaker door.
-- Idempotent: an existing user or staff row is adopted, never duplicated or silently overwritten.
-  It fails outright if two people resolve to the same record.
-- It grants nothing directly — authority flows from `staff_users` → JWT hook → `has_perm()` → RLS.
-  A role not already in `public.roles` is refused rather than created.
-- Each administrator must then complete a **real Google sign-in** and be verified individually
-  (`supabase/snippets/verify-google-signin.sql`), because one working login proves nothing about another.
-- On Mumbai staging this produced exactly the expected result: 2 SUPER_ADMIN + 1 ADMIN, all active,
-  3 auth users, 4 identities.
+Creates a confirmed-email, **password-less** `auth.users` row plus a `staff_users` row with the
+catalogue role, Lucknow branch, active. Idempotent; refuses a role not in `public.roles`; grants
+nothing directly — authority flows `staff_users` → JWT hook → `has_perm()` → RLS. Each person must
+then complete a real Google sign-in and be verified individually
+(`supabase/snippets/verify-google-signin.sql`).
 
 ## 9. Production ADMIN bootstrap plan
 
-Same script and same roster entry: `careers@gogulf.co` → **ADMIN** (Lucknow, active).
+`careers@gogulf.co` → **ADMIN**, same script and safeguards. Proven on staging: ADMIN runs the
+whole job lifecycle and cannot manage roles or permissions, promote itself, alter a SUPER_ADMIN or
+insert audit rows (`rbac-behaviour.test.sql`, 84 assertions). Until the Workspace mailboxes can
+actually complete Google sign-in, an ADMIN exists in the database but cannot log in.
 
-Proven on staging: an ADMIN can run the whole job lifecycle and work applications, and **cannot**
-manage roles or permissions, promote itself, alter a SUPER_ADMIN, or insert audit rows. Those refusals
-are asserted in `rbac-behaviour.test.sql` (84 assertions), which must pass on Mumbai production before
-the first real sign-in.
+## 10. Production environment verification, and `SUPABASE_SERVICE_ROLE_KEY`
 
-Sequencing note: `careers@gogulf.co` and `admin@gogulf.co` are still pending on Google's side. Until
-each mailbox can actually complete Google sign-in, an ADMIN exists in the database but cannot log in.
-Confirm the Workspace accounts before treating staff access as ready.
+**Present in Vercel Production**, stored as type `sensitive` — write-only, so the API will not
+return it. Verified by name and target, not by value.
 
-## 10. RLS and security verification
+What that means for the cutover, stated precisely:
 
-- **25 tables, all with RLS**, 65 policies, 14 SECURITY DEFINER functions on Mumbai staging
-  (`has_perm`, `is_staff`, `scope_allows`, `write_audit_log`, `record_document_access`,
-  `job_applications_intake`, `jobs_audit`, `resolve_contact`, …).
-- **280/280 SQL assertions** pass, covering anon, non-staff, VIEW_ONLY, RECRUITER, MARKETING, HR,
-  ADMIN and SUPER_ADMIN behaviour — not just policy existence.
-- Named anon guarantees, asserted rather than assumed: no table-wide SELECT on `jobs`; only the public
-  columns a listing shows; `internal_notes` unreadable; drafts and archived jobs invisible; no job may
-  be deleted by any API role (archive only); `job_applications` writable by column, never readable.
-- `job_applications` privileges on Mumbai staging: `authenticated=SELECT`, `service_role=DISU`, and
-  column-level `anon` INSERT limited to `cv_path, email, experience, full_name, id, job_country, job_id,
-  job_title, message, other_paths, page_source, passport_path, phone` — notably **not** `status`.
-- Storage: 2 policies on a private bucket; staff read is policy-gated, and the public has no path to
-  an object.
-- `npm run check:secrets`: 134 build-output files scanned, no server-only secret reachable from the client.
-- Hosted REST probes recorded at the staging release: closed-job application 400, anon `status` 401,
-  anon read 401, draft invisible, `internal_notes` 401.
+- ✅ The variable exists in the Production environment.
+- ✅ It is **not** `NEXT_PUBLIC_*`, and no `NEXT_PUBLIC_*` variable carries a secret-shaped name.
+- ✅ `lib/supabase/admin.ts` requires it through `requireServerEnv`, imports `server-only`, and
+  throws if called in a browser; the client-bundle scan finds no server-only secret in 134 files.
+- ❓ **Whether the value is Mumbai production's key and not Tokyo's cannot be proved from here.**
+  The safe check is on the Supabase side: in the **Mumbai production** project (`exsnksrmkycloxiajwmx`)
+  → Settings → API, compare the service-role key's first and last six characters with what was
+  pasted into Vercel. Do not paste the key anywhere else to compare it.
+- ⚠️ Adding it **does not** bring the cutover forward: while `NEXT_PUBLIC_SUPABASE_URL` still names
+  Tokyo, a production server-side call would use a Mumbai key against a Tokyo URL and fail. The
+  URL and the keys must change **together**, at cutover.
 
-**These results are from Mumbai staging.** The same suites must be run on Mumbai production after
-`0012`/`0013` and before any real data exists.
+Local files, checked without printing any value (`node scripts/check-secret-config.mjs`):
+`.env.prod-supabase.local` → Mumbai production (`exsnksrmkycloxiajwmx`) with a service-role key;
+`.env.development.local` / `.env.production.local` → local Supabase; `.env.local` → no Supabase URL.
 
-## 11. Application → Contact → Case: privacy and data-processing implications
+## 11. Razorpay infrastructure — built, deployed, not enabled
 
-`0013` lets staff convert a job application into a CRM **contact** and a **case**. That is new
-processing of applicant personal data, and it is the item on this list with a legal, not technical,
-gate.
+**Scope: consultation fees only.** No pay-to-apply, no candidate payment UI, no payment gate on
+any application. `docs/PAYMENTS.md` is the full document; the guards are:
 
-- **What changes:** an applicant who submitted a CV and passport scan for one job becomes a durable
-  contact record with a case history, retained beyond the life of that application.
-- **Lawful basis and notice:** the privacy policy must say that applications become contact and case
-  records, for what purpose, for how long, and how to ask for deletion (DPDP data-principal rights).
-  The current policy was written for a form that emails a CV — it does not describe a CRM.
-- **Consent flags on import:** email `true`; **WhatsApp, SMS and marketing `false`**. They consented to
-  a job application, nothing more. Manufacturing consent is the expensive mistake here.
-- **Imported cases** land in a "Legacy — imported, not triaged" stage, unassigned, with `opened_at` set
-  to the original application date — so nobody mistakes them for worked leads.
-- **Documents import as `uploaded`, never `approved`** — nobody verified them, and recording otherwise
-  fabricates an audit trail.
-- **Minimisation in the audit trail:** triage and conversion are audited without PII (§15).
-- **Not yet done:** the privacy review itself. It is listed as a blocker (§19, B4), and it should
-  precede the first real conversion, not the cutover of the website.
+| Guard | Where |
+| --- | --- |
+| `payment_purpose` enum has exactly one value, `consultation` | `0014` |
+| `payments` has **no** job or application column, in either direction | `0014` |
+| `jobs_paid_application_not_public` CHECK still refuses to publish a paid-access job | `0012`, untouched |
+
+**Schema (`0014_payments.sql`)** — `payments` (reference `GG-PAY-2026-00001`, provider order/payment
+ids, `amount_minor` in paise, status, optional contact/case/branch, provider failure code,
+timestamps; a row cannot claim `paid` without `paid_at` **and** a provider payment id) and
+`payment_events` (one row per provider event id, unique — that uniqueness *is* the idempotency
+mechanism). **No raw payload, no payer name, email, phone or card data is stored**; only
+allow-listed fields (amount, currency, method, provider error code).
+
+**Endpoint** — `POST /api/razorpay/webhook`, production URL
+`https://www.gogulf.co/api/razorpay/webhook`. Reads the raw body, verifies
+`x-razorpay-signature` (HMAC SHA-256, constant-time compare, hex-validated), never parses before
+verifying, dedupes on `x-razorpay-event-id`, and returns 503 (unconfigured) / 401 (bad signature) /
+400 (malformed) / 200 (recorded, including duplicates) / 500 (our failure, so Razorpay retries).
+The webhook is the **only** authority on payment state; no client callback writes payment state,
+and `payments` has no INSERT/UPDATE/DELETE policy at all.
+
+**Idempotency and ordering**, asserted in SQL: a replayed event id is a `duplicate`; a late
+`payment.authorized` after `order.paid` is `ignored`; `payment.failed` never erases a payment that
+succeeded; a failure for a payment that had not succeeded applies and keeps the provider's error
+code; an event for an unknown order is recorded and ignored, never invented. Each applied
+transition writes a `system` / `razorpay` audit entry with no payer identity.
+
+**Test-mode result (live HTTP against a local production server, 9/9):**
+
+| Case | Expected | Got |
+| --- | --- | --- |
+| Signed `order.paid` | 200 | 200 `ok / ignored` (no matching order — correct) |
+| Same event id replayed | 200 `duplicate` | 200 `duplicate` |
+| Body altered after signing | 401 | 401 |
+| No signature header | 401 | 401 |
+| Signed with a different secret | 401 | 401 |
+| Signed, no event id header | 400 | 400 |
+| Signed body that is not JSON | 400 | 400 |
+| Signed JSON that is not an event | 400 | 400 |
+| Signed `payment.failed` | 200 | 200 |
+
+The database then held exactly **two** event rows (the replay deduplicated, the unsigned and
+malformed requests never reached it) — the full chain, not just the HTTP layer.
+
+**Not built, deliberately:** the consultation checkout UI, any receipt workflow, and any call site
+for `createConsultationOrder()` (which exists, refuses live keys outside production, and writes the
+payment row *before* the provider call).
+
+**Razorpay dashboard configuration required** (nothing has been done):
+
+| | Test mode | Live mode |
+| --- | --- | --- |
+| Webhook URL | `https://staging.gogulf.co/api/razorpay/webhook` | `https://www.gogulf.co/api/razorpay/webhook` |
+| Secret | New random secret → Vercel **Preview** `RAZORPAY_WEBHOOK_SECRET` | New random secret → Vercel **Production** `RAZORPAY_WEBHOOK_SECRET`, set **before** saving the webhook |
+| Events | `order.paid`, `payment.authorized`, `payment.failed` | same |
+
+Do not enable the live webhook until §8 of `docs/PAYMENTS.md` passes — in particular, there is no
+checkout yet, so there would be no orders for it to be about.
+
+**Credential state.** `.env.local` holds **live-mode** Razorpay credentials. On Vercel the three
+Razorpay variables were set to **preview + production**; with the user's approval the **Preview
+scope was removed this pass**, so live credentials no longer reach staging. Two guards now enforce
+that: `scripts/check-staging-isolation.mjs` fails a staging/preview build carrying a live key id
+(warning only on a developer machine), and `ordersAllowed()` refuses order creation with a live key
+outside a production deployment.
 
 ## 12. Job publishing safeguards
 
-- Lifecycle `draft → review → published → closed → archived`, with the reverse moves that make sense
-  (unpublish, reopen, restore). **Jobs are archived, never deleted** — no API role holds DELETE, and
-  `jobs` carries no DELETE or ALL policy.
-- Staff create **drafts only**. `job_publish_problems` blocks review/publish unless the listing states
-  the minimum a genuine vacancy needs: title, place, category, a closing date that is still ahead if it
-  is time-limited, requirements if professional, and free application access.
-- Public exposure is RLS-bounded to `status in ('published','closed')`; drafts, in-review and archived
-  jobs 404 for everyone, including by direct URL.
-- Closed jobs explain themselves and refuse applications; `JobPosting` structured data appears only on
-  open jobs; the sitemap lists open jobs only.
-- Every lifecycle action is audited with the acting staff email and the changed fields only
-  (`job.published`, `job.unpublished`, `job.closed`, `job.reopened`, `job.archived`, `job.restored`,
-  `job.featured`, `job.featured_until_changed`, …).
-- Publishing revalidates the public paths, so a publish is visible on the next request — no deploy needed.
-- **Content rule for production (decision D4):** publish only confirmed listings. The 12 `STAGING TEST`
-  jobs exist only on staging; the seed refuses any production target and refuses to run without the
-  staging marker.
+Unchanged by this pass. Lifecycle `draft → review → published → closed → archived`; jobs are
+archived, never deleted (no DELETE privilege, no DELETE/ALL policy); `job_publish_problems` blocks
+publication until the listing states place, category, a future closing date if time-limited,
+requirements if professional, and free application access; drafts/in-review/archived 404 publicly;
+`JobPosting` only on open jobs; sitemap lists open jobs only; every lifecycle action audited with
+the acting staff email and changed fields; publishing revalidates the public paths.
 
 ## 13. Free/Ongoing vs Professional/Featured architecture
 
-Five independent concepts, deliberately not collapsed into one "job type":
-
-| Concept | Column(s) | Values |
-| --- | --- | --- |
-| Classification | `classification` (from the category) | `general`, `professional` |
-| Lifecycle | `status` | `draft`, `review`, `published`, `closed`, `archived` |
-| Availability | `availability`, `closes_on` | `ongoing` (no date), `time_limited` (date required to publish) |
-| Promotion | `promotion`, `featured_until` | `standard`, `featured` (optionally until a date) |
-| Application access | `application_access`, `application_method` | `free`, `paid` · `online_form`, `whatsapp` |
-
-Live combinations today: **Professional + Featured + Free**, **General + Ongoing + Free**, and —
-only once an approved payment flow exists — Professional + Standard + Paid.
-
-**Featured is read, never written back:** a job is featured while `promotion = 'featured'` and
-`featured_until` has not passed (inclusive, India time). Nothing mutates when it lapses, so there is no
-scheduled job to fail and no stale flag to clean up. Presentation order is featured, then ongoing and
-general hiring, then professional. No urgency is derived from data — a closing date is shown as a date,
-never as "closing soon".
+Five independent concepts — classification, lifecycle, availability, promotion, application access
+— never collapsed into one "job type". Live combinations: Professional + Featured + Free, General +
+Ongoing + Free, and (only with an approved payment flow) Professional + Standard + Paid. Featured is
+**read, never written back**: a job is featured while `promotion = 'featured'` and `featured_until`
+has not passed, so nothing mutates when it lapses. No urgency is derived from data.
 
 ## 14. Paid application protection and the Razorpay boundary
 
-Paid application access is modelled but **cannot go live by configuration**. Four independent guards:
+Four independent guards, unchanged and now re-asserted alongside the payments schema: the CHECK
+constraint refusing paid + published/closed; `jobs_before_write` naming `paid_application_unavailable`;
+`job_applications_intake` refusing an application to any job that is not published **and** free; and
+the staff form stating that paid application access is unavailable. `0014` adds a fifth: there is no
+column anywhere that could link a payment to an application.
 
-1. **`jobs_paid_application_not_public`** — a CHECK constraint:
-   `NOT (status IN ('published','closed') AND application_access = 'paid')`. A constraint, not a
-   settings flag, so switching paid applications on requires a migration and a review.
-2. **`jobs_before_write`** names the problem (`paid_application_unavailable`) when a publish is attempted.
-3. **`job_applications_intake`** refuses an application to any job that is not published **and** free.
-4. The staff form states that paid application access is not currently available.
-
-The SQL suite asserts exactly this, in these words: *"paid application access cannot be public:
-enforced by a CHECK constraint, not a setting."*
-
-**Razorpay boundary:** approved for consultation fees only. There is no candidate payment flow, no
-Razorpay code path in the application, and **no Razorpay variable in the Vercel production
-environment** — confirmed today. Keep it that way at cutover; adding keys would create a payment
-surface with nothing behind it.
+Razorpay is approved for consultation fees only. The live credentials are Production-only and no
+code path charges a candidate.
 
 ## 15. Audit-log coverage
 
-- `audit_logs` is partitioned (`audit_logs_2026`, `audit_logs_2027`, `audit_logs_default`) with
-  `ensure_audit_partition` maintaining it.
-- Writes go through `write_audit_log` (SECURITY DEFINER). **Staff cannot insert audit rows directly** —
-  asserted for ADMIN and below, including SUPER_ADMIN for the self-service cases.
-- Covered: every job lifecycle action with the acting staff email and changed fields; application triage
-  and conversion (without PII); document opening, recorded by document kind; system seeding.
-- Mumbai staging currently holds 389 rows with `actor_type` in (`staff`, `system`) — 370 of them the
-  expected seed baseline, the rest produced by the rehearsal and your QA.
-- Mumbai production should show **exactly 370 rows, all `actor_type=system`,** before any staff activity.
-  A different number means something has already used the project and needs explaining before cutover.
-- **Known caveat:** `record_document_access` writes its audit entry *before* the signed link is issued,
-  so a Storage failure afterwards leaves an "opened" entry for a document that never opened. The bias is
-  toward over-recording access, which is the safer direction, but it is not a precise record of what a
-  member of staff actually saw.
+`audit_logs` partitioned (`2026`, `2027`, default) with `ensure_audit_partition`. Writes go through
+`write_audit_log` (SECURITY DEFINER); staff cannot insert audit rows. Covered: job lifecycle,
+application triage and conversion (without PII), document opening by kind, system seeding, and now
+**payment transitions** (`payment.paid`, `payment.authorized`, `payment.failed` as `system`/`razorpay`,
+asserted to contain no payer identity). Mumbai production must read **exactly 370 rows, all
+`system`**, before any staff activity — verified today.
+
+**Known caveat:** `record_document_access` writes its audit entry *before* the signed link is
+issued, so a Storage failure afterwards leaves an "opened" entry for a document that did not open.
 
 ## 16. Document migration and secure access
 
-**Access (already built):** documents live in a private bucket; staff reach them only through a server
-route that checks permission, issues a short-lived signed URL and records the access. There is no public
-path to an object, and the anon role cannot read `job_applications` at all.
+Access is built: private bucket, staff-only signed URLs through a permission-checked server route,
+every access recorded. Migration procedure (not run): copy from the **verified archive**, re-verify
+SHA-256 per object and fail the row on mismatch, import documents as `uploaded` (never `approved`),
+quarantine phone numbers that fail E.164, keep the working copy on an encrypted volume on one named
+machine, revoke Tokyo's anon INSERT only after the delta is zero, retain read-only 30 days.
 
-**Migration procedure (not yet run):**
-
-1. Copy from the **verified archive**, never the live bucket, into
-   `contacts/{contact}/cases/{case}/{document}.{ext}`.
-2. Re-verify SHA-256 after upload; **a mismatch fails that row** rather than logging a warning.
-3. Import documents with status `uploaded`, never `approved`.
-4. Quarantine any phone number that fails E.164 for manual review — never guess a normalisation, because
-   a wrong one silently merges two different people.
-5. Keep the working copy on an encrypted volume on one named machine — not a synced folder, not the repo,
-   not a ticket, not an AI tool. Delete it once the migration is verified, and record who ran it, when,
-   and where the archive lives.
-6. Revoke Tokyo's legacy anon INSERT **after** the delta is zero (this is the one-way door in §5).
-7. Retain Tokyo read-only for 30 days, then archive, then delete with written sign-off.
-
-Note for the smoke test: the 14 rehearsal applications on staging carry **synthetic documents (random
-bytes by design)**, so opening one shows an unreadable file. That is expected and is not a defect. A
-genuine end-to-end document check needs a freshly submitted application.
+Note for smoke-testing: staging's rehearsal documents are synthetic random bytes by design, so they
+open as unreadable files. A genuine document check needs a freshly submitted application.
 
 ## 17. Production smoke-test plan (after cutover, before announcing)
 
-Run in this order; stop at the first failure and consult §18.
-
-1. **Build and isolation** — the deployment's build log shows the isolation guard passing and names the
-   Mumbai production project.
-2. **Bundle identity** — the live chunks name exactly one Supabase ref, `exsnksrmkycloxiajwmx`; no
-   `julbqkeyvzwluayokcdi`, `wxolbnhyzktfjdvcnixc` or `noxireidrbeqcvsirjec` anywhere.
-3. **Public pages** — `/`, `/jobs`, a job page, `/candidates`, `/employers`, `/services`, `/about`,
-   `/contact`, `/verify`, `/pricing`, both policies: all 200, correct company facts, no "STAGING TEST"
-   content anywhere.
-4. **Structured data and indexing** — `Organization` JSON-LD asserts only verified facts; `JobPosting`
-   only on open jobs; `robots.txt` and `sitemap.xml` correct; production is **not** `noindex`.
-5. **Job visibility** — a draft and an archived job 404 by direct URL; a closed job explains itself and
-   refuses applications.
-6. **Application intake** — submit one real test application with a real CV and passport file; confirm
-   the row lands in Mumbai production, the documents upload, the acknowledgement email arrives through
-   Resend, and the internal notification reaches the right desk.
-7. **Document access** — open that application's CV and passport from `/admin` as staff; confirm both
-   render and that the access is audited by kind.
-8. **Staff sign-in** — each administrator signs in with Google individually; verify the claims
-   (`app_role`, `app_staff_id`, `app_branch`) with `verify-google-signin.sql`; confirm an `@gmail.com`
-   identity gets nothing.
-9. **Admin gate** — `/admin` without a session redirects to `/admin/login?next=…`; `/admin/login` is
-   `noindex`.
-10. **Authorisation** — ADMIN can run the job lifecycle; ADMIN cannot manage roles or permissions,
-    promote itself, or alter a SUPER_ADMIN.
-11. **Security headers** — `x-content-type-options`, `x-frame-options`, `referrer-policy`,
-    `strict-transport-security`, `permissions-policy` present; no `x-powered-by`.
-12. **Clean up** — delete the test application and its documents from Mumbai production, and record that
-    you did.
+1. Build log shows the isolation guard passing and names Mumbai production.
+2. Live bundle names exactly one Supabase ref, `exsnksrmkycloxiajwmx`.
+3. Public pages 200 with correct company facts and no "STAGING TEST" content anywhere.
+4. `Organization` JSON-LD asserts only verified facts; `JobPosting` only on open jobs; robots and
+   sitemap correct; production is **not** `noindex`.
+5. A draft and an archived job 404 by direct URL; a closed job refuses applications.
+6. Submit one real test application with real files: row lands in Mumbai production, documents
+   upload, acknowledgement and internal emails arrive through Resend.
+7. Open that application's CV and passport from `/admin`; both render; access is audited by kind.
+8. Each administrator signs in with Google individually; claims verified; an `@gmail.com` identity
+   gets nothing.
+9. `/admin` without a session redirects; `/admin/login` is `noindex`.
+10. ADMIN can run the job lifecycle; cannot manage roles or permissions.
+11. Security headers present; no `x-powered-by`.
+12. `POST /api/razorpay/webhook` with no signature returns 401 (or 503 if no secret is set) —
+    confirming the endpoint is live but closed.
+13. Delete the test application and its documents, and record that you did.
 
 ## 18. Exact conditions that must stop or reverse the cutover
 
 **Stop before switching traffic** if any of these is true:
 
-- `0012`/`0013` do not both appear in `schema_migrations` on Mumbai production, or the SQL suites do not
-  report 280/280 there.
-- Mumbai production shows any pre-existing live data: applications, contacts, cases, staff, auth users or
-  storage objects — or an audit-row count other than 370, all `system`.
+- `0012`, `0013`, `0014` are not all in `schema_migrations` on Mumbai production, or the SQL suites
+  do not report 316/316 there.
+- Mumbai production shows any pre-existing live data, or an audit-row count other than 370 all `system`.
 - The delta check reports a difference the archive does not contain, or any SHA-256 mismatch.
 - The deployed bundle names more than one Supabase project, or names Tokyo.
-- `SUPABASE_SERVICE_ROLE_KEY` is missing in production, or any server-only secret appears in client output.
-- Google sign-in does not work for **every** administrator, or a non-Workspace account can obtain a role.
-- A draft, in-review or archived job is publicly reachable; or a paid job can be published.
-- The full E2E suite has not been run against the cutover commit (§19, P1).
+- `SUPABASE_SERVICE_ROLE_KEY` is missing, or is not the Mumbai production key (§10), or any
+  server-only secret appears in client output.
+- Google sign-in does not work for **every** administrator, or a non-Workspace account obtains a role.
+- A draft, in-review or archived job is publicly reachable, or a paid job can be published.
+- The full E2E suite has not been run against the exact cutover commit.
 
 **Roll back after switching** if any of these appears:
 
-- Applications fail to submit, or documents fail to upload, or a submitted document cannot be retrieved.
-- Any applicant data is written to the wrong project, or an application arrives with missing document paths.
-- Any unauthenticated access to `job_applications`, `contacts`, `cases` or the storage bucket succeeds.
+- Applications fail to submit, documents fail to upload, or a submitted document cannot be retrieved.
+- Applicant data is written to the wrong project, or an application arrives with missing document paths.
+- Any unauthenticated access to `job_applications`, `contacts`, `cases`, `payments` or the bucket succeeds.
 - Staff cannot sign in, or a member of staff receives the wrong role.
 - The live site serves staging or test content, or `noindex` reaches production.
-- Error rates or 5xx responses rise materially above the pre-cutover baseline and are not explained
-  within the first hour.
-
-Roll back by promoting `dpl_9RaneE2dUCaRfmGifXYfumUjWDL9` and restoring the Tokyo Supabase variables
-(§5). While Tokyo still holds its data and its intake grant, this is a five-minute reversal.
+- 5xx rates rise materially above the pre-cutover baseline and are unexplained within the first hour.
 
 ## 19. Remaining blockers and prerequisites
+
+**Closed this pass:** the automation-bypass rotation, the Mumbai production inventory, the full E2E
+run against the current commit, and live Razorpay credentials sitting in the staging environment.
 
 **Prerequisites still to complete (in order):**
 
 | | Item | Owner |
 | --- | --- | --- |
-| P1 | Run the **full E2E and axe suites against `384f58a`** — the home page changed after the last full run. Do it on an idle machine with `--workers=1` or `2`; free memory was 232 MB today, and heavy runs under ~1 GB produce false timeouts | Me, on your word |
-| P2 | **Rotate the Vercel automation-bypass secret** — see below; it is still the 10 Sep value | You (Vercel dashboard) |
-| P3 | Independently verify Mumbai production's current state with the read-only snippet (§C.1) | You |
-| P4 | Apply `0012`/`0013` to Mumbai production and run the suites there — **only while it holds no live data** | You, or me with explicit approval |
-| P5 | Create the production Google OAuth client (Internal) and apply the Supabase auth settings | You (Google Cloud) |
-| P6 | Bootstrap production staff, then verify a real Google sign-in per person | You, or me with explicit approval |
-| P7 | Switch the Vercel production variables and promote the cutover build | You |
+| P1 | Confirm the Production `SUPABASE_SERVICE_ROLE_KEY` is Mumbai production's, by comparing first/last six characters in the Supabase dashboard (§10) | You |
+| P2 | Apply `0012`–`0014` to Mumbai production and run the suites there — **only while it holds no live data** | You, or me with explicit approval |
+| P3 | Create the production Google OAuth client (Internal) and apply the Supabase auth settings | You (Google Cloud) |
+| P4 | Bootstrap production staff, then verify a real Google sign-in per person | You, or me with explicit approval |
+| P5 | Switch the Vercel production Supabase URL + anon key and promote the cutover build | You |
+| P6 | Post-cutover smoke test (§17), then the final delta check and Tokyo intake revocation | Both |
 
 **Blockers not owned by engineering:**
 
 | | Item |
 | --- | --- |
-| B1 | `careers@gogulf.co` and `admin@gogulf.co` Google Workspace accounts must actually be able to sign in |
+| B1 | `careers@gogulf.co` and `admin@gogulf.co` Workspace accounts must actually be able to sign in |
 | B2 | Real job content: only confirmed listings may be published (D4) |
-| B3 | A decision on what happens to applications that arrive during the switch window (§5, row 3) |
-| B4 | **Privacy review** of converting applications into CRM contacts and cases, and a privacy-policy update that describes it, before the first real conversion (§11) |
-| B5 | Written sign-off for the eventual deletion of the Tokyo data after the 30-day retention |
+| B3 | A decision on applications that arrive during the switch window |
+| B4 | **Privacy review** of converting applications into CRM contacts and cases, and a privacy-policy update describing it — plus payment records as personal data (§11) before any consultation charge |
+| B5 | Written sign-off for deleting the Tokyo data after the 30-day retention |
 
-**Security-sensitive items that still need manual handling:**
+**Security-sensitive items still needing manual handling:**
 
-- **Vercel automation-bypass secret — not rotated.** The project's `automation-bypass` entry was created
-  **2026-09-10T15:18:55Z**, and the leak into a local Playwright log happened on 17 Sep, so the exposed
-  value is still live. Regenerate it at Project → Settings → Deployment Protection. Nothing in this
-  report printed it, and staging e2e output must stay filtered because Playwright prints request headers
-  on failure.
-- Service-role keys and database passwords live only in gitignored env files; `.env.prod-supabase.local`
-  is misleadingly named — it holds **Mumbai** keys, not Tokyo. Read the URL in a file before using it.
-- Google OAuth client creation and every staff sign-in need a human in a browser; they cannot be automated.
-- Applicant documents are regulated data: encrypted volume, one named machine, no ticket, no chat, no AI tool.
-- Production reads from this session are blocked by the auto-mode classifier — if you want me to verify
-  Mumbai production directly, you will need to allow it explicitly.
+- **Razorpay live webhook**: not configured, and must not be until `docs/PAYMENTS.md` §8 passes.
+- **Razorpay test webhook**: needs a dashboard secret and a Vercel **Preview** variable before
+  staging can receive a real delivery; local probing covers the same code paths meanwhile.
+- Google OAuth client creation and every staff sign-in need a human in a browser.
+- `.env.prod-supabase.local` is misleadingly named: it holds **Mumbai** keys, not Tokyo.
+- `.env.local` holds **live** payment credentials; treat that machine accordingly.
+- Applicant documents are regulated data: encrypted volume, one named machine, no ticket, no chat,
+  no AI tool.
+- The rotated automation-bypass secret is fetched from the Vercel API at call time by the test
+  tooling — nothing needs updating by hand, and nothing should paste it anywhere.
 
 ---
 
-## What I have not done
-
-No production change of any kind: Tokyo untouched, Mumbai production untouched, no Vercel variable
-edited, no OAuth configuration created, no staff or auth user created, no data migrated, no DNS change,
-no merge to `main`, no tag pushed. The only repository change accompanying this report is the read-only
-inventory snippet it references.
-
-**This report makes no recommendation and grants no approval. The cutover decision is yours.**
+**This report makes no recommendation and grants no approval. Production database cutover has NOT
+been performed. The decision is yours.**

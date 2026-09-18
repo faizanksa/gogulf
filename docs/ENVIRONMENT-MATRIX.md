@@ -68,8 +68,8 @@ never logged.
 | --- | --- | --- |
 | `SUPABASE_SERVICE_ROLE_KEY` | **Bypasses all RLS** | Webhooks, cron, migration tooling, system automation **only**. Never in a user request path |
 | `SUPABASE_DB_URL` | Direct Postgres | Migrations and CI only |
-| `RAZORPAY_KEY_SECRET` | Signs orders | Live value exists only in production |
-| `RAZORPAY_WEBHOOK_SECRET` | HMAC over the raw webhook body | **Distinct** from `RAZORPAY_KEY_SECRET` — set in the Razorpay dashboard |
+| `RAZORPAY_KEY_SECRET` | Signs orders | Live value exists only in production. A live key id (`rzp_live_…`) fails the staging/preview build and is refused at run time outside production — `docs/PAYMENTS.md` §5 |
+| `RAZORPAY_WEBHOOK_SECRET` | HMAC over the raw webhook body | **Distinct** from `RAZORPAY_KEY_SECRET` — generated in the Razorpay dashboard when the webhook is created, not derived from the API keys. Until it is set, `/api/razorpay/webhook` answers 503 and Razorpay retries |
 | `RESEND_API_KEY` | Transactional email | |
 | `RESEND_FROM_EMAIL` / `RESEND_REPLY_TO` | e.g. `no-reply@` / `careers@gogulf.co` | Not secret, but server-side by convention |
 | `RESEND_WEBHOOK_SECRET` | Delivery and bounce events | |

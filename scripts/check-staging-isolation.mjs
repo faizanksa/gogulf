@@ -112,6 +112,7 @@ if (isProductionDeploy) {
   }
 
   console.log(`Supabase API: ${describe(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "")}`);
+  console.log(`Razorpay: ${razorpayMode()} key`);
   console.log("PASS — production build carries its required configuration.");
   process.exit(0);
 }
@@ -119,6 +120,14 @@ if (isProductionDeploy) {
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const dbUrl = process.env.SUPABASE_DB_URL ?? "";
 const failures = [];
+
+/** live / test / none — from the key id prefix; the key itself is never printed. */
+function razorpayMode() {
+  const id = process.env.RAZORPAY_KEY_ID ?? "";
+  if (id.startsWith("rzp_live_")) return "live";
+  if (id.startsWith("rzp_test_")) return "test";
+  return id ? "unrecognised" : "no";
+}
 
 function refOf(value) {
   // https://<ref>.supabase.co   or   postgres://…@db.<ref>.supabase.co:5432/…
@@ -162,6 +171,28 @@ for (const [name, value] of Object.entries({
   } catch {
     // Not a decodable JWT (newer publishable key format). The URL check is the
     // primary guard; this is a secondary one.
+  }
+}
+
+// Razorpay keys carry their mode in the key id. A live key on a deployed
+// non-production environment can take real money from a real card during a test,
+// which is the payments equivalent of writing to the production database — so it
+// fails this guard exactly as a production Supabase URL would.
+//
+// On a developer's own machine it is a warning, not a failure: live credentials do
+// legitimately sit in .env.local, and lib/payments/razorpay.ts already refuses to
+// create an order with them outside a production deployment. Breaking `npm run dev`
+// would teach people to delete the guard.
+console.log(`Razorpay: ${razorpayMode()} key`);
+if (razorpayMode() === "live") {
+  if (label === "local") {
+    console.warn(
+      "\nWARNING — a LIVE Razorpay key is in scope for this local run.\n" +
+        "  Order creation is refused outside production (lib/payments/razorpay.ts),\n" +
+        "  and the webhook route only verifies signatures. Use test keys for payment work.\n",
+    );
+  } else {
+    failures.push("RAZORPAY_KEY_ID is a LIVE key. Only a production deploy may carry live payment credentials.");
   }
 }
 

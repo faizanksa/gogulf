@@ -1,0 +1,120 @@
+/**
+ * Prove the Razorpay webhook endpoint behaves, against a running server.
+ *
+ *   node scripts/razorpay-webhook-probe.mjs --base=http://127.0.0.1:3100 --secret=whsec_local_test
+ *   node scripts/razorpay-webhook-probe.mjs --base=https://staging.gogulf.co          # expects 503 until configured
+ *
+ * Sends: a correctly signed event, the same event id again (replay), a body altered
+ * after signing, an unsigned request, a body that is not JSON, and one that is JSON
+ * but not an event. Prints one line per case with the status code and the outcome the
+ * endpoint reported.
+ *
+ * SAFETY
+ *   - Never prints the secret or a signature.
+ *   - Sends only synthetic order/payment ids (`order_PROBE…`), which match no real
+ *     payment, so a run against a configured environment records ignored events and
+ *     changes no money state.
+ *   - Uses the secret passed on the command line, never a live credential from a file.
+ */
+
+import { createHmac, randomUUID } from "node:crypto";
+
+const arg = (name, fallback) => (process.argv.find((a) => a.startsWith(`--${name}=`)) ?? `--${name}=${fallback ?? ""}`).split("=").slice(1).join("=");
+
+const base = arg("base", "http://127.0.0.1:3100").replace(/\/$/, "");
+const secret = arg("secret", "");
+const url = `${base}/api/razorpay/webhook`;
+
+const sign = (body) => createHmac("sha256", secret).update(body, "utf8").digest("hex");
+
+const event = (type, extra = {}) =>
+  JSON.stringify({
+    entity: "event",
+    event: type,
+    payload: {
+      payment: {
+        entity: {
+          id: `pay_PROBE${Math.floor(Math.random() * 1e6)}`,
+          order_id: "order_PROBE000000001",
+          amount: 500000,
+          currency: "INR",
+          method: "upi",
+          ...extra,
+        },
+      },
+    },
+  });
+
+const post = async (label, { body, signature, eventId }) => {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      ...(signature ? { "x-razorpay-signature": signature } : {}),
+      ...(eventId ? { "x-razorpay-event-id": eventId } : {}),
+    },
+    body,
+  });
+  let outcome = "";
+  try {
+    const json = await res.json();
+    outcome = `${json.status ?? ""}${json.outcome ? ` / ${json.outcome}` : ""}`;
+  } catch {
+    outcome = "(no json body)";
+  }
+  console.log(`  ${String(res.status).padEnd(4)} ${label.padEnd(44)} ${outcome}`);
+  return res.status;
+};
+
+console.log(`Probing ${url}${secret ? "" : "  (no --secret given: expecting 503 or 401 only)"}\n`);
+
+const paid = event("order.paid");
+const replayId = `evt_PROBE_${randomUUID()}`;
+const results = {};
+
+results.signed = await post("signed order.paid", { body: paid, signature: secret ? sign(paid) : undefined, eventId: replayId });
+results.replay = await post("same event id again (replay)", { body: paid, signature: secret ? sign(paid) : undefined, eventId: replayId });
+
+const tampered = paid.replace("500000", "100000");
+results.tampered = await post("body altered after signing", { body: tampered, signature: secret ? sign(paid) : undefined, eventId: `evt_PROBE_${randomUUID()}` });
+
+results.unsigned = await post("no signature header", { body: paid, eventId: `evt_PROBE_${randomUUID()}` });
+results.wrongSecret = await post("signed with a different secret", {
+  body: paid,
+  signature: createHmac("sha256", "not-the-secret").update(paid, "utf8").digest("hex"),
+  eventId: `evt_PROBE_${randomUUID()}`,
+});
+
+results.noEventId = await post("signed, but no event id header", { body: paid, signature: secret ? sign(paid) : undefined });
+
+const notJson = "{not json";
+results.notJson = await post("signed body that is not JSON", { body: notJson, signature: secret ? sign(notJson) : undefined, eventId: `evt_PROBE_${randomUUID()}` });
+
+const notEvent = JSON.stringify({ hello: "world" });
+results.notEvent = await post("signed JSON that is not an event", { body: notEvent, signature: secret ? sign(notEvent) : undefined, eventId: `evt_PROBE_${randomUUID()}` });
+
+const failed = event("payment.failed", { error_code: "BAD_REQUEST_ERROR", error_description: "probe" });
+results.failed = await post("signed payment.failed", { body: failed, signature: secret ? sign(failed) : undefined, eventId: `evt_PROBE_${randomUUID()}` });
+
+console.log("");
+if (!secret) {
+  const ok = [results.signed, results.unsigned].every((s) => s === 503 || s === 401);
+  console.log(ok ? "PASS — the endpoint is deployed and refuses everything while unconfigured." : "FAIL — unexpected status for an unconfigured endpoint.");
+  process.exit(ok ? 0 : 1);
+}
+
+const expected = {
+  signed: 200,
+  replay: 200,
+  tampered: 401,
+  unsigned: 401,
+  wrongSecret: 401,
+  noEventId: 400,
+  notJson: 400,
+  notEvent: 400,
+  failed: 200,
+};
+const wrong = Object.entries(expected).filter(([k, v]) => results[k] !== v);
+for (const [k, v] of wrong) console.log(`  expected ${v} for ${k}, got ${results[k]}`);
+console.log(wrong.length === 0 ? "PASS — signature, replay and malformed-input handling all behave." : "FAIL — see above.");
+process.exit(wrong.length === 0 ? 0 : 1);
