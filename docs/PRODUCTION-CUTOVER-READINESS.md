@@ -184,7 +184,7 @@ pass; now Production-only)**.
 | `NEXT_PUBLIC_SUPABASE_URL` | → `https://exsnksrmkycloxiajwmx.supabase.co` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | → Mumbai production anon key |
 | `SUPABASE_SERVICE_ROLE_KEY` | **Present.** Confirm it is Mumbai production's, not Tokyo's — see §10; it cannot be read back |
-| `PLATFORM_MODE` | Confirm `server` (production currently builds the static export from `main`, whose `vercel.json` is `npm run build`) |
+| `PLATFORM_MODE` | Confirm `server`. *(Corrected 18 Sep: the live `519cb85` build is already server mode — this variable took effect although `main`'s `vercel.json` is `npm run build`. See `docs/MAIN-RELEASE-READINESS.md` §1.)* |
 | Build command | Comes with the merge: the branch's `vercel.json` is `cross-env PLATFORM_MODE=server npm run build` |
 | `APP_ENV` | **Not required** — `deploymentStage()` resolves production from `VERCEL_ENV=production`. Never set `APP_ENV=staging` there |
 | `NEXT_PUBLIC_EMAILJS_*` | Retire if any remain |
@@ -249,8 +249,10 @@ is expected at this stage.
 
 **What that means, precisely:**
 
-- ✅ Today nothing breaks: production is a static export from `main` with no server routes, so
-  no code path uses the service-role key.
+- ✅ Today nothing breaks: the live `519cb85` build has no `createAdminClient()` call site and
+  predates the key, so no code path uses the service-role key. *(Corrected 18 Sep: it is a server
+  build, not a static export — `docs/MAIN-RELEASE-READINESS.md` §1.)* From `304130c` a production
+  build that pairs a Tokyo URL with this key is refused at prebuild.
 - ⚠️ **The URL, the anon key and the service-role key must be switched together, in one change.**
   Merging the server build to `main` while `NEXT_PUBLIC_SUPABASE_URL` still names Tokyo would
   send a Mumbai key to a Tokyo endpoint; the result is `PGRST301` (rejected JWT) on every
