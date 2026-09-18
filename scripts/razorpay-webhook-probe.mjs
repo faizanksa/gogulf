@@ -26,6 +26,13 @@ const base = arg("base", "http://127.0.0.1:3100").replace(/\/$/, "");
 const secret = arg("secret", "");
 const url = `${base}/api/razorpay/webhook`;
 
+// With no --order, the probe uses an order id that matches no payment: every
+// delivery is then recorded and `ignored`, which proves the HTTP and signature
+// layers without touching a real payment. Pass --order to drive an actual payment
+// row through authorized → paid, and --failed-order to drive one to failed.
+const orderId = arg("order", "order_PROBE000000001");
+const failedOrderId = arg("failed-order", orderId);
+
 // Staging sits behind Vercel deployment protection, which answers 401 to anything
 // without the bypass header. Without this, every probe result would be the wall's
 // answer rather than the endpoint's — a test that passes while proving nothing.
@@ -33,7 +40,7 @@ const bypass = base.startsWith(STAGING_ORIGIN) ? await getStagingBypass() : null
 
 const sign = (body) => createHmac("sha256", secret).update(body, "utf8").digest("hex");
 
-const event = (type, extra = {}) =>
+const event = (type, extra = {}, order = orderId) =>
   JSON.stringify({
     entity: "event",
     event: type,
@@ -41,7 +48,7 @@ const event = (type, extra = {}) =>
       payment: {
         entity: {
           id: `pay_PROBE${Math.floor(Math.random() * 1e6)}`,
-          order_id: "order_PROBE000000001",
+          order_id: order,
           amount: 500000,
           currency: "INR",
           method: "upi",
@@ -75,10 +82,12 @@ const post = async (label, { body, signature, eventId }) => {
 
 console.log(`Probing ${url}${secret ? "" : "  (no --secret given: expecting 503 or 401 only)"}\n`);
 
+const authorized = event("payment.authorized");
 const paid = event("order.paid");
 const replayId = `evt_PROBE_${randomUUID()}`;
 const results = {};
 
+results.authorized = await post("signed payment.authorized", { body: authorized, signature: secret ? sign(authorized) : undefined, eventId: `evt_PROBE_${randomUUID()}` });
 results.signed = await post("signed order.paid", { body: paid, signature: secret ? sign(paid) : undefined, eventId: replayId });
 results.replay = await post("same event id again (replay)", { body: paid, signature: secret ? sign(paid) : undefined, eventId: replayId });
 
@@ -100,7 +109,7 @@ results.notJson = await post("signed body that is not JSON", { body: notJson, si
 const notEvent = JSON.stringify({ hello: "world" });
 results.notEvent = await post("signed JSON that is not an event", { body: notEvent, signature: secret ? sign(notEvent) : undefined, eventId: `evt_PROBE_${randomUUID()}` });
 
-const failed = event("payment.failed", { error_code: "BAD_REQUEST_ERROR", error_description: "probe" });
+const failed = event("payment.failed", { error_code: "BAD_REQUEST_ERROR", error_description: "probe" }, failedOrderId);
 results.failed = await post("signed payment.failed", { body: failed, signature: secret ? sign(failed) : undefined, eventId: `evt_PROBE_${randomUUID()}` });
 
 console.log("");
@@ -122,6 +131,7 @@ if (!secret) {
 }
 
 const expected = {
+  authorized: 200,
   signed: 200,
   replay: 200,
   tampered: 401,

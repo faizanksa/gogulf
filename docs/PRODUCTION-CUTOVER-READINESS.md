@@ -232,8 +232,34 @@ actually complete Google sign-in, an ADMIN exists in the database but cannot log
 
 ## 10. Production environment verification, and `SUPABASE_SERVICE_ROLE_KEY`
 
-**Present in Vercel Production**, stored as type `sensitive` — write-only, so the API will not
-return it. Verified by name and target, not by value.
+**Read directly from Vercel on 18 Sep 2026** (project refs are public; no key was printed):
+
+| Variable | Production | Preview |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | **Tokyo** `julbqkeyvzwluayokcdi` | Mumbai staging `noxireidrbeqcvsirjec` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | **Tokyo** (project claim read from the key) | Mumbai staging |
+| `SUPABASE_SERVICE_ROLE_KEY` | present, type `sensitive` (write-only) — **Mumbai production**, per the user's own dashboard check | Mumbai staging (added 18 Sep, preview-only) |
+| `PLATFORM_MODE` | `server` | `server` |
+| `NEXT_PUBLIC_SITE_URL` | `https://www.gogulf.co` | `https://staging.gogulf.co` |
+
+**Internal consistency:** the production URL and anon key name the **same** project (Tokyo) —
+that pair is consistent and correct for today. The service-role key is **deliberately from a
+different project** (Mumbai production), which is the one inconsistency in the environment and
+is expected at this stage.
+
+**What that means, precisely:**
+
+- ✅ Today nothing breaks: production is a static export from `main` with no server routes, so
+  no code path uses the service-role key.
+- ⚠️ **The URL, the anon key and the service-role key must be switched together, in one change.**
+  Merging the server build to `main` while `NEXT_PUBLIC_SUPABASE_URL` still names Tokyo would
+  send a Mumbai key to a Tokyo endpoint; the result is `PGRST301` (rejected JWT) on every
+  privileged call — exactly the failure seen while testing the webhook locally.
+- ✅ It is **not** `NEXT_PUBLIC_*`, and no `NEXT_PUBLIC_*` variable carries a secret-shaped name.
+- ✅ `lib/supabase/admin.ts` requires it through `requireServerEnv`, imports `server-only`, and
+  throws if called in a browser; the client-bundle scan finds no server-only secret in 134 files.
+- ❓ Vercel stores it write-only, so **this session cannot re-verify which project it belongs to**.
+  That check remains the user's dashboard comparison, which they have confirmed.
 
 What that means for the cutover, stated precisely:
 
@@ -306,7 +332,21 @@ malformed requests never reached it) — the full chain, not just the HTTP layer
 for `createConsultationOrder()` (which exists, refuses live keys outside production, and writes the
 payment row *before* the provider call).
 
-**Razorpay dashboard configuration required** (nothing has been done):
+**Staging test-mode webhook — environment configured 18 Sep 2026.** Two **Preview-only**
+variables were added with the user's approval: a generated 24-byte `RAZORPAY_WEBHOOK_SECRET`
+(test, not live) and the **Mumbai staging** `SUPABASE_SERVICE_ROLE_KEY`, without which the
+webhook could reach the database step but not write. Live Razorpay credentials stay scoped to
+`production` alone.
+
+**Full HTTP + database flow verified against Mumbai staging** (the deployed code, built for that
+project): `payment.authorized` → payment `authorized`; `order.paid` → `paid` with `paid_at` and
+the provider payment id; the same event id replayed → `duplicate` with no second row and no
+second transition; `payment.failed` on a second payment → `failed` with `BAD_REQUEST_ERROR`;
+tampered, unsigned and wrongly signed bodies → 401; missing event id, non-JSON and non-event
+bodies → 400. Afterwards the database held three `payment_events` rows, three `system`/`razorpay`
+audit entries, and **zero** event rows containing contact-shaped data.
+
+**Razorpay dashboard configuration required** (still nothing done there):
 
 | | Test mode | Live mode |
 | --- | --- | --- |
@@ -428,12 +468,16 @@ run against the current commit, and live Razorpay credentials sitting in the sta
 
 | | Item | Owner |
 | --- | --- | --- |
-| P1 | Confirm the Production `SUPABASE_SERVICE_ROLE_KEY` is Mumbai production's, by comparing first/last six characters in the Supabase dashboard (§10) | You |
-| P2 | Apply `0012`–`0014` to Mumbai production and run the suites there — **only while it holds no live data** | You, or me with explicit approval |
-| P3 | Create the production Google OAuth client (Internal) and apply the Supabase auth settings | You (Google Cloud) |
-| P4 | Bootstrap production staff, then verify a real Google sign-in per person | You, or me with explicit approval |
-| P5 | Switch the Vercel production Supabase URL + anon key and promote the cutover build | You |
-| P6 | Post-cutover smoke test (§17), then the final delta check and Tokyo intake revocation | Both |
+| P1 | Apply `0012`–`0014` to Mumbai production and run the suites there — **only while it holds no live data** | You, or me with explicit approval |
+| P2 | Create the production Google OAuth client (Internal) and apply the Supabase auth settings | You (Google Cloud) |
+| P3 | Bootstrap production staff, then verify a real Google sign-in per person | You, or me with explicit approval |
+| P4 | Switch the production `NEXT_PUBLIC_SUPABASE_URL` **and** anon key to Mumbai production **in the same change** as promoting the server build — the service-role key already there is Mumbai's, so a half-switch fails every privileged call (§10) | You |
+| P5 | Post-cutover smoke test (§17), then the final delta check and Tokyo intake revocation | Both |
+
+**Closed 18 Sep 2026 (second pass):** the Production service-role key is confirmed by the user as
+Mumbai production's; production URL/anon verified internally consistent (Tokyo); the staging
+test-mode webhook environment is configured and the full HTTP + database flow is proven against
+Mumbai staging.
 
 **Blockers not owned by engineering:**
 

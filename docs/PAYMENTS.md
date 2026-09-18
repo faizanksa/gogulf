@@ -119,26 +119,41 @@ Rules enforced in code, not by convention:
 - `node scripts/check-secret-config.mjs` reports presence, mode and shape of every secret
   **without printing a value**, so this can be reviewed without opening an env file.
 
-**Current state (18 Sep 2026):** `.env.local` carries **live-mode** Razorpay credentials
-(key id, key secret and a webhook secret). No Razorpay variable exists in the Vercel
-project — production or preview — which is correct while no checkout exists.
+**Current state (18 Sep 2026):** `.env.local` carries **live-mode** Razorpay credentials (key
+id, key secret and a webhook secret). On Vercel, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` and
+`RAZORPAY_WEBHOOK_SECRET` hold live values scoped to **`production` only** — they were briefly
+scoped to preview as well, and that was removed. Preview carries a **generated test** webhook
+secret and the Mumbai staging service-role key, nothing live.
 
 ## 6. Razorpay dashboard configuration
 
 Nothing below has been done, and none of it should be done for **live** until the endpoint
 is deployed and verified in test mode.
 
-**Test mode first** (Dashboard → Settings → Webhooks, in *Test Mode*):
+**Test mode — the environment side is already done.** On 18 Sep 2026 two **Preview-only**
+variables were added to Vercel:
+
+| Variable | Value | Type |
+| --- | --- | --- |
+| `RAZORPAY_WEBHOOK_SECRET` | a generated 24-byte test secret | `encrypted` — readable in the Vercel dashboard, which is how you copy it into Razorpay |
+| `SUPABASE_SERVICE_ROLE_KEY` | the **Mumbai staging** key, so the webhook can write | `encrypted` |
+
+Neither is a live credential and neither touches Production, where the live Razorpay
+values and the Mumbai production service-role key remain scoped to `production` alone.
+
+**What is left for you, in the Razorpay dashboard (Test Mode → Settings → Webhooks):**
 
 | Field | Value |
 | --- | --- |
 | Webhook URL | `https://staging.gogulf.co/api/razorpay/webhook` |
-| Secret | Generate a new random secret here; copy it into the Vercel **Preview** environment as `RAZORPAY_WEBHOOK_SECRET`, then redeploy staging |
+| Secret | **Copy it from Vercel** → project `gogulf` → Settings → Environment Variables → Preview → `RAZORPAY_WEBHOOK_SECRET`. Do not generate a new one there, or signatures will not match |
 | Active events | `order.paid`, `payment.authorized`, `payment.failed` |
 
-Staging is behind Vercel deployment protection, so Razorpay's delivery will be refused
-until the webhook path is allowed — either use the bypass, or verify against a local
-server (§7), which is simpler and proves the same code.
+One caveat about a delivery sent from Razorpay's own dashboard: **staging sits behind Vercel
+deployment protection**, so a request without the bypass header is answered by the protection
+wall and never reaches the route. Razorpay would report a failed delivery that says nothing
+about this code. Proving the endpoint with the probe below (which carries the bypass) gives the
+same evidence without opening staging to the internet.
 
 **Live mode — only after §8's checklist passes:**
 
@@ -163,21 +178,57 @@ as the webhook secret.
   out-of-order delivery, failure-after-success, unknown orders, audit content, and who may
   read what.
 
-**By hand, against a local production server** (this is the honest end-to-end test — it
-exercises the real route, the real database function and the real HMAC):
+**By hand, against a running server** (the honest end-to-end test — real route, real database
+function, real HMAC):
 
 ```bash
 npm run build:server
 # A test secret for this run only; never the live one.
 RAZORPAY_WEBHOOK_SECRET=whsec_local_test npm run start -- -p 3100
 node scripts/razorpay-webhook-probe.mjs --base=http://127.0.0.1:3100 --secret=whsec_local_test
+
+# Against deployed staging (the probe fetches the Vercel bypass itself):
+node scripts/razorpay-webhook-probe.mjs --base=https://staging.gogulf.co --secret=<the Preview secret> \
+  --order=order_STG_TEST_PAID_1 --failed-order=order_STG_TEST_FAILED_1
 ```
 
-`scripts/razorpay-webhook-probe.mjs` sends a correctly signed event, a tampered body, an
-unsigned request, a replay of the same event id and a malformed payload, and prints the
-status code for each. It never prints a secret or a signature.
+`scripts/razorpay-webhook-probe.mjs` sends a signed `payment.authorized`, a signed `order.paid`,
+a replay of the same event id, a tampered body, an unsigned request, one signed with the wrong
+secret, one with no event id, a non-JSON body, JSON that is not an event, and a signed
+`payment.failed` — printing the status for each. It never prints a secret or a signature.
+Without `--order` it uses an order id that matches no payment, so a run against a live
+environment records ignored events and moves no money state.
 
-## 8. Before the live webhook is enabled
+**Result on 18 Sep 2026, against the Mumbai staging database** (`noxireidrbeqcvsirjec`), using
+the deployed code built for that project:
+
+| Delivery | Status | Outcome |
+| --- | --- | --- |
+| signed `payment.authorized` | 200 | `processed` — payment → `authorized` |
+| signed `order.paid` | 200 | `processed` — payment → `paid`, `paid_at` and provider payment id set |
+| same event id again | 200 | `duplicate` — no second event row, no second transition |
+| body altered after signing | 401 | refused |
+| no signature header | 401 | refused |
+| signed with a different secret | 401 | refused |
+| signed, no event id header | 400 | refused |
+| signed body that is not JSON | 400 | refused |
+| signed JSON that is not an event | 400 | refused |
+| signed `payment.failed` (second payment) | 200 | `processed` — payment → `failed` with `BAD_REQUEST_ERROR` |
+
+Database afterwards: `order_STG_TEST_PAID_1` = `paid` (stamped, with payment id),
+`order_STG_TEST_FAILED_1` = `failed` (stamped, with the provider code), three `payment_events`
+rows, three audit entries as `system` / `razorpay`, and **zero** event rows containing
+contact-shaped data.
+
+## 8. Why production still answers 503, and must
+
+`RAZORPAY_WEBHOOK_SECRET` exists in Production, so the endpoint there would accept a signed
+delivery — but **no live webhook is configured in Razorpay, and none should be yet**. Production
+also still points at Tokyo, which has no `payments` table (`0014` is not applied there), so a
+delivery that did arrive would be recorded against a database that cannot hold it. Both reasons
+point the same way: leave the live webhook off until the checklist below is met.
+
+## 9. Before the live webhook is enabled
 
 1. `/api/razorpay/webhook` deployed and reachable at the production URL.
 2. Test-mode probe passes: 200 for a signed event, 401 for a tampered one, 200 +
