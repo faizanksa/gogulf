@@ -64,7 +64,7 @@ inspect the object list before retrying — do not run the file twice.
 node scripts/db-remote.mjs --target=mumbai-production test --yes-i-am-provisioning-production
 ```
 Expect **386/386**. Then read-only: 27 public tables all with RLS, and `audit_logs` at exactly
-**370 rows, all `system`** (`supabase/snippets/readiness-inventory.sql`). Anything else: stop.
+**372 rows, all `system`** (370 today, plus the two audited grant deletions in `0016`; `supabase/snippets/readiness-inventory.sql`). Anything else: stop.
 
 **3. Google OAuth (Internal consent screen) and Supabase auth settings**
 Exact values in `docs/GOOGLE-OAUTH.md` §3. Then verify with a real refused
@@ -155,7 +155,7 @@ Billing is deployed and inert until these are done, in this order:
 
 ## Stop conditions
 
-Stop before switching traffic if: `0012`–`0015` are not all in `schema_migrations`, or the SQL suites are not 386/386 on Mumbai production; Mumbai production shows any data or an audit count other than 370 `system` rows; the delta check finds anything the archive lacks; the bundle names more than one Supabase project or names Tokyo; any server-only secret appears in client output; Google sign-in fails for any administrator or a non-Workspace account gets a role; a draft or archived job is public; a paid-access job can be published; the full E2E suite has not been run against the exact merge commit.
+Stop before switching traffic if: `0012`–`0015` are not all in `schema_migrations`, or the SQL suites are not 386/386 on Mumbai production; Mumbai production shows any data or an audit count other than 372 `system` rows after `0016` (370 before it); the delta check finds anything the archive lacks; the bundle names more than one Supabase project or names Tokyo; any server-only secret appears in client output; Google sign-in fails for any administrator or a non-Workspace account gets a role; a draft or archived job is public; a paid-access job can be published; the full E2E suite has not been run against the exact merge commit.
 
 Roll back after switching if: applications fail to submit or documents cannot be retrieved; data reaches the wrong project; any unauthenticated access to `job_applications`, `contacts`, `cases`, `payments`, `invoices` or the bucket succeeds; the customer payment page shows anything beyond number, service, amount and status; staff sign-in or roles are wrong; staging or test content is live, or `noindex` reaches production; unexplained 5xx after the first hour.
 

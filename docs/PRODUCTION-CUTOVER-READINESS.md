@@ -34,8 +34,8 @@ purposes; that report remains the page-by-page record of the website release can
 
 ---
 
-> **Update 19 September 2026.** Billing was added after this report was written. **The gap to
-> close on Mumbai production is now `0012`–`0015`, and the SQL suites expect 386 assertions**
+> **Update 19 September 2026.** Billing and the ADMIN/SUPER_ADMIN model (`0016`) were added after this report was written. Mumbai production must read **372** audit rows, all `system`, once `0012`–`0016` are applied (370 today). **The gap to
+> close on Mumbai production is now `0012`–`0016`, and the SQL suites expect 432 assertions**
 > (this report's "0012–0014" and "316" are the 18 Sep figures). The ordered procedure, exact
 > commands, rollback and stop conditions are now in `docs/PRODUCTION-CUTOVER-RUNBOOK.md`; the
 > release state is in `docs/MAIN-RELEASE-READINESS.md`; billing is `docs/PAYMENTS.md` §10.
