@@ -192,7 +192,8 @@ select pay_test.check(
 select pay_test.check(
   (select count(*) from public.audit_logs
     where entity_type = 'payment' and action in ('payment.paid', 'payment.authorized', 'payment.failed')
-      and actor_type = 'system' and actor_label = 'razorpay') >= 3,
+      and actor_type = 'system' and actor_label = 'razorpay'
+      and new_values->>'event_id' like 'evt_%') >= 3,
   'each applied transition wrote a system audit entry attributed to the provider');
 
 select pay_test.check(
@@ -207,34 +208,39 @@ select pay_test.check(
 
 -- ---------------------------------------------------------------------------
 -- Who may read it
+--
+-- Counts are scoped to the rows this file created. The suite runs against shared
+-- environments (Mumbai staging carries webhook-test payments of its own), and an
+-- assertion that counts every row in the table would pass or fail depending on
+-- what someone else did last — which is not a property of the policy under test.
 -- ---------------------------------------------------------------------------
 set local role anon;
 select pay_test.act_as_anon();
-select pay_test.check(pay_test.visible('select 1 from public.payments') <= 0, 'anon cannot read payments');
-select pay_test.check(pay_test.visible('select 1 from public.payment_events') <= 0, 'anon cannot read payment events');
+select pay_test.check(pay_test.visible('select 1 from public.payments where provider_order_id like ''order_TEST_%''') <= 0, 'anon cannot read payments');
+select pay_test.check(pay_test.visible('select 1 from public.payment_events where event_id like ''evt_A%'' or event_id like ''evt_B%'' or event_id like ''evt_X%'' or event_id like ''evt_S%''') <= 0, 'anon cannot read payment events');
 reset role;
 
 set local role authenticated;
 select pay_test.act_as_staff('s_finance');
-select pay_test.check(pay_test.visible('select 1 from public.payments') = 2, 'a finance manager reads payments');
+select pay_test.check(pay_test.visible('select 1 from public.payments where provider_order_id like ''order_TEST_%''') = 2, 'a finance manager reads payments');
 select pay_test.check(
   pay_test.error_of($$update public.payments set status = 'paid' where provider_order_id = 'order_TEST_B'$$) is not null
   or (select status from public.payments where provider_order_id = 'order_TEST_B') = 'failed',
   'a finance manager cannot mark a payment paid by hand');
 
 select pay_test.act_as_staff('s_rec');
-select pay_test.check(pay_test.visible('select 1 from public.payments') = 0, 'a recruiter sees no payments');
-select pay_test.check(pay_test.visible('select 1 from public.payment_events') = 0, 'a recruiter sees no payment events');
+select pay_test.check(pay_test.visible('select 1 from public.payments where provider_order_id like ''order_TEST_%''') = 0, 'a recruiter sees no payments');
+select pay_test.check(pay_test.visible('select 1 from public.payment_events where event_id like ''evt_A%'' or event_id like ''evt_B%'' or event_id like ''evt_X%'' or event_id like ''evt_S%''') = 0, 'a recruiter sees no payment events');
 
 select pay_test.act_as_staff('s_view');
-select pay_test.check(pay_test.visible('select 1 from public.payment_events') = 0,
+select pay_test.check(pay_test.visible('select 1 from public.payment_events where event_id like ''evt_A%'' or event_id like ''evt_B%'' or event_id like ''evt_X%'' or event_id like ''evt_S%''') = 0,
   'view-only cannot read the raw webhook log — that needs payments.reconcile');
 
 select pay_test.act_as_staff('s_admin');
-select pay_test.check(pay_test.visible('select 1 from public.payments') = 2, 'an admin reads payments');
+select pay_test.check(pay_test.visible('select 1 from public.payments where provider_order_id like ''order_TEST_%''') = 2, 'an admin reads payments');
 -- Seven deliveries were made above: A1, A2, A3, A4, X1, S1, B1. The replay of A1
 -- is deliberately not among them — that is the point of the idempotency check.
-select pay_test.check(pay_test.visible('select 1 from public.payment_events') = 7, 'an admin reconciles the whole webhook log');
+select pay_test.check(pay_test.visible('select 1 from public.payment_events where event_id like ''evt_A%'' or event_id like ''evt_B%'' or event_id like ''evt_X%'' or event_id like ''evt_S%''') = 7, 'an admin reconciles the whole webhook log');
 select pay_test.check(
   pay_test.error_of($$select public.record_payment_event('evt_HACK', 'order.paid', 'order_TEST_B', 'pay_B', 250000, 'INR', null, null, null)$$) is not null,
   'a signed-in admin cannot call the webhook function — it belongs to the service role alone');

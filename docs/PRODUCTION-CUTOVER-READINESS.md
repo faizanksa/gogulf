@@ -338,13 +338,19 @@ variables were added with the user's approval: a generated 24-byte `RAZORPAY_WEB
 webhook could reach the database step but not write. Live Razorpay credentials stay scoped to
 `production` alone.
 
-**Full HTTP + database flow verified against Mumbai staging** (the deployed code, built for that
-project): `payment.authorized` → payment `authorized`; `order.paid` → `paid` with `paid_at` and
-the provider payment id; the same event id replayed → `duplicate` with no second row and no
-second transition; `payment.failed` on a second payment → `failed` with `BAD_REQUEST_ERROR`;
-tampered, unsigned and wrongly signed bodies → 401; missing event id, non-JSON and non-event
-bodies → 400. Afterwards the database held three `payment_events` rows, three `system`/`razorpay`
-audit entries, and **zero** event rows containing contact-shaped data.
+**Full HTTP + database flow verified twice against Mumbai staging** — once with the app run
+locally against that project, and again against **deployed staging**
+(`dpl_7hn67GZFTiL4q8HSFEnEyHDPHvii`): `payment.authorized` → payment `authorized`; `order.paid` →
+`paid` with `paid_at` and the provider payment id; the same event id replayed → `duplicate` with
+no second row and no second transition; `payment.failed` on a second payment → `failed` with
+`BAD_REQUEST_ERROR`; tampered, unsigned and wrongly signed bodies → 401; missing event id,
+non-JSON and non-event bodies → 400.
+
+Mumbai staging afterwards: four payments (two `paid`, two `failed`), nine `payment_events` rows
+with nine distinct event ids (6 `processed`, 3 `ignored`), six `system`/`razorpay` audit entries,
+and **zero** event summaries containing contact-shaped data. The SQL suite was tightened to scope
+its counts to its own fixtures, so it still reports **316/316** on that environment with these
+rows present.
 
 **Razorpay dashboard configuration required** (still nothing done there):
 

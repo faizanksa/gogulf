@@ -220,6 +220,19 @@ Database afterwards: `order_STG_TEST_PAID_1` = `paid` (stamped, with payment id)
 rows, three audit entries as `system` / `razorpay`, and **zero** event rows containing
 contact-shaped data.
 
+**Repeated against deployed staging** (`https://staging.gogulf.co`, deployment
+`dpl_7hn67GZFTiL4q8HSFEnEyHDPHvii`, commit `f66a11a`, using the Preview webhook secret and the
+`_2` order pair): the same ten statuses, and the same transitions — so the endpoint behaves
+identically as deployed, not only when run locally. Across both runs Mumbai staging then held
+**four** payments (two `paid`, two `failed`), **nine** `payment_events` rows with **nine
+distinct event ids** (6 `processed`, 3 `ignored` — the ignored ones being deliveries for orders
+that did not exist), **six** payment audit entries, and **zero** summaries containing
+contact-shaped data.
+
+Those staging rows are deliberate fixtures. `supabase/tests/payments.test.sql` scopes its counts
+to its own `order_TEST_%` fixtures precisely so a shared environment holding them does not change
+the result of the suite — 316/316 still passes on Mumbai staging with them in place.
+
 ## 8. Why production still answers 503, and must
 
 `RAZORPAY_WEBHOOK_SECRET` exists in Production, so the endpoint there would accept a signed
