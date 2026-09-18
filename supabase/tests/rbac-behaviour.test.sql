@@ -335,6 +335,14 @@ select rls_test.check(
 -- ===========================================================================
 -- 6. Privilege escalation
 -- ===========================================================================
+-- 0016 took users.manage away from ADMIN (asserted in admin-model.test.sql). The guards in
+-- 0009 §6 — a users.manage holder cannot mint or touch a SUPER_ADMIN or edit itself — are
+-- still defence in depth for any role ever given it, so this section keeps proving them by
+-- giving ADMIN the grant for this transaction only (it rolls back with everything else).
+reset role;
+insert into public.role_permissions (role_key, permission_id, scope)
+select 'ADMIN', id, 'all' from public.permissions where key = 'users.manage';
+set local role authenticated;
 select rls_test.act_as_staff('s_admin');
 select rls_test.check(
   rls_test.affected($$insert into public.role_permissions (role_key, permission_id, scope)

@@ -2,12 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ApplicationAssignControl, ApplicationStatusControl, ConvertApplication } from "@/components/admin/ApplicationControls";
+import { AddNoteForm } from "@/components/admin/NotesPanel";
 import { ApplicationStatusBadge, NotAllowed, PageTitle, Panel, Time } from "@/components/admin/ui";
 import styles from "@/components/admin/admin.module.css";
 import { FactList } from "@/components/ui/FactList";
 import { getStaffContext } from "@/lib/auth/staff";
 import { getApplication, listAssignableStaff } from "@/lib/crm/data";
+import { listNotes } from "@/lib/crm/notes";
 import { auditTrail } from "@/lib/jobs/admin-data";
+import { addNote } from "../../notes/actions";
 import { assignApplication, convertApplication, setApplicationStatus } from "../actions";
 
 export const metadata: Metadata = { title: "Application" };
@@ -30,6 +33,9 @@ export default async function ApplicationPage({ params }: { params: Promise<{ id
     staff.can["audit.view"] ? auditTrail("job_application", id) : Promise.resolve([]),
   ]);
   if (!app) notFound();
+  // Notes belong to the contact. Until the application is converted there is no contact to
+  // attach one to, so the panel says so instead of offering a form that could not save.
+  const notes = app.contact_id && staff.can["notes.team.view"] ? await listNotes(app.contact_id) : [];
 
   const converted = app.case_id !== null;
   const documents = [
@@ -97,6 +103,32 @@ export default async function ApplicationPage({ params }: { params: Promise<{ id
               ))}
             </ul>
           </Panel>
+
+          {staff.can["notes.team.view"] || staff.can["notes.team.create"] ? (
+            <Panel id="application-notes" title="Notes">
+              {!app.contact_id ? (
+                <p className={styles.muted}>Convert the application to a contact and case first — notes are kept on the contact, so the whole team sees them wherever the person appears.</p>
+              ) : (
+                <>
+                  {staff.can["notes.team.create"] ? <AddNoteForm contactId={app.contact_id} caseId={app.case_id} path={`/admin/applications/${app.id}`} action={addNote} /> : null}
+                  {notes.length ? (
+                    <ol className={styles.timeline}>
+                      {notes.map((n) => (
+                        <li key={n.id} className={styles.timelineItem}>
+                          <span>{n.body}</span>
+                          <span className={styles.muted}>
+                            <Time iso={n.created_at} withTime /> · {n.author?.full_name ?? "Staff"}
+                          </span>
+                        </li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <p className={styles.muted}>No notes yet.</p>
+                  )}
+                </>
+              )}
+            </Panel>
+          ) : null}
 
           {staff.can["audit.view"] ? (
             <Panel id="application-history" title="History">

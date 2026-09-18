@@ -33,16 +33,20 @@ export interface ApplicationFilters {
   q: string;
   status: ApplicationStatus | "";
   job: string;
+  /** "none" = unassigned, "me" = assigned to the signed-in staff member. */
+  assignee?: "none" | "me" | "";
   page: number;
 }
 
-export async function listApplications(filters: ApplicationFilters) {
+export async function listApplications(filters: ApplicationFilters, staffId?: string) {
   const supabase = await createServerSupabase();
   const { from, to } = rangeOf(filters.page, PAGE_SIZE);
   let query = supabase.from("job_applications").select(APPLICATION_SELECT, { count: "exact" });
   if (filters.q) query = query.or(`full_name.ilike.*${filters.q}*,email.ilike.*${filters.q}*,phone.ilike.*${filters.q}*,job_title.ilike.*${filters.q}*`);
   if (filters.status) query = query.eq("status", filters.status);
   if (filters.job) query = query.eq("job_id", filters.job);
+  if (filters.assignee === "none") query = query.is("assignee_id", null);
+  if (filters.assignee === "me" && staffId) query = query.eq("assignee_id", staffId);
   const { data, count, error } = await query.order("created_at", { ascending: false }).range(from, to);
   return { applications: (data ?? []) as unknown as StaffApplication[], total: count ?? 0, failed: Boolean(error) };
 }

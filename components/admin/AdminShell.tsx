@@ -27,6 +27,16 @@ export function AdminShell({ staff, children }: { staff: StaffContext; children:
     ...(staff.can["contacts.view"] ? [{ href: "/admin/contacts", label: "Contacts" }] : []),
     ...(staff.can["cases.view"] ? [{ href: "/admin/cases", label: "Cases" }] : []),
     ...(staff.can["invoices.view"] ? [{ href: "/admin/invoices", label: "Invoices" }] : []),
+    ...(staff.can["payments.view"] ? [{ href: "/admin/payments", label: "Payments" }] : []),
+    // Oversight and platform administration. Which of these a person sees follows the
+    // permission catalogue (0016): ADMIN sees the operational audit trail only; staff,
+    // roles, settings and integrations are SUPER_ADMIN's. Hiding a link is not the control —
+    // each page and action checks again and RLS decides.
+    ...(staff.can["audit.view"] ? [{ href: "/admin/audit", label: "Audit" }] : []),
+    ...(staff.can["users.manage"] ? [{ href: "/admin/staff", label: "Staff" }] : []),
+    ...(staff.can["roles.manage"] ? [{ href: "/admin/roles", label: "Roles and permissions" }] : []),
+    ...(staff.can["settings.manage"] ? [{ href: "/admin/settings", label: "Settings" }] : []),
+    ...(staff.can["integrations.manage"] ? [{ href: "/admin/integrations", label: "Integrations" }] : []),
   ];
 
   return (

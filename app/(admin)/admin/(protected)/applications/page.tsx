@@ -27,14 +27,15 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
     q: searchText(params),
     status: oneOf(params, "status", APPLICATION_STATUSES),
     job: uuidParam(params, "job"),
+    assignee: oneOf(params, "assignee", ["none", "me"] as const),
     page: pageOf(params),
   };
   const [{ applications, total, failed }, job] = await Promise.all([
-    listApplications(filters),
+    listApplications(filters, staff.staffId),
     filters.job ? getStaffJob(filters.job) : Promise.resolve(null),
   ]);
-  const current = { q: filters.q, status: filters.status, job: filters.job, page: String(filters.page) };
-  const active = Boolean(filters.q || filters.status || filters.job);
+  const current = { q: filters.q, status: filters.status, job: filters.job, assignee: filters.assignee, page: String(filters.page) };
+  const active = Boolean(filters.q || filters.status || filters.job || filters.assignee);
 
   return (
     <>
@@ -63,6 +64,13 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
                 {APPLICATION_STATUS_LABELS[s]}
               </option>
             ))}
+          </Select>
+        </FilterField>
+        <FilterField id="f-assignee" label="Assigned to">
+          <Select id="f-assignee" name="assignee" defaultValue={filters.assignee}>
+            <option value="">Anyone</option>
+            <option value="me">Me</option>
+            <option value="none">Nobody yet</option>
           </Select>
         </FilterField>
         {filters.job ? <input type="hidden" name="job" value={filters.job} /> : null}

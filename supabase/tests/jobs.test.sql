@@ -513,6 +513,12 @@ reset role;
 -- ===========================================================================
 -- 7. Role administration — ADMIN is not a SUPER_ADMIN
 -- ===========================================================================
+-- 0016 took users.manage away from ADMIN (asserted in admin-model.test.sql). The guards
+-- in 0009 §6 — a users.manage holder cannot mint or touch a SUPER_ADMIN or edit itself —
+-- are still defence in depth for any role ever given it, so this block keeps proving them
+-- by giving ADMIN the grant for this transaction only (it rolls back with everything else).
+insert into public.role_permissions (role_key, permission_id, scope)
+select 'ADMIN', id, 'all' from public.permissions where key = 'users.manage';
 set local role authenticated;
 select jobs_test.act_as_staff('s_admin');
 select jobs_test.check(

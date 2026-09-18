@@ -212,7 +212,10 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
                     )}
                   </td>
                   <td data-label="Updated" className={styles.nowrap}>
-                    <Time iso={job.updated_at} />
+                    <div className={styles.cellMain}>
+                      <Time iso={job.updated_at} />
+                      <span className={styles.muted}>by {job.updater?.full_name ?? job.creator?.full_name ?? "System"}</span>
+                    </div>
                   </td>
                   <td data-label="">
                     <ul className={styles.inlineLinks}>
