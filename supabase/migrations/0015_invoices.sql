@@ -330,6 +330,7 @@ begin
 end;
 $$;
 
+drop trigger if exists invoices_before_write_trg on public.invoices;
 create trigger invoices_before_write_trg
   before insert or update on public.invoices
   for each row execute function public.invoices_before_write();
@@ -405,6 +406,7 @@ begin
 end;
 $$;
 
+drop trigger if exists invoices_audit_trg on public.invoices;
 create trigger invoices_audit_trg
   after insert or update on public.invoices
   for each row execute function public.invoices_audit();
@@ -557,6 +559,7 @@ begin
 end;
 $$;
 
+drop trigger if exists payments_invoice_sync_trg on public.payments;
 create trigger payments_invoice_sync_trg
   after update of status on public.payments
   for each row

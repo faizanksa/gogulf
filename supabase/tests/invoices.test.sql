@@ -283,6 +283,20 @@ select invoices_test.check(
   invoices_test.affected(format($$update public.invoices set notes = 'Reviewed by finance' where id = %L$$, invoices_test.id('inv_a'))) = 1,
   'FINANCE_MANAGER can write to it');
 
+select invoices_test.act_as_staff('s_super'); -- SUPER_ADMIN: is_super short-circuits has_perm, in every branch
+select invoices_test.check(
+  invoices_test.visible(format('select 1 from public.invoices where id = %L', invoices_test.id('inv_a'))) = 1
+    and (select creator.email from public.invoices i join public.staff_users creator on creator.id = i.created_by
+          where i.id = invoices_test.id('inv_a')) = 'it-admin@gogulf.co',
+  'SUPER_ADMIN sees every invoice, and who created it (creator and editor are recorded, not just visible)');
+select invoices_test.check(
+  invoices_test.affected(format($$update public.invoices set notes = 'Reviewed by super admin' where id = %L$$, invoices_test.id('inv_a'))) = 1,
+  'SUPER_ADMIN can write to an invoice in any branch');
+-- A separate statement: an AND does not promise the write runs before the read.
+select invoices_test.check(
+  (select updated_by from public.invoices where id = invoices_test.id('inv_a')) = invoices_test.id('s_super'),
+  'and updated_by records the SUPER_ADMIN, while created_by still names the ADMIN who drafted it');
+
 select invoices_test.act_as_staff('s_acc'); -- ACCOUNTS, branch scope, own branch LKO — same branch as inv_a
 with i as (
   insert into public.invoices (customer_name, purpose, line_items)

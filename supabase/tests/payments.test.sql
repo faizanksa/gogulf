@@ -217,7 +217,7 @@ select pay_test.check(
 set local role anon;
 select pay_test.act_as_anon();
 select pay_test.check(pay_test.visible('select 1 from public.payments where provider_order_id like ''order_TEST_%''') <= 0, 'anon cannot read payments');
-select pay_test.check(pay_test.visible('select 1 from public.payment_events where event_id like ''evt_A%'' or event_id like ''evt_B%'' or event_id like ''evt_X%'' or event_id like ''evt_S%''') <= 0, 'anon cannot read payment events');
+select pay_test.check(pay_test.visible('select 1 from public.payment_events where event_id in (''evt_A1'', ''evt_A2'', ''evt_A3'', ''evt_A4'', ''evt_B1'', ''evt_S1'', ''evt_X1'')') <= 0, 'anon cannot read payment events');
 reset role;
 
 set local role authenticated;
@@ -230,17 +230,17 @@ select pay_test.check(
 
 select pay_test.act_as_staff('s_rec');
 select pay_test.check(pay_test.visible('select 1 from public.payments where provider_order_id like ''order_TEST_%''') = 0, 'a recruiter sees no payments');
-select pay_test.check(pay_test.visible('select 1 from public.payment_events where event_id like ''evt_A%'' or event_id like ''evt_B%'' or event_id like ''evt_X%'' or event_id like ''evt_S%''') = 0, 'a recruiter sees no payment events');
+select pay_test.check(pay_test.visible('select 1 from public.payment_events where event_id in (''evt_A1'', ''evt_A2'', ''evt_A3'', ''evt_A4'', ''evt_B1'', ''evt_S1'', ''evt_X1'')') = 0, 'a recruiter sees no payment events');
 
 select pay_test.act_as_staff('s_view');
-select pay_test.check(pay_test.visible('select 1 from public.payment_events where event_id like ''evt_A%'' or event_id like ''evt_B%'' or event_id like ''evt_X%'' or event_id like ''evt_S%''') = 0,
+select pay_test.check(pay_test.visible('select 1 from public.payment_events where event_id in (''evt_A1'', ''evt_A2'', ''evt_A3'', ''evt_A4'', ''evt_B1'', ''evt_S1'', ''evt_X1'')') = 0,
   'view-only cannot read the raw webhook log — that needs payments.reconcile');
 
 select pay_test.act_as_staff('s_admin');
 select pay_test.check(pay_test.visible('select 1 from public.payments where provider_order_id like ''order_TEST_%''') = 2, 'an admin reads payments');
 -- Seven deliveries were made above: A1, A2, A3, A4, X1, S1, B1. The replay of A1
 -- is deliberately not among them — that is the point of the idempotency check.
-select pay_test.check(pay_test.visible('select 1 from public.payment_events where event_id like ''evt_A%'' or event_id like ''evt_B%'' or event_id like ''evt_X%'' or event_id like ''evt_S%''') = 7, 'an admin reconciles the whole webhook log');
+select pay_test.check(pay_test.visible('select 1 from public.payment_events where event_id in (''evt_A1'', ''evt_A2'', ''evt_A3'', ''evt_A4'', ''evt_B1'', ''evt_S1'', ''evt_X1'')') = 7, 'an admin reconciles the whole webhook log');
 select pay_test.check(
   pay_test.error_of($$select public.record_payment_event('evt_HACK', 'order.paid', 'order_TEST_B', 'pay_B', 250000, 'INR', null, null, null)$$) is not null,
   'a signed-in admin cannot call the webhook function — it belongs to the service role alone');

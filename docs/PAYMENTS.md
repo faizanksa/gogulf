@@ -1,7 +1,9 @@
 # Payments — Razorpay infrastructure
 
 What exists, what deliberately does not, and what has to be configured by hand before a
-rupee can move. Written 18 September 2026, with migration `0014_payments.sql`.
+rupee can move. Written 18 September 2026, with migration `0014_payments.sql`; **§10 (invoices,
+the customer payment page and the QR code, migration `0015_invoices.sql`) was added on
+19 September 2026.**
 
 ---
 
@@ -27,6 +29,11 @@ Three things enforce that, none of which is a coding convention:
 relaxes one fails the suite.
 
 ## 2. The flow this prepares
+
+> **Update 19 Sep 2026:** the checkout this section calls "NOT BUILT" now exists, for **invoices**
+> (§10). The consultation-order path below (`createConsultationOrder`) still has no call site; the
+> invoice flow reaches the same webhook and the same `record_payment_event` through
+> `lib/payments/provider-order.ts`, the one module that talks to Razorpay.
 
 ```
 consultation agreed
@@ -248,8 +255,188 @@ point the same way: leave the live webhook off until the checklist below is met.
    `duplicate` for a replay, 400 for malformed input.
 3. `RAZORPAY_WEBHOOK_SECRET` set in Vercel Production **before** the webhook is saved in
    the dashboard, so the first delivery is never refused with 503.
-4. A consultation checkout exists (it does not yet) — otherwise there are no orders for the
-   webhook to be about.
+4. A checkout exists **and has been exercised in Razorpay TEST mode.** The invoice checkout is
+   built (§10) but has not been run against Razorpay's own test API, because no TEST key exists
+   on any machine or in Vercel Preview (§10.9). Until it has, only the webhook half is proven.
 5. Receipt/acknowledgement behaviour agreed, and the privacy policy checked for the new
-   processing (a payment record is personal data).
+   processing (a payment record is personal data). *(19 Sep: Razorpay is now named in the
+   privacy policy's third-party list; the wording awaits the business's review.)*
 6. `npm run check:secrets` clean on the production build.
+
+---
+
+## 10. Invoices, the customer payment page and the QR code (`0015`)
+
+Consultation and service invoices. A staff member creates and issues an invoice; the customer
+opens `/pay/GG-INV-YYYY-NNNNN` (or scans its QR code), pays through Razorpay Checkout, and the
+signed webhook described above marks the invoice paid. **No new payment infrastructure was
+built** — invoices hang off the tables, the function and the endpoint that already exist.
+
+### 10.1 Architecture
+
+```
+staff: create draft → issue                 /admin/invoices            RLS + invoices_before_write
+staff: copy / QR / print / share the link   /pay/<reference>           (the link IS the reference)
+payer: opens the page, presses Pay           beginPayment(reference)    only input: the reference
+  → 1. read invoice                          public_invoice_view()      explicit column allow-list
+  → 2. live order already?                   open_invoice_payment_request(ref)          → reuse it
+  → 3. else create the order at Razorpay     createProviderOrder()      mode guard, integer paise
+  → 4. record it against the invoice         open_invoice_payment_request(ref, order)
+payer: Razorpay Checkout (checkout.js, loaded only on click)
+Razorpay: signed webhook                     /api/razorpay/webhook      UNCHANGED
+  → record_payment_event()                   0014                       UNCHANGED
+  → sync_invoice_from_payment()  (trigger)   0015                       invoice → paid / payment_failed
+```
+
+**A "payment link" is our own page, not a Razorpay Payment Link, and the QR encodes that page's
+URL, not a Razorpay QR Code.** This was chosen deliberately: it keeps every state change on the
+three event types already tested end to end (`payment.authorized`, `order.paid`,
+`payment.failed`) instead of introducing `payment_link.*` and `qr_code.*` events whose payloads
+have not been verified, and it means the QR carries no amount and no secret.
+
+### 10.2 What is stored, and what is refused
+
+| | |
+| --- | --- |
+| `invoices` | reference (`GG-INV`, from a sequence), status, optional `contact_id`/`case_id`, branch, bill-to **frozen at issue**, purpose, `line_items` (validated in the database), `discount_minor`, optional `tax_rate_percent`, derived `subtotal`/`tax`/`total` (INR paise), issue and due dates, `created_by/at`, `updated_by/at`, `issued_at`, `paid_at`, `voided_at`, `void_reason` |
+| `payments.invoice_id` | the only change to `payments`; **still no job or job-application column** |
+| Not stored | card data, raw webhook payloads, payer identity in events or audit entries (all unchanged) |
+| No job link | `invoices` has no `job_id` and no `job_application_id`; `invoices.test.sql` and `boundaries.test.ts` assert it |
+
+Totals are **derived by the database** from the line items (`invoices_before_write`), never
+accepted from a form. A discount larger than the subtotal is refused, not clamped.
+
+### 10.3 States and who may move them
+
+```
+draft ──issue──▶ issued ──customer opens checkout──▶ payment_pending ──webhook: order.paid──▶ paid
+  │                │ ▲                                    │
+  └──void──▶ void ◀┘ └── retry (new order) ◀── payment_failed ◀──webhook: payment.failed──┘
+```
+
+| Move | Who / what | Enforced by |
+| --- | --- | --- |
+| draft → issued, draft → void, issued → void, payment_failed → void | a **staff** session with `invoices.issue` / `invoices.void` | `invoices_before_write` staff whitelist |
+| issued / payment_failed → payment_pending | `open_invoice_payment_request` (a payer's request) | trusted transition, set inside a SECURITY DEFINER function and reset straight after |
+| issued / payment_pending / payment_failed → paid, → payment_failed | the payments trigger, i.e. a **verified webhook event** | trusted transition |
+| anything → **unpaid**, paid → anything, void → anything | **nobody** | no path exists |
+| payment_pending → void | **nobody** (money may be in flight) | in neither whitelist |
+
+A staff `UPDATE ... SET status = 'paid'` is refused by the database whatever the UI sends.
+After issue, the customer, amounts, line items, tax, discount and dates are **frozen**: an edit
+that touches them succeeds as a write but leaves them unchanged. To correct an issued invoice,
+void it and create a new one. Reversing received money is a **refund**, which has no flow and
+needs its own approved, audited design — nothing here pretends otherwise.
+
+A late `order.paid` for an order already reported failed still ends the invoice **paid** (money
+arrived); a late `payment.failed` never un-pays a paid invoice. The sync trigger updates zero
+rows rather than raising in any other case, so it cannot turn a recorded payment into a webhook
+500 that makes Razorpay retry.
+
+### 10.4 The two doors an unauthenticated payer has
+
+`anon` has **no privilege on `invoices` or `payments`**. It may execute exactly two
+SECURITY DEFINER functions, named in `rls.test.sql` so adding a third is a deliberate, reviewed change:
+
+| Function | Does | Cannot |
+| --- | --- | --- |
+| `public_invoice_view(reference)` | returns reference, status, purpose, total, currency, due date, issue date for a non-draft invoice | return a draft; return billing address, contact, notes, GSTIN, ids or staff fields; take an id |
+| `open_invoice_payment_request(reference, order_id?)` | with no order id: returns the live order if there is one. With one: records it against the invoice, amount **read from the invoice** | accept an amount; open a second live order (partial unique index `payments_invoice_open_order_uniq`); act on a draft, paid or void invoice |
+
+`/pay/[reference]` shows Go Gulf, the invoice number, the service, the amount, the status and
+the Pay button — nothing else. It is never cached, never indexed (`noindex`, and `/pay/` is in
+`robots.txt`), and rate limited per address and per invoice (per-instance, as the limiter says).
+
+### 10.5 Razorpay
+
+* **One module calls Razorpay:** `lib/payments/provider-order.ts`. It refuses a live key outside
+  production and a test key inside it *before* anything is written or sent, requires a positive
+  integer number of paise, restricts order notes to three names and a character set with no
+  `@` or `+` (so an email or phone cannot ride along), and refuses an order whose amount or
+  currency differs from the request. `createConsultationOrder` now uses it too.
+* **The browser is never authoritative.** Checkout's success callback only starts the page
+  re-reading; the status shown is what the server read from the invoice, which only the webhook
+  moves. The callback's arguments (payment id, signature) are not read.
+* `checkout.js` is loaded **only when the payer presses Pay**, so opening the page contacts no
+  third party. There is no Content-Security-Policy anywhere in this application today
+  (`lib/security-headers.mjs` sets none); adding one is a recommended follow-up, and would need
+  `script-src`/`frame-src`/`connect-src` for `checkout.razorpay.com` and `api.razorpay.com`.
+* The webhook, `record_payment_event`, `normaliseEvent` and `verifyWebhookSignature` are
+  **unchanged**; the verified webhook behaviours were re-run against this build (§10.8).
+
+### 10.6 Permissions (existing catalogue, nothing invented)
+
+| Capability | Permission | ADMIN | SUPER_ADMIN |
+| --- | --- | --- | --- |
+| See invoices and payment status | `invoices.view` | all | all |
+| Create, edit a draft, issue | `invoices.issue` | all | all |
+| Void | `invoices.void` | all | all |
+| See payment attempts on an invoice | `payments.view` | all | all |
+| See the audit history | `audit.view` | **yes** | yes |
+| Roles / permissions | `roles.manage` / `permissions.manage` | **no** | yes |
+
+Scope is enforced in the database (`scope_allows`): FINANCE_MANAGER is all-scope; ACCOUNTS
+issues within its branch; HR_MANAGER, TRAVEL_MANAGER, OPERATIONS_MANAGER and VIEW_ONLY can view
+in their branch only and cannot create — asserted in `invoices.test.sql`. Creator and last
+editor are shown to every role that can read the invoice, not only SUPER_ADMIN.
+
+**Open finding, not changed (you asked for no unilateral policy change).** In the `0008`
+catalogue ADMIN also holds `audit.view`, `settings.manage` and `users.manage`, which is broader
+than "SUPER_ADMIN sees the audit history and privileged settings". Making history SUPER_ADMIN-only
+would be a small migration (remove `ADMIN → audit.view`; the invoice and job history panels
+already hide themselves without it). It is one reviewed change if you want it.
+
+### 10.7 Audit
+
+Written by the database in the same transaction, attributed from the JWT or to the system:
+`invoice.created`, `invoice.updated` (changed fields only), `invoice.issued`,
+`invoice.payment_link_opened` / `_reopened`, `invoice.paid`, `invoice.payment_failed`,
+`invoice.voided` (with the reason), and — from 0014 — `payment.authorized/paid/failed`. Staff cannot
+insert audit rows. `invoice.paid` is attributed to the **system**, not a person. No entry carries
+the customer's name, email or phone (checked on staging), and no raw Razorpay payload is stored.
+
+### 10.8 Verified, and how
+
+| | Result |
+| --- | --- |
+| SQL, local from empty and Mumbai staging | **386/386** (316 before: +69 in the new `invoices.test.sql`, +1 in `rls.test.sql` — the two anon doors are now named and asserted) |
+| Unit | **277/277** (223 before), including the order guards, the payment starter and structural boundary tests |
+| Local E2E on the payment page | 8/8 (draft, unknown and malformed → 404; no internal data in the HTML; noindex; paid and void offer no payment; Pay fails closed; axe on phone and desktop) |
+| **Deployed staging** (`staging.gogulf.co` → Mumbai staging) | **38/38** — page, leak checks, 404s, order reuse, no orphan order, signed `payment.authorized` / `order.paid` / duplicate / tampered / unsigned / malformed, invoice paid **by the webhook**, late failure cannot un-pay, failure → retry with a new order → paid, audit trail, no payer identity in events or audit |
+
+### 10.9 Not verified, and why
+
+* **A real Razorpay test-mode checkout has not been run.** No TEST API key exists on this machine
+  or in Vercel Preview (only live credentials, which are Production-only and must never be copied
+  to Preview). Everything up to the Razorpay API call and everything after Razorpay's signed event
+  is verified; the call itself and `checkout.js` opening in a browser are not. **Required:** add
+  `RAZORPAY_KEY_ID` (`rzp_test_…`) and `RAZORPAY_KEY_SECRET` to the Vercel **Preview** scope, then
+  pay one synthetic invoice (§10.10).
+* **The admin screens have no automated browser test.** A staff session needs a real Google
+  sign-in (the guard checks the sign-in method), which cannot be minted honestly here. Their
+  behaviour is covered by the SQL role tests, unit tests and the build; the visual flow needs
+  the manual QA below.
+* **Razorpay's own test delivery to staging** still cannot reach the route (Vercel deployment
+  protection answers first); deliveries were signed and sent by a flow script instead.
+
+### 10.10 Manual QA on staging (needs a Google-signed-in ADMIN or SUPER_ADMIN)
+
+1. `/admin/invoices/new`: customer, service, two line items, a discount, no tax rate → the total updates live. **Save draft**, reload, edit, save again.
+2. **Issue invoice.** The amounts are now read-only; the payment link and QR appear. Copy the link, download and print the QR, scan it with a phone → the Go Gulf page opens with only number, service, amount and status.
+3. With TEST keys in Preview: press **Pay**, complete a test payment, see "confirming", then "Payment received". The staff page shows **Paid**, one payment row, and the history (issued → payment opened → paid, the last as *System*).
+4. Repeat with a test **failure**, then retry from the same link.
+5. Void an unpaid invoice with a reason; its link now says it cannot be paid.
+6. As a role without `invoices.issue` (VIEW_ONLY, HR_MANAGER) confirm there is no New invoice button and a direct visit to `/admin/invoices/new` says the role lacks access.
+
+### 10.11 Still to decide or build
+
+| | |
+| --- | --- |
+| **GST / "Tax Invoice"** | Decision D8 (GST certificate) is unresolved. The rate field is optional and per invoice; nothing defaults it, and no page says "Tax Invoice". The business/legal owner decides treatment, GSTIN display and numbering rules before real invoices go out |
+| Refunds and reversals | No flow. Required before a paid invoice can ever be corrected |
+| Receipts / emails to the customer | Not built; staff share the link themselves |
+| PDF invoice | Not built |
+| Link a customer to a contact/case | The columns exist and are honoured; the form does not offer them yet |
+| Privacy policy wording | Razorpay is added to the third-party list; the business should review the text. `POLICY_EFFECTIVE_DATE` was **not** changed |
+| Content-Security-Policy | None exists site-wide; recommended (§10.5) |
+| Live webhook | Still not configured; must not be until §9 is met |
