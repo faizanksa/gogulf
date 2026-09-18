@@ -1,8 +1,9 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Badge } from "@/components/ui/Badge";
-import type { ApplicationStatus, JobStatus } from "@/types/database";
+import type { ApplicationStatus, InvoiceStatus, JobStatus } from "@/types/database";
 import { hrefWith, pageCount, PAGE_SIZE } from "@/lib/admin/params";
+import { INVOICE_STATUS_LABELS } from "@/lib/billing/model";
 import { STATUS_LABELS } from "@/lib/jobs/model";
 import styles from "./admin.module.css";
 
@@ -75,6 +76,19 @@ const APPLICATION_TONES: Record<ApplicationStatus, "neutral" | "green" | "blue" 
 
 export function ApplicationStatusBadge({ status }: { status: ApplicationStatus }) {
   return <Badge tone={APPLICATION_TONES[status]}>{APPLICATION_STATUS_LABELS[status]}</Badge>;
+}
+
+const INVOICE_TONES: Record<InvoiceStatus, "neutral" | "green" | "blue" | "warning" | "error"> = {
+  draft: "neutral",
+  issued: "blue",
+  payment_pending: "warning",
+  paid: "green",
+  payment_failed: "error",
+  void: "neutral",
+};
+
+export function InvoiceStatusBadge({ status }: { status: InvoiceStatus }) {
+  return <Badge tone={INVOICE_TONES[status]}>{INVOICE_STATUS_LABELS[status]}</Badge>;
 }
 
 export const STAGE_LABELS: Record<string, string> = {

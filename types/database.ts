@@ -35,6 +35,7 @@ export type JobEmploymentType = Enums["job_employment_type"];
 export type JobEmployerDisclosure = Enums["job_employer_disclosure"];
 export type JobSalaryPeriod = Enums["job_salary_period"];
 export type ApplicationStatus = Enums["application_status"];
+export type InvoiceStatus = Enums["invoice_status"];
 
 /** Scope on a permission grant (0002). A check constraint, not an enum, in the schema. */
 export type PermissionScope = "all" | "branch" | "own";

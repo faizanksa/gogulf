@@ -23,7 +23,7 @@ const AI_CRAWLERS = [
 ];
 
 // The staff workspace, the customer portal and the API are never for crawlers.
-const PRIVATE = ["/admin", "/portal", "/api/"];
+const PRIVATE = ["/admin", "/portal", "/api/", "/pay/"];
 
 export default function robots(): MetadataRoute.Robots {
   // Staging and previews disallow everything.

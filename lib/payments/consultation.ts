@@ -1,10 +1,8 @@
 import "server-only";
 
-import { deploymentStage } from "@/lib/deployment";
-import { serverEnv } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { ordersAllowed, razorpayMode } from "./razorpay";
+import { assertProviderReady, createProviderOrder, ProviderOrderError } from "./provider-order";
 
 /**
  * Creating the order a consultation fee is paid against — the server half of a
@@ -52,21 +50,9 @@ export interface ConsultationOrder {
   keyId: string;
 }
 
-const RAZORPAY_ORDERS_URL = "https://api.razorpay.com/v1/orders";
-
 export async function createConsultationOrder(input: ConsultationOrderInput): Promise<ConsultationOrder> {
-  const env = serverEnv();
-  const keyId = env.RAZORPAY_KEY_ID;
-  const keySecret = env.RAZORPAY_KEY_SECRET;
-  if (!keyId || !keySecret) throw new Error("Razorpay is not configured");
-
-  // A live key outside production, or a test key in production, is refused before a
-  // request is made. This is what makes it safe to hold live credentials locally.
-  const mode = razorpayMode(keyId);
-  const stage = deploymentStage();
-  if (!ordersAllowed(mode, stage)) {
-    throw new Error(`Razorpay ${mode} credentials must not be used from a ${stage} deployment`);
-  }
+  // A live key outside production (or a test key inside it) is refused before any row is written.
+  assertProviderReady();
 
   if (!Number.isInteger(input.amountRupees) || input.amountRupees <= 0) {
     throw new Error("A consultation amount must be a positive whole number of rupees");
@@ -98,44 +84,35 @@ export async function createConsultationOrder(input: ConsultationOrderInput): Pr
 
   if (insertError || !payment) throw new Error(`Could not open a payment record: ${insertError?.code ?? "unknown"}`);
 
-  const response = await fetch(RAZORPAY_ORDERS_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${Buffer.from(`${keyId}:${keySecret}`).toString("base64")}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      amount: amountMinor,
-      currency: "INR",
+  let order;
+  try {
+    // Refuses a live key outside production (and a test key inside it) before any request.
+    order = await createProviderOrder({
+      amountMinor,
       receipt: payment.reference,
       notes: { purpose: "consultation", ...(input.note ? { note: input.note } : {}) },
-    }),
-  });
-
-  if (!response.ok) {
+    });
+  } catch (error) {
     // Roll our record back to failed rather than leaving it `created` forever.
+    const reason = error instanceof ProviderOrderError ? error.reason : "unknown";
     await supabase
       .from("payments")
-      .update({ status: "failed", failed_at: new Date().toISOString(), failure_reason: `order creation returned ${response.status}` })
+      .update({ status: "failed", failed_at: new Date().toISOString(), failure_reason: `order creation: ${reason}` })
       .eq("id", payment.id);
-    logger.error("razorpay.order.create_failed", { reference: payment.reference, status: response.status });
-    throw new Error("Could not create the Razorpay order");
+    logger.error("razorpay.order.create_failed", { reference: payment.reference, reason });
+    throw error instanceof ProviderOrderError && error.reason === "wrong_mode" ? error : new Error("Could not create the Razorpay order");
   }
-
-  const order = (await response.json()) as { id?: string };
-  if (!order.id) throw new Error("Razorpay did not return an order id");
-
-  const { error: updateError } = await supabase.from("payments").update({ provider_order_id: order.id }).eq("id", payment.id);
+  const { error: updateError } = await supabase.from("payments").update({ provider_order_id: order.orderId }).eq("id", payment.id);
   if (updateError) throw new Error(`Could not attach the order id: ${updateError.code ?? "unknown"}`);
 
-  logger.info("razorpay.order.created", { reference: payment.reference, orderId: order.id, amountMinor });
+  logger.info("razorpay.order.created", { reference: payment.reference, orderId: order.orderId, amountMinor });
 
   return {
     paymentId: payment.id,
     reference: payment.reference,
-    providerOrderId: order.id,
+    providerOrderId: order.orderId,
     amountMinor,
     currency: "INR",
-    keyId,
+    keyId: order.keyId,
   };
 }

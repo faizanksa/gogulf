@@ -731,6 +731,141 @@ export type Database = {
           },
         ]
       }
+      invoices: {
+        Row: {
+          billing_address: Json
+          branch_id: string | null
+          case_id: string | null
+          contact_id: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          customer_email: string | null
+          customer_name: string
+          customer_phone: string | null
+          discount_minor: number
+          due_date: string | null
+          id: string
+          issue_date: string
+          issued_at: string | null
+          line_items: Json
+          notes: string | null
+          paid_at: string | null
+          purpose: string
+          reference: string
+          seller_gstin: string | null
+          status: Database["public"]["Enums"]["invoice_status"]
+          subtotal_minor: number
+          tax_amount_minor: number
+          tax_rate_percent: number | null
+          total_minor: number
+          updated_at: string
+          updated_by: string | null
+          void_reason: string | null
+          voided_at: string | null
+        }
+        Insert: {
+          billing_address?: Json
+          branch_id?: string | null
+          case_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          customer_email?: string | null
+          customer_name: string
+          customer_phone?: string | null
+          discount_minor?: number
+          due_date?: string | null
+          id?: string
+          issue_date?: string
+          issued_at?: string | null
+          line_items: Json
+          notes?: string | null
+          paid_at?: string | null
+          purpose: string
+          reference?: string
+          seller_gstin?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"]
+          subtotal_minor?: number
+          tax_amount_minor?: number
+          tax_rate_percent?: number | null
+          total_minor?: number
+          updated_at?: string
+          updated_by?: string | null
+          void_reason?: string | null
+          voided_at?: string | null
+        }
+        Update: {
+          billing_address?: Json
+          branch_id?: string | null
+          case_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string
+          customer_phone?: string | null
+          discount_minor?: number
+          due_date?: string | null
+          id?: string
+          issue_date?: string
+          issued_at?: string | null
+          line_items?: Json
+          notes?: string | null
+          paid_at?: string | null
+          purpose?: string
+          reference?: string
+          seller_gstin?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"]
+          subtotal_minor?: number
+          tax_amount_minor?: number
+          tax_rate_percent?: number | null
+          total_minor?: number
+          updated_at?: string
+          updated_by?: string | null
+          void_reason?: string | null
+          voided_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "staff_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "staff_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_applications: {
         Row: {
           assignee_id: string | null
@@ -1201,6 +1336,7 @@ export type Database = {
           failure_code: string | null
           failure_reason: string | null
           id: string
+          invoice_id: string | null
           method: string | null
           paid_at: string | null
           provider: Database["public"]["Enums"]["payment_provider"]
@@ -1224,6 +1360,7 @@ export type Database = {
           failure_code?: string | null
           failure_reason?: string | null
           id?: string
+          invoice_id?: string | null
           method?: string | null
           paid_at?: string | null
           provider?: Database["public"]["Enums"]["payment_provider"]
@@ -1247,6 +1384,7 @@ export type Database = {
           failure_code?: string | null
           failure_reason?: string | null
           id?: string
+          invoice_id?: string | null
           method?: string | null
           paid_at?: string | null
           provider?: Database["public"]["Enums"]["payment_provider"]
@@ -1278,6 +1416,13 @@ export type Database = {
             columns: ["contact_id"]
             isOneToOne: false
             referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
             referencedColumns: ["id"]
           },
         ]
@@ -1656,6 +1801,8 @@ export type Database = {
         Args: { perm: string; required_scope?: string }
         Returns: boolean
       }
+      invoice_line_items_subtotal: { Args: { items: Json }; Returns: number }
+      invoice_line_items_valid: { Args: { items: Json }; Returns: boolean }
       is_staff: { Args: never; Returns: boolean }
       job_publish_problems: {
         Args: { j: Database["public"]["Tables"]["jobs"]["Row"] }
@@ -1684,6 +1831,7 @@ export type Database = {
         Args: { p_type: Database["public"]["Enums"]["case_type"] }
         Returns: string
       }
+      next_invoice_reference: { Args: never; Returns: string }
       next_job_reference: { Args: never; Returns: string }
       next_payment_reference: { Args: never; Returns: string }
       normalize_email: { Args: { raw: string }; Returns: string }
@@ -1693,6 +1841,29 @@ export type Database = {
       }
       normalize_wa_id: { Args: { raw: string }; Returns: string }
       note_view_permission: { Args: { p_visibility: string }; Returns: string }
+      open_invoice_payment_request: {
+        Args: { p_provider_order_id?: string; p_reference: string }
+        Returns: {
+          amount_minor: number
+          currency: string
+          payment_id: string
+          payment_reference: string
+          provider_order_id: string
+          reused: boolean
+        }[]
+      }
+      public_invoice_view: {
+        Args: { p_reference: string }
+        Returns: {
+          currency: string
+          due_date: string
+          issued_at: string
+          purpose: string
+          reference: string
+          status: Database["public"]["Enums"]["invoice_status"]
+          total_minor: number
+        }[]
+      }
       record_document_access: { Args: { p_path: string }; Returns: boolean }
       record_payment_event: {
         Args: {
@@ -1750,6 +1921,13 @@ export type Database = {
         | "ivr_caller"
         | "social_handle"
         | "job_portal"
+      invoice_status:
+        | "draft"
+        | "issued"
+        | "payment_pending"
+        | "paid"
+        | "payment_failed"
+        | "void"
       job_application_access: "free" | "paid"
       job_application_method: "online_form" | "whatsapp"
       job_availability: "ongoing" | "time_limited"
@@ -1915,6 +2093,14 @@ export const Constants = {
         "social_handle",
         "job_portal",
       ],
+      invoice_status: [
+        "draft",
+        "issued",
+        "payment_pending",
+        "paid",
+        "payment_failed",
+        "void",
+      ],
       job_application_access: ["free", "paid"],
       job_application_method: ["online_form", "whatsapp"],
       job_availability: ["ongoing", "time_limited"],
@@ -1939,3 +2125,4 @@ export const Constants = {
     },
   },
 } as const
+

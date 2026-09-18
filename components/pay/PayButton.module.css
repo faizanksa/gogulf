@@ -1,0 +1,16 @@
+.wrap {
+  display: grid;
+  gap: var(--space-3);
+}
+.confirming {
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-bg-subtle);
+}
+.error {
+  margin: 0;
+  font-weight: var(--weight-semibold);
+  color: var(--color-error-text, #8a1f11);
+}

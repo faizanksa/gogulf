@@ -374,6 +374,18 @@ const SECTIONS = [
             </dd>
           </div>
           <div>
+            <dt>Razorpay</dt>
+            <dd>
+              Processes the online payment of an invoice we have issued you. When you choose to pay,
+              Razorpay&apos;s secure payment window opens on your device — it is loaded from Razorpay
+              only at that moment, not when you open the page — and you enter your card, UPI or bank
+              details there, not on this website. We send Razorpay the invoice number, the amount and
+              a short description of the service; Razorpay tells us whether the payment succeeded,
+              its reference and the type of payment method used. Razorpay handles what you enter
+              under its own privacy policy.
+            </dd>
+          </div>
+          <div>
             <dt>Google Workspace</dt>
             <dd>
               Hosts our {LEGAL_ENTITY.brand} email accounts, including {CONTACT.jobsEmail} and{" "}

@@ -26,6 +26,7 @@ export function AdminShell({ staff, children }: { staff: StaffContext; children:
     ...(staff.can["applications.screen"] ? [{ href: "/admin/applications", label: "Applications" }] : []),
     ...(staff.can["contacts.view"] ? [{ href: "/admin/contacts", label: "Contacts" }] : []),
     ...(staff.can["cases.view"] ? [{ href: "/admin/cases", label: "Cases" }] : []),
+    ...(staff.can["invoices.view"] ? [{ href: "/admin/invoices", label: "Invoices" }] : []),
   ];
 
   return (

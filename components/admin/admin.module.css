@@ -666,3 +666,127 @@ a.stat:hover {
   top: 3.5rem;
   z-index: 10;
 }
+
+/* ------------------------------------------------------------------ invoices */
+.fieldError {
+  margin: 0;
+  color: var(--color-error-text, #8a1f11);
+  font-weight: var(--weight-semibold);
+}
+.lineItems {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lineRow {
+  display: grid;
+  gap: var(--space-2) var(--space-3);
+  align-items: end;
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-divider);
+}
+@media (min-width: 900px) {
+  .lineRow {
+    grid-template-columns: minmax(0, 3fr) minmax(5rem, 1fr) minmax(7rem, 1.2fr) minmax(6rem, auto) auto;
+  }
+}
+.lineTotal {
+  margin: 0;
+  min-height: var(--target-min);
+  display: flex;
+  align-items: center;
+  font-variant-numeric: tabular-nums;
+}
+.totals {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  max-width: 24rem;
+  margin-inline-start: auto;
+}
+.totals > div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+.totals dt {
+  color: var(--color-text-secondary);
+}
+.totals dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.grandTotal {
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+  font-weight: var(--weight-semibold);
+}
+.grandTotal dt {
+  color: var(--color-text);
+}
+.qrBox {
+  display: grid;
+  gap: var(--space-3);
+  justify-items: start;
+}
+.qrImage {
+  width: 14rem;
+  height: 14rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: #fff;
+}
+.linkRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+.linkInput {
+  flex: 1 1 18rem;
+  min-width: 0;
+  min-height: var(--target-min);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-bg-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+.amount {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.factList {
+  display: grid;
+  gap: var(--space-2) var(--space-5);
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  margin: 0;
+}
+.factList dt {
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+}
+.factList dd {
+  margin: 0;
+}
+@media print {
+  .topbar,
+  .nav,
+  .pageTitle,
+  .noPrint {
+    display: none !important;
+  }
+  .qrImage {
+    width: 12cm;
+    height: 12cm;
+    border: none;
+  }
+}
+.inlineForm {
+  display: grid;
+  gap: var(--space-2);
+  max-width: 32rem;
+}

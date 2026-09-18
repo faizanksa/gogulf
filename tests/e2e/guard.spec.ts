@@ -56,6 +56,9 @@ test.describe("anonymous visitors", () => {
     ["/admin/applications", "/admin/login"],
     ["/admin/contacts", "/admin/login"],
     ["/admin/cases", "/admin/login"],
+    ["/admin/invoices", "/admin/login"],
+    ["/admin/invoices/new", "/admin/login"],
+    ["/admin/invoices/00000000-0000-0000-0000-000000000000", "/admin/login"],
     ["/portal", "/portal/login"],
     ["/portal/cases", "/portal/login"],
   ] as const) {
