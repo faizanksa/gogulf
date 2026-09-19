@@ -255,9 +255,10 @@ point the same way: leave the live webhook off until the checklist below is met.
    `duplicate` for a replay, 400 for malformed input.
 3. `RAZORPAY_WEBHOOK_SECRET` set in Vercel Production **before** the webhook is saved in
    the dashboard, so the first delivery is never refused with 503.
-4. A checkout exists **and has been exercised in Razorpay TEST mode.** The invoice checkout is
-   built (§10) but has not been run against Razorpay's own test API, because no TEST key exists
-   on any machine or in Vercel Preview (§10.9). Until it has, only the webhook half is proven.
+4. A checkout exists **and has been exercised in Razorpay TEST mode.** *(Done 19 Sep 2026 — §10.12:
+   real TEST orders and payments, success, decline and retry, on staging. Razorpay's own webhook
+   delivery to staging was **not** observed; that half is proven only by signed deliveries sent by
+   a script with the real ids, and is listed as an open item there.)*
 5. Receipt/acknowledgement behaviour agreed, and the privacy policy checked for the new
    processing (a payment record is personal data). *(19 Sep: Razorpay is now named in the
    privacy policy's third-party list; the wording awaits the business's review.)*
@@ -279,9 +280,9 @@ staff: create draft → issue                 /admin/invoices            RLS + i
 staff: copy / QR / print / share the link   /pay/<reference>           (the link IS the reference)
 payer: opens the page, presses Pay           beginPayment(reference)    only input: the reference
   → 1. read invoice                          public_invoice_view()      explicit column allow-list
-  → 2. live order already?                   open_invoice_payment_request(ref)          → reuse it
+  → 2. live order already?                   open_invoice_payment_request(ref)          → reuse it      (server, service_role — 0017)
   → 3. else create the order at Razorpay     createProviderOrder()      mode guard, integer paise
-  → 4. record it against the invoice         open_invoice_payment_request(ref, order)
+  → 4. record it against the invoice         open_invoice_payment_request(ref, order)                   (server, service_role — 0017)
 payer: Razorpay Checkout (checkout.js, loaded only on click)
 Razorpay: signed webhook                     /api/razorpay/webhook      UNCHANGED
   → record_payment_event()                   0014                       UNCHANGED
@@ -317,7 +318,7 @@ draft ──issue──▶ issued ──customer opens checkout──▶ payment
 | Move | Who / what | Enforced by |
 | --- | --- | --- |
 | draft → issued, draft → void, issued → void, payment_failed → void | a **staff** session with `invoices.issue` / `invoices.void` | `invoices_before_write` staff whitelist |
-| issued / payment_failed → payment_pending | `open_invoice_payment_request` (a payer's request) | trusted transition, set inside a SECURITY DEFINER function and reset straight after |
+| issued / payment_failed → payment_pending | `open_invoice_payment_request`, called **by the server** once Razorpay has issued an order (`service_role` only since 0017) | trusted transition, set inside a SECURITY DEFINER function and reset straight after |
 | issued / payment_pending / payment_failed → paid, → payment_failed | the payments trigger, i.e. a **verified webhook event** | trusted transition |
 | anything → **unpaid**, paid → anything, void → anything | **nobody** | no path exists |
 | payment_pending → void | **nobody** (money may be in flight) | in neither whitelist |
@@ -333,15 +334,32 @@ arrived); a late `payment.failed` never un-pays a paid invoice. The sync trigger
 rows rather than raising in any other case, so it cannot turn a recorded payment into a webhook
 500 that makes Razorpay retry.
 
-### 10.4 The two doors an unauthenticated payer has
+### 10.4 The one door an unauthenticated payer has — and the one they must not have (`0017`)
 
-`anon` has **no privilege on `invoices` or `payments`**. It may execute exactly two
-SECURITY DEFINER functions, named in `rls.test.sql` so adding a third is a deliberate, reviewed change:
+`anon` has **no privilege on `invoices` or `payments`**. It may execute exactly **one**
+SECURITY DEFINER function, named in `rls.test.sql` so adding another is a deliberate, reviewed change:
 
-| Function | Does | Cannot |
-| --- | --- | --- |
-| `public_invoice_view(reference)` | returns reference, status, purpose, total, currency, due date, issue date for a non-draft invoice | return a draft; return billing address, contact, notes, GSTIN, ids or staff fields; take an id |
-| `open_invoice_payment_request(reference, order_id?)` | with no order id: returns the live order if there is one. With one: records it against the invoice, amount **read from the invoice** | accept an amount; open a second live order (partial unique index `payments_invoice_open_order_uniq`); act on a draft, paid or void invoice |
+| Function | Who may execute | Does | Cannot |
+| --- | --- | --- | --- |
+| `public_invoice_view(reference)` | anon, authenticated | returns reference, status, purpose, total, currency, due date, issue date for a non-draft invoice; read-only | return a draft; return billing address, contact, notes, GSTIN, ids or staff fields; take an id |
+| `open_invoice_payment_request(reference, order_id?)` | **`service_role` only** | with no order id: returns the live order if there is one. With one: records it against the invoice, amount **read from the invoice** | accept an amount; open a second live order (partial unique index `payments_invoice_open_order_uniq`); act on a draft, paid or void invoice |
+
+**Why the second one is server-only (found 19 Sep 2026, fixed in `0017`).** `0015` granted it to
+`anon` so the payment page could use the public anon key. It computed the amount from the invoice,
+but it also stores a **caller-supplied provider order id**. The anon key ships in the browser
+bundle and invoice references are sequential, so anyone could call it on any issued invoice with an
+invented order id. Reproduced on Mumbai staging with a synthetic invoice: a `payments` row carrying
+`order_PLANTED_BY_ANON` was created and the invoice moved to `payment_pending`, so the real payer's
+next "Pay securely" would have been handed a fake order that Razorpay refuses. No money moves and no
+data leaks, but a stranger could stop any invoice being paid. An order id is only meaningful if
+Razorpay issued it to the server, and only the server knows that — so `0017` revokes the function
+from `anon`, `authenticated` and `PUBLIC`, and `lib/payments/invoice-payment.ts` calls it with the
+privileged client (`createAdminClient("payment-request")`, a named fifth permitted use in
+`lib/supabase/admin.ts`) after it has created the order. The tests that pin this were each shown to
+fail against the old grant: `invoices.test.sql`, `rls.test.sql`, `boundaries.test.ts`, and an e2e
+that tries the attack with the anon key. It was found because the first real checkout was made and
+its test setup exercised the same door the payer's browser would have; nothing in the earlier unit
+or SQL suites had tried to abuse it.
 
 `/pay/[reference]` shows Go Gulf, the invoice number, the service, the amount, the status and
 the Pay button — nothing else. It is never cached, never indexed (`noindex`, and `/pay/` is in
@@ -372,19 +390,22 @@ the Pay button — nothing else. It is never cached, never indexed (`noindex`, a
 | Create, edit a draft, issue | `invoices.issue` | all | all |
 | Void | `invoices.void` | all | all |
 | See payment attempts on an invoice | `payments.view` | all | all |
-| See the audit history | `audit.view` | **yes** | yes |
-| Roles / permissions | `roles.manage` / `permissions.manage` | **no** | yes |
+| See the operational audit history (jobs, applications, invoices, payments) | `audit.view` | **yes** | yes |
+| See audit entries about staff, roles or settings | `users.manage` / `roles.manage` / `settings.manage` | **no** (0016) | yes |
+| Staff roster, roles, permissions, settings, integrations | `users.manage`, `roles.manage`, `permissions.manage`, `settings.manage`, `integrations.manage` | **no** (0016) | yes |
 
 Scope is enforced in the database (`scope_allows`): FINANCE_MANAGER is all-scope; ACCOUNTS
 issues within its branch; HR_MANAGER, TRAVEL_MANAGER, OPERATIONS_MANAGER and VIEW_ONLY can view
 in their branch only and cannot create — asserted in `invoices.test.sql`. Creator and last
 editor are shown to every role that can read the invoice, not only SUPER_ADMIN.
 
-**Open finding, not changed (you asked for no unilateral policy change).** In the `0008`
-catalogue ADMIN also holds `audit.view`, `settings.manage` and `users.manage`, which is broader
-than "SUPER_ADMIN sees the audit history and privileged settings". Making history SUPER_ADMIN-only
-would be a small migration (remove `ADMIN → audit.view`; the invoice and job history panels
-already hide themselves without it). It is one reviewed change if you want it.
+**Resolved in `0016` (19 Sep 2026).** The `0008` catalogue had given ADMIN `users.manage` and
+`settings.manage`, and let any `audit.view` holder read every audit entry. ADMIN is operational
+staff and SUPER_ADMIN the system administrator, so `0016` removes those two grants from ADMIN and
+gates the audit entries that record platform administration (`staff_users`, `role_permissions`,
+`settings`) behind the matching management permission. ADMIN keeps the operational trail — which is
+what billing and jobs need — and SUPER_ADMIN reads all of it. `admin-model.test.sql` (46
+assertions) proves each escalation is refused and each ability retained.
 
 ### 10.7 Audit
 
@@ -399,25 +420,33 @@ the customer's name, email or phone (checked on staging), and no raw Razorpay pa
 
 | | Result |
 | --- | --- |
-| SQL, local from empty and Mumbai staging | **386/386** (316 before: +69 in the new `invoices.test.sql`, +1 in `rls.test.sql` — the two anon doors are now named and asserted) |
-| Unit | **277/277** (223 before), including the order guards, the payment starter and structural boundary tests |
-| Local E2E on the payment page | 8/8 (draft, unknown and malformed → 404; no internal data in the HTML; noindex; paid and void offer no payment; Pay fails closed; axe on phone and desktop) |
-| **Deployed staging** (`staging.gogulf.co` → Mumbai staging) | **38/38** — page, leak checks, 404s, order reuse, no orphan order, signed `payment.authorized` / `order.paid` / duplicate / tampered / unsigned / malformed, invoice paid **by the webhook**, late failure cannot un-pay, failure → retry with a new order → paid, audit trail, no payer identity in events or audit |
+| SQL, local from empty and Mumbai staging | **439/439** (386 at first release: +46 `admin-model.test.sql`, +6 in `invoices.test.sql` and +1 in `rls.test.sql` for `0017` — the anon allow-list is now one door and the order-recording function is asserted `service_role`-only). On staging three attempts ended in connection-level errors (`psql` exit 2 twice, then a statement timeout on the first catalogue insert) before a clean fourth run; no assertion failed in any of them |
+| Unit | **325/325** (277 at first release), including the order guards, the payment starter (now asserting the privileged client) and structural boundary tests |
+| Local E2E, whole suite | **208 passed, 0 failed, 58 skipped** (viewport scoping); 66 axe. On the payment page 9 pass, including "a stranger with the public anon key cannot plant an order on someone's invoice" |
+| **Deployed staging** (`staging.gogulf.co` → Mumbai staging), on `e59bf06` | **39/39** — page, leak checks, 404s, anon refused (`42501`) both to ask and to plant, order reuse, no orphan order, signed `payment.authorized` / `order.paid` / duplicate / tampered / unsigned / malformed, invoice paid **by the webhook**, late failure cannot un-pay, failure → retry with a new order → paid, audit trail, no payer identity in events or audit |
+| **Real Razorpay TEST payments** | §10.12 |
 
 ### 10.9 Not verified, and why
 
-* **A real Razorpay test-mode checkout has not been run.** No TEST API key exists on this machine
-  or in Vercel Preview (only live credentials, which are Production-only and must never be copied
-  to Preview). Everything up to the Razorpay API call and everything after Razorpay's signed event
-  is verified; the call itself and `checkout.js` opening in a browser are not. **Required:** add
-  `RAZORPAY_KEY_ID` (`rzp_test_…`) and `RAZORPAY_KEY_SECRET` to the Vercel **Preview** scope, then
-  pay one synthetic invoice (§10.10).
+* **Razorpay's own webhook delivery to staging has not been observed.** Real TEST payments were
+  made (§10.12) and Razorpay accepted them, but no event from Razorpay arrived in Mumbai staging:
+  none in the ten minutes after the first payment and none within 60 seconds of each later one
+  (`payment_events` held only rows this work had sent). The cause is not established from here — the
+  TEST webhook configuration lives in Razorpay's dashboard, which cannot be read or set by any tool
+  used in this work, and Vercel's deployment protection on staging answers any request that lacks
+  the bypass token before it reaches the route. So the webhook half is proven by **simulated
+  delivery**: signed deliveries, built by a script with the staging webhook secret, carrying the
+  **real** order and payment ids. That exercises the receiver and the database exactly, and says
+  nothing about whether Razorpay's own delivery is configured. **To close it:** in the Razorpay
+  dashboard (Test Mode) add a webhook for `order.paid`, `payment.authorized`, `payment.failed` to
+  `https://staging.gogulf.co/api/razorpay/webhook?x-vercel-protection-bypass=<the project's
+  automation bypass secret>`, with the same secret as `RAZORPAY_WEBHOOK_SECRET` in Vercel Preview
+  (readable in the Vercel dashboard; it is a generated test-only value). Then pay a synthetic invoice
+  and confirm it becomes **paid with no script involved**.
 * **The admin screens have no automated browser test.** A staff session needs a real Google
   sign-in (the guard checks the sign-in method), which cannot be minted honestly here. Their
   behaviour is covered by the SQL role tests, unit tests and the build; the visual flow needs
   the manual QA below.
-* **Razorpay's own test delivery to staging** still cannot reach the route (Vercel deployment
-  protection answers first); deliveries were signed and sent by a flow script instead.
 
 ### 10.10 Manual QA on staging (needs a Google-signed-in ADMIN or SUPER_ADMIN)
 
@@ -440,3 +469,32 @@ the customer's name, email or phone (checked on staging), and no raw Razorpay pa
 | Privacy policy wording | Razorpay is added to the third-party list; the business should review the text. `POLICY_EFFECTIVE_DATE` was **not** changed |
 | Content-Security-Policy | None exists site-wide; recommended (§10.5) |
 | Live webhook | Still not configured; must not be until §9 is met |
+
+### 10.12 The real Razorpay TEST payments (19 September 2026)
+
+**What was real:** the deployed staging server created each order at Razorpay with the TEST key
+(the build log reads `Razorpay: test key`; a live key would have failed the preview build); Razorpay
+Checkout opened in a real Chrome; the payments were made in Razorpay's own Checkout in **Test Mode**
+(Netbanking, Razorpay's mock bank page: **Success** or **Failure**). Order and payment ids below are
+Razorpay's identifiers, not secrets. **What was not:** Razorpay's own webhook (§10.9) — the events
+in the table were delivered by a script, signed with the staging webhook secret, carrying these
+real ids. No key was printed, read back or copied anywhere; the TEST key exists only in Vercel
+Preview and no live credential was used.
+
+| # | Deployed commit | Invoice | Razorpay order | Razorpay payment | Outcome at Razorpay | What the system did |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `5a5339a` | `GG-INV-2026-00051` | `order_TdeYlBbq7Y7fnM` | `pay_Tdeic3SjEjzBKh` | "Payment Successful", ₹2,000 | Order created for the invoice total (200000 paise). Pressing Pay a second time **reused the same order** (one payments row). After the payment the invoice was still `payment_pending` — the browser completing checkout changed nothing. Simulated signed `payment.authorized` → still pending; `order.paid` → **paid**; replay → `duplicate`; late `payment.failed` → ignored, still paid. This run's test setup exposed the anon order-planting hole (§10.4, fixed in `0017`) |
+| 2 | `e59bf06` (with `0017`) | `GG-INV-2026-00086` | `order_Tdk0wSG0OK6fZD` | `pay_Tdk1CMWdsazMtx` | "Payment Successful", ₹2,000 | Order recorded through the server-side path. Simulated delivery, 13 of 14 checks passing: authorized ≠ paid; paid by the webhook; one payments row with the real order id and payment id and amount = invoice total; duplicate → `duplicate`; late failure cannot un-pay; altered body, unsigned and wrong-signature → 401; **the paid order id cannot be attached to another invoice** (refused, `permission denied`); an event for an unknown order changes no invoice. The 14th check, on the audit trail, failed on a wrong entity name in my script (the entries are `invoice` / `payment`, not the plural); the same check was corrected and passes on row 3 |
+| 3 | `e59bf06` | `GG-INV-2026-00088` | `order_Tdk4ivzmeEs93b` | `pay_Tdk4zUsfdAKh4g` | **Declined** ("Payment could not be completed") | Simulated `payment.failed` → invoice `payment_failed`, the payments row `failed` with the provider ids kept |
+| 3b | `e59bf06` | `GG-INV-2026-00088` (retry) | `order_Tdk7Ef2rSLPagB` | `pay_Tdk7X8I31ksMun` | "Payment Successful" | A **new** order for the same 200000 paise (the failed one is not reused); the invoice moved `payment_failed → payment_pending`. Simulated `order.paid` → **paid**; two payments rows (first `failed`, second `paid`); audit trail: created → issued → payment link opened → `payment.failed` → `invoice.payment_failed` → link reopened → `payment.authorized` → `payment.paid` → `invoice.paid` |
+
+Also verified on the fixed deployment: an anonymous caller with the public anon key is refused
+(`42501`) both to ask for and to plant an order, leaving the invoice `issued` and payable
+(re-running the exact probe that succeeded before `0017`); the 39-check staging flow passes.
+
+**Scope of the claim.** This proves: the amount comes from the invoice and the order matches it;
+the order is tied to one invoice and cannot be attached to another; retrying reuses a live order
+and never mints a second; a failed payment allows a retry with a new order; a duplicate event is
+idempotent; the browser's return from Checkout is not authoritative; every state change is audited.
+It does **not** prove that Razorpay will deliver its webhook to staging (§10.9), and nothing here
+touched live mode or Production.

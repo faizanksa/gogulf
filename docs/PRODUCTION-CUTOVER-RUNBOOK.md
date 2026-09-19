@@ -7,8 +7,8 @@ This is the ordered procedure. The evidence and the reasoning are in
 production needs your explicit go-ahead at the time; none is pre-approved by this document.
 
 > **The merge to `main` and the database cutover are one event.** The release reads jobs from
-> the database (`0012`), writes `job_id` on applications (`0013`) and needs `0014`/`0015` for
-> payments and invoices. Tokyo production has migration `0001` only, and since commit `304130c`
+> the database (`0012`), writes `job_id` on applications (`0013`) and needs `0014`–`0017` for
+> payments, invoices, the admin model and the server-only payment request. Tokyo production has migration `0001` only, and since commit `304130c`
 > a production build whose `NEXT_PUBLIC_SUPABASE_URL` names Tokyo **fails at prebuild** (the live
 > deployment keeps serving). So step 8 (merge) cannot succeed before step 7 (variables).
 
@@ -18,7 +18,13 @@ Two projects, and they must never be confused:
 | --- | --- | --- |
 | Tokyo | `julbqkeyvzwluayokcdi` | **Live today.** Never a target of any script here. Never written to. |
 | Mumbai production | `exsnksrmkycloxiajwmx` | Empty, at `0001`–`0011`. The target of this runbook. |
-| Mumbai staging | `noxireidrbeqcvsirjec` | Rehearsal. `0001`–`0015`, 386/386. |
+| Mumbai staging | `noxireidrbeqcvsirjec` | Rehearsal. `0001`–`0017`, 439/439. |
+
+State read on 19 Sep 2026: Mumbai production is at `0011` (a `db push --dry-run` lists exactly
+`0012`–`0017` as pending; nothing was applied). **Tokyo has moved since the 16 Sep backup:** the
+live project holds 15 applications and 39 documents against the archive's 14 and 34, so the
+"zero delta" expectation in step 1 below no longer holds — the archive is stale and step 1 begins
+with a freeze and a fresh backup.
 
 ---
 
@@ -30,10 +36,10 @@ Two projects, and they must never be confused:
 | A2 | Privacy review of application → contact/case conversion, and of payment records | You | real applicants; real payments |
 | A3 | **GST treatment and invoice numbering** (D8, GST certificate) | You + accountant | **any real invoice** |
 | A4 | Privacy-policy wording for Razorpay reviewed; decide whether the effective date changes | You | billing go-live |
-| A5 | Whether ADMIN should keep `audit.view` / `settings.manage` / `users.manage` (`PAYMENTS.md` §10.6) | You | nothing (a follow-up migration) |
-| A6 | Applications arriving during the switch window: replay policy | You | step 9 |
+| A5 | *(Resolved in `0016`, 19 Sep: ADMIN no longer holds `users.manage` / `settings.manage`, and audit entries about staff, roles and settings need the matching permission. SUPER_ADMIN is the system administrator.)* | — | — |
+| A6 | **Intake freeze** for the window, and the replay policy for anything arriving during the switch. Real applications are still arriving on Tokyo (one on 18 Sep) | You | step 1, step 9 |
 | A7 | Google Workspace mailboxes for `careers@` and `admin@` can complete a Google sign-in | You | staff access |
-| A8 | **Razorpay TEST keys added to Vercel Preview, and one full test-mode payment on staging** (`PAYMENTS.md` §10.9–10.10) | You (keys) + me | billing go-live |
+| A8 | Razorpay TEST keys in Vercel Preview and real test-mode payments on staging — **done 19 Sep** (`PAYMENTS.md` §10.12). **Still open:** Razorpay's own TEST webhook delivered to staging (`PAYMENTS.md` §10.9) and the manual QA of the admin screens as signed-in staff (`PAYMENTS.md` §10.10) | You (dashboard, QA) + me | billing go-live |
 
 ## Phase B — the cutover (each step needs your go-ahead)
 
@@ -43,11 +49,15 @@ only its own pinned env files.
 
 **1. Freeze and record Tokyo**
 
+Freeze intake first (A6). Then:
+
 ```bash
-npm run backup:prod -- verify         # live vs. archive: rows, documents, SHA-256, delta
+npm run backup:prod                   # a fresh, hash-checked archive of rows and documents
+npm run backup:prod -- verify         # live vs. that archive: rows, documents, SHA-256, delta
 ```
-Expect 14 rows / 34 documents, zero delta. On any delta: take a fresh backup, re-verify, and
-migrate from the **archive**, never the live bucket. Keep the output.
+The 16 Sep archive is stale (live holds 15 rows / 39 documents; the archive 14 / 34), so a fresh one
+is required. Expect **zero delta against the fresh archive**. On any delta: take another, re-verify,
+and migrate from the **archive**, never the live bucket. Keep the output.
 
 **2. Apply the missing migrations to Mumbai production — only while it holds no live data**
 
@@ -55,7 +65,8 @@ migrate from the **archive**, never the live bucket. Keep the output.
 node scripts/db-remote.mjs --target=mumbai-production push --dry-run --yes-i-am-provisioning-production
 node scripts/db-remote.mjs --target=mumbai-production push --yes-i-am-provisioning-production
 ```
-Applies exactly `0012_jobs`, `0013_job_applications_bridge`, `0014_payments`, `0015_invoices`.
+Applies exactly `0012_jobs`, `0013_job_applications_bridge`, `0014_payments`, `0015_invoices`,
+`0016_admin_operational_model`, `0017_invoice_payment_request_server_only`.
 `db push` reports failure after success on this machine (a pg-delta certificate error): **read
 `schema_migrations`, not the exit code.** `0012` is not re-runnable; if a push stops part-way,
 inspect the object list before retrying — do not run the file twice.
@@ -63,8 +74,16 @@ inspect the object list before retrying — do not run the file twice.
 ```bash
 node scripts/db-remote.mjs --target=mumbai-production test --yes-i-am-provisioning-production
 ```
-Expect **386/386**. Then read-only: 27 public tables all with RLS, and `audit_logs` at exactly
-**372 rows, all `system`** (370 today, plus the two audited grant deletions in `0016`; `supabase/snippets/readiness-inventory.sql`). Anything else: stop.
+Expect **439/439**. Then read-only: 27 public tables all with RLS, and `audit_logs` at exactly
+**372 rows, all `system`** (370 today, plus the two audited grant deletions in `0016`; `0017` writes
+none; `supabase/snippets/readiness-inventory.sql`). Also confirm the payment-request door is shut:
+`select has_function_privilege('anon', 'public.open_invoice_payment_request(text,text)', 'EXECUTE')`
+must be **false** (and `true` for `service_role`). Anything else: stop.
+
+**The suites consume sequence numbers.** `GG-INV` and `GG-PAY` are sequences, which a rolled-back
+transaction does not restore, so after the suites the first real invoice is not `GG-INV-2026-00001`
+(Mumbai staging reads `00089` after its runs). Either accept a gap at the start of the numbering or
+reset both sequences after the suites and before real use — decide before running them (A3, numbering).
 
 **3. Google OAuth (Internal consent screen) and Supabase auth settings**
 Exact values in `docs/GOOGLE-OAUTH.md` §3. Then verify with a real refused
@@ -95,7 +114,7 @@ ADMIN, and keep the notes.
 | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://exsnksrmkycloxiajwmx.supabase.co` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Mumbai production anon key |
-| `SUPABASE_SERVICE_ROLE_KEY` | already Mumbai production's (confirm by first/last six characters in the Supabase dashboard; Vercel keeps it write-only) |
+| `SUPABASE_SERVICE_ROLE_KEY` | already Mumbai production's (confirm by first/last six characters in the Supabase dashboard; Vercel keeps it write-only). **Since `0017` the customer payment page also needs it** to record an order, so a wrong key here breaks payment, not only the webhook |
 
 Do **not** set `APP_ENV` in Production (`staging` would add `noindex`). The prebuild guard now
 fails a production build whose anon or service-role key belongs to a different project than the
@@ -133,7 +152,10 @@ revoked. After that, rollback needs a reconciliation in both directions.
 Billing is deployed and inert until these are done, in this order:
 
 1. **A3 and A4 resolved.** No real invoice before GST treatment is decided.
-2. **TEST-mode rehearsal on staging passed** (A8), including a failure and a retry.
+2. **TEST-mode rehearsal on staging passed** (A8), including a failure and a retry — real TEST
+   payments and a decline/retry were done on 19 Sep (`PAYMENTS.md` §10.12). **Also required before
+   this step: Razorpay's own TEST webhook has been seen marking a staging invoice paid**
+   (`PAYMENTS.md` §10.9), because the live webhook is the same mechanism with a different secret.
 3. **Live webhook.** In Vercel **Production** confirm `RAZORPAY_WEBHOOK_SECRET` exists *before*
    saving the webhook in the Razorpay dashboard, so the first delivery is never refused:
    URL `https://www.gogulf.co/api/razorpay/webhook`, events `order.paid`, `payment.authorized`,
@@ -155,7 +177,7 @@ Billing is deployed and inert until these are done, in this order:
 
 ## Stop conditions
 
-Stop before switching traffic if: `0012`–`0015` are not all in `schema_migrations`, or the SQL suites are not 386/386 on Mumbai production; Mumbai production shows any data or an audit count other than 372 `system` rows after `0016` (370 before it); the delta check finds anything the archive lacks; the bundle names more than one Supabase project or names Tokyo; any server-only secret appears in client output; Google sign-in fails for any administrator or a non-Workspace account gets a role; a draft or archived job is public; a paid-access job can be published; the full E2E suite has not been run against the exact merge commit.
+Stop before switching traffic if: `0012`–`0017` are not all in `schema_migrations`, or the SQL suites are not 439/439 on Mumbai production, or `anon` can execute `open_invoice_payment_request`; the fresh Tokyo backup was not taken after intake was frozen; Mumbai production shows any data or an audit count other than 372 `system` rows after `0016` (370 before it); the delta check finds anything the archive lacks; the bundle names more than one Supabase project or names Tokyo; any server-only secret appears in client output; Google sign-in fails for any administrator or a non-Workspace account gets a role; a draft or archived job is public; a paid-access job can be published; the full E2E suite has not been run against the exact merge commit.
 
 Roll back after switching if: applications fail to submit or documents cannot be retrieved; data reaches the wrong project; any unauthenticated access to `job_applications`, `contacts`, `cases`, `payments`, `invoices` or the bucket succeeds; the customer payment page shows anything beyond number, service, amount and status; staff sign-in or roles are wrong; staging or test content is live, or `noindex` reaches production; unexplained 5xx after the first hour.
 

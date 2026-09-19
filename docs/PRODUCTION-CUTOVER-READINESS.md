@@ -34,9 +34,12 @@ purposes; that report remains the page-by-page record of the website release can
 
 ---
 
-> **Update 19 September 2026.** Billing and the ADMIN/SUPER_ADMIN model (`0016`) were added after this report was written. Mumbai production must read **372** audit rows, all `system`, once `0012`–`0016` are applied (370 today). **The gap to
-> close on Mumbai production is now `0012`–`0016`, and the SQL suites expect 432 assertions**
-> (this report's "0012–0014" and "316" are the 18 Sep figures). The ordered procedure, exact
+> **Update 19 September 2026.** Billing, the ADMIN/SUPER_ADMIN model (`0016`) and the server-only payment request (`0017`) were added after this report was written. Mumbai production must read **372** audit rows, all `system`, once `0012`–`0017` are applied (370 today; `0017` writes none). **The gap to
+> close on Mumbai production is now `0012`–`0017` (confirmed by a read-only dry run on 19 Sep), and the SQL suites expect 439 assertions**
+> (this report's "0012–0014" and "316" are the 18 Sep figures). **Also since this report: the live Tokyo
+> project holds 15 applications and 39 documents against the 16 Sep backup's 14 and 34** (one
+> application arrived on 18 Sep), so this report's "expect zero delta against the existing archive"
+> statements no longer hold — a fresh backup after an intake freeze is required. The ordered procedure, exact
 > commands, rollback and stop conditions are now in `docs/PRODUCTION-CUTOVER-RUNBOOK.md`; the
 > release state is in `docs/MAIN-RELEASE-READINESS.md`; billing is `docs/PAYMENTS.md` §10.
 

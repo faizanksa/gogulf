@@ -1,9 +1,11 @@
 # Main release readiness — Phase 3 platform onto `main`
 
-Written 18 September 2026; **updated 19 September 2026 with the billing MVP** (sections 2, 3, 4,
-6, 10–15 changed; jobs, applications and CRM sections are as of the 18 Sep record, whose
-application code is unchanged). This is a **release-preparation record**, not an approval, and it
-contains no go/no-go recommendation. Statuses are factual:
+Written 18 September 2026; **updated 19 September 2026 with the billing MVP, and again the same
+day with the completed admin model, migrations `0016`–`0017` and the first real Razorpay TEST
+payments** (§2–§6, §9–§14 changed; jobs and applications sections are as of the 18 Sep record, whose
+application code is unchanged). This is a **release-preparation record**, not an approval. Its
+conclusion is stated in §14: **`main` was not merged and the cutover was not performed.** Statuses
+are factual:
 
 | Status | Meaning |
 | --- | --- |
@@ -18,7 +20,7 @@ contains no go/no-go recommendation. Statuses are factual:
 > A push to `main` starts a Vercel **production** build. This release makes the public job
 > pages read the `jobs` table (`0012`), makes every application write `job_id` (`0013`), and
 > adds a staff workspace and billing (invoices, a customer payment page) that need
-> `0002`–`0015`. **Tokyo production has migration `0001`
+> `0002`–`0017`. **Tokyo production has migration `0001`
 > only.** So the release cannot run against Tokyo, and nothing in the live-operations scope
 > (real vacancies, applications linked to jobs, the admin workspace, invoices) can operate on Tokyo. From
 > commit `304130c`, a production build whose `NEXT_PUBLIC_SUPABASE_URL` names Tokyo **fails at
@@ -52,11 +54,11 @@ The local `main` ref on the development machine is stale (`b9ff284`, 29 behind).
 | | |
 | --- | --- |
 | Branch | `phase-2/redesign`, pushed to **`origin/staging`** only |
-| Code under test | **`15ca649`** ("feat(billing): invoices, a customer payment page and QR, on the existing Razorpay rails") — every test in §12 ran against this application code. Previous candidate: `c120367` (code `304130c`) |
-| Release head | the commit adding this update (documentation, the new runbook, and a guard on `0015`'s triggers, on top of `15ca649`; the exact hash is in the operator report) |
-| Commits above `main` | 30 code/test/doc commits plus this update; `main` is an ancestor, so the merge is a fast-forward |
-| Staging deployment of `15ca649` | **`gogulf-60uyaa03a`** (Vercel), READY, aliased to `staging.gogulf.co`; build log shows `Commit: 15ca649`, `Environment: staging`, `Supabase API: project noxireidrbeqcvsirjec`, `Razorpay: no key`, isolation guard `PASS` |
-| Staging Supabase | Mumbai staging `noxireidrbeqcvsirjec`, migrations `0001`–`0015` (read back 19 Sep) |
+| Code under test | **`e59bf06`** ("fix(billing): only the server may record a payment request … (0017)") — every test in §12 ran against this application code. Previous candidates: `5a5339a` (admin model, `0016`), `15ca649` (billing MVP), `c120367` (code `304130c`) |
+| Release head | the commit adding this update (documentation only, on top of `e59bf06`; the exact hash is in the operator report) |
+| Commits above `main` | 34 code/test/doc commits plus this update; `main` is an ancestor, so the merge is a fast-forward |
+| Staging deployment of `e59bf06` | **`gogulf-69xv9djiy`** (Vercel), READY, aliased to `staging.gogulf.co`; build log shows `Commit: e59bf06`, `Environment: staging`, `Supabase API: project noxireidrbeqcvsirjec`, `Razorpay: test key`, isolation guard `PASS` |
+| Staging Supabase | Mumbai staging `noxireidrbeqcvsirjec`, migrations `0001`–`0017` (read back from `schema_migrations` 19 Sep) |
 
 ## 3. Change summary
 
@@ -72,12 +74,14 @@ The local `main` ref on the development machine is stale (`b9ff284`, 29 behind).
 | CRM / admin | `0fa1c0d` | 40 files, +4,202/−23 | Google staff sign-in (`/auth/callback`); workspace for jobs, categories, applications, contacts, cases; audit history panel |
 | RBAC | `59671df`, `74b2d6f`, `284418d` | — | Per-person roles on the staff roster; bootstrap script; claim-shape tests. The role catalogue itself (`0008`) is unchanged and already on Mumbai production |
 | Billing / payments | `8714b78` | 6 files, +668 | `0014` `payments` + `payment_events`; consultation purpose only |
-| **Billing MVP** | `15ca649` | 41 files, +4,358/−57 | `0015` `invoices`, invoice audit, `payments.invoice_id`, payments→invoice sync trigger, two anon SECURITY DEFINER doors; `/admin/invoices` (list, new, detail); customer page `/pay/[reference]`; QR; shared Razorpay order module; Razorpay named in the privacy policy; `qrcode` dependency |
+| **Billing MVP** | `15ca649` | 41 files, +4,358/−57 | `0015` `invoices`, invoice audit, `payments.invoice_id`, payments→invoice sync trigger, two anon SECURITY DEFINER doors (**the second was closed to anon in `0017`**, below); `/admin/invoices` (list, new, detail); customer page `/pay/[reference]`; QR; shared Razorpay order module; Razorpay named in the privacy policy; `qrcode` dependency |
+| **Admin model** | `5a5339a` | 36 files, +2,699/−34 | `0016`: ADMIN loses `users.manage` and `settings.manage`; audit entries about staff, roles and settings need the matching management permission. Operations dashboard (real counts only); `/admin/payments`, `/audit`, `/staff`, `/roles`, `/roles/[key]`, `/settings` (read-only), `/integrations` (presence and mode only); assignee filter and team notes on applications; server actions each check permission before creating a database client |
+| **Payment-request hardening** | `e59bf06` | 9 files, +232/−53 | `0017`: `open_invoice_payment_request` is executable by `service_role` only. Found by the first real TEST checkout: with the public anon key, anyone could plant an invented order id on any issued invoice and jam it (§6) |
 | Razorpay infrastructure | `8714b78`, `15ca649` | — | `POST /api/razorpay/webhook` (unchanged); `lib/payments/provider-order.ts` is now the one module that calls Razorpay, used by consultation and invoices |
 | Email | `625c9c1` | small | Application email template shows the job reference; still Resend, server-side |
 | Security | `27ee3f1`, `4c6fcf6`, `8714b78`, `304130c` | — | Narrower anon grants; production build guards; live-key isolation; probe guard |
-| Database migrations | `27ee3f1`, `2299f14`, `8714b78`, `15ca649` | 5 files | `0011`–`0015` |
-| Tests | `1b34aaf`, `284418d`, `8a60e82`, `427aaac`, `15ca649` | SQL 316 → 386; unit 223 → 277; e2e +11 | Jobs, payments, invoices, RBAC behaviour, RLS; e2e for DB jobs, apply bridge, admin gate, the payment page |
+| Database migrations | `27ee3f1`, `2299f14`, `8714b78`, `15ca649`, `5a5339a`, `e59bf06` | 7 files | `0011`–`0017` |
+| Tests | `1b34aaf`, `284418d`, `8a60e82`, `427aaac`, `15ca649`, `5a5339a`, `e59bf06` | SQL 316 → 439; unit 223 → 325; e2e 200 → 208 passed | Jobs, payments, invoices, RBAC behaviour, RLS, the admin model; e2e for DB jobs, apply bridge, admin gate, the payment page and the order-planting attack |
 | Documentation | 9 commits | 8 files, +1,383 | JOBS, PAYMENTS, GOOGLE-OAUTH, PHASE-3 release, cutover readiness, this file |
 | Tooling | `647ac38`, `f529e03`, `eea570b`, `bf81b02`, `86038d3`, `8714b78` | 11 files, +1,707/−128 | Backup/restore, remote DB runner, bootstrap, probes, bypass rotation, staging verifier |
 | Deployment / environment | `4c6fcf6`, `20083e7`, `d40e774`, `304130c` | — | `vercel.json` forces server mode; production prebuild guard; `[remotes.*]` Supabase auth settings |
@@ -120,19 +124,22 @@ fixed in `304130c` (§6).
 | `0013` applications bridge | — | **required** | ✅ | ✅ |
 | `0014` payments | — | **required** | ✅ | ✅ |
 | `0015` invoices | — | **required** | ✅ (19 Sep) | ✅ |
+| `0016` admin operational model | — | **required** | ✅ (19 Sep) | ✅ |
+| `0017` payment request is server-only | — | **required** | ✅ (19 Sep) | ✅ |
 
-**Required on Mumbai production before the cutover: `0012`, `0013`, `0014`, `0015`, in that order.**
-Nothing is ever applied to Tokyo. Mumbai production state is from the read-only inventory of 18
-Sep (`docs/PRODUCTION-CUTOVER-READINESS.md` §1); it was not re-read for this document.
+**Required on Mumbai production before the cutover: `0012`, `0013`, `0014`, `0015`, `0016`, `0017`,
+in that order.** Nothing is ever applied to Tokyo. **Re-read read-only on 19 Sep:** a dry run against
+Mumbai production (`db push --dry-run`, nothing applied) lists exactly `0012`–`0017` as pending,
+i.e. it is at `0011`.
 
 | Property | Result |
 | --- | --- |
-| Ordered, gapless | **VERIFIED** — `0001`–`0015`; `npm run db:validate` 15/15 parse |
-| From an empty database | **VERIFIED** — `supabase db reset --local` applied `0001`–`0015`; 386/386 assertions |
-| On Mumbai staging | **VERIFIED — STAGING** — 386/386; `schema_migrations` reads `0001`…`0015` |
-| RLS coverage | **VERIFIED** — `rls.test.sql` asserts every public table has RLS enabled, pins the anon/authenticated privileges on `job_applications`, `payments`, `payment_events`, `jobs`, and names the **two** SECURITY DEFINER functions anon may execute (`public_invoice_view`, `open_invoice_payment_request`) — `invoices` itself has no anon privilege of any kind |
-| Additive | **VERIFIED** — `0015` adds one type, one sequence, one table and one nullable column on `payments`; it does not alter `record_payment_event`, `payments` policies, `payment_purpose`, or anything in `0012`/`0013` |
-| Re-runnable (applied a second time on top of itself, rolled back) | `0011` ✅, `0013` ✅, `0014` ✅, `0015` ✅ (its three `create trigger` statements are guarded). **`0012` is not**: tables, types and policies are guarded, but its six `create trigger` statements are not, so a second run stops at the first one |
+| Ordered, gapless | **VERIFIED** — `0001`–`0017`; `npm run db:validate` 17/17 parse |
+| From an empty database | **VERIFIED** — `supabase db reset --local` applied `0001`–`0017`; 439/439 assertions |
+| On Mumbai staging | **VERIFIED — STAGING** — 439/439 (fourth attempt; three earlier attempts ended in connection-level errors, none in an assertion — §12); `schema_migrations` reads `0001`…`0017` |
+| RLS coverage | **VERIFIED** — `rls.test.sql` asserts every public table has RLS enabled, pins the anon/authenticated privileges on `job_applications`, `payments`, `payment_events`, `jobs`, names the **one** SECURITY DEFINER function anon may execute (`public_invoice_view`), and asserts `open_invoice_payment_request` is executable by `service_role` alone (`0017`) — `invoices` itself has no anon privilege of any kind |
+| Additive | **VERIFIED** — `0015` adds one type, one sequence, one table and one nullable column on `payments`; it does not alter `record_payment_event`, `payments` policies, `payment_purpose`, or anything in `0012`/`0013`. `0016` deletes two `role_permissions` rows (audited) and replaces one policy. `0017` only revokes and grants `EXECUTE` on one function |
+| Re-runnable (applied a second time on top of itself, rolled back) | `0011` ✅, `0013` ✅, `0014` ✅, `0015` ✅ (its three `create trigger` statements are guarded); `0016` and `0017` are idempotent by construction (`delete … where`, `drop policy if exists`, `revoke`/`grant`) but **were not re-applied as a test**. **`0012` is not**: tables, types and policies are guarded, but its six `create trigger` statements are not, so a second run stops at the first one |
 
 `0012` is already applied on Mumbai staging, and applied migrations are not edited. The CLI
 applies and records each file once. **If a push to Mumbai production fails partway, read
@@ -143,7 +150,7 @@ Command, when the cutover is approved:
 
 ```bash
 node scripts/db-remote.mjs --target=mumbai-production push --yes-i-am-provisioning-production
-node scripts/db-remote.mjs --target=mumbai-production test --yes-i-am-provisioning-production   # expect 386/386, only while it holds no live data
+node scripts/db-remote.mjs --target=mumbai-production test --yes-i-am-provisioning-production   # expect 439/439, only while it holds no live data
 ```
 
 ## 5. Environment requirements
@@ -175,25 +182,28 @@ the production prebuild enforces it:
 | `PLATFORM_MODE` or a Supabase variable missing | FAIL (existing check) |
 
 Preview (staging) today: Mumbai staging URL/anon/service role, a generated **test**
-`RAZORPAY_WEBHOOK_SECRET`, `APP_ENV=staging`, **no** Razorpay key id or secret.
+`RAZORPAY_WEBHOOK_SECRET`, `APP_ENV=staging`, and — added by you on 19 Sep — a Razorpay **TEST**
+`RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` (both stored as sensitive variables, so `vercel env pull`
+returns them empty; the mode is read from the build log's `Razorpay: test key` line, which the
+isolation guard prints and which **fails the build if it were live**).
 
 **Billing adds no new variable.** It uses the same three Razorpay variables and the same
-Supabase variables. What it needs that does not exist yet is a **TEST** `RAZORPAY_KEY_ID` /
-`RAZORPAY_KEY_SECRET` in the Vercel **Preview** scope, to exercise checkout on staging. Until then
-"Pay" on staging says payment is unavailable, by design (`Razorpay: no key` in its build log).
-In Production the live pair is already present and `ordersAllowed` accepts it only there.
+Supabase variables. In Production the live pair is already present and `ordersAllowed` accepts it
+only there; in Preview only the TEST pair exists and a live key would fail the build. Since `0017`
+the payment page's server also needs `SUPABASE_SERVICE_ROLE_KEY` (already present in Production and
+Preview) to record an order.
 
 ## 6. Security verification
 
 | Check | Method | Result |
 | --- | --- | --- |
-| No secret in the client bundle | `npm run check:secrets` | **VERIFIED** — 134 files, 10 server-only values, none found |
-| No secret in tracked files, build output, docs, logs | `node scripts/check-secret-config.mjs` | **VERIFIED** — 563 files, **13** values (now includes the Google OAuth client secret), none found |
-| No secret anywhere in git history | full-patch search of every commit on every branch | **VERIFIED** — 86 commits, 15 values (service-role keys, DB passwords, Supabase PAT, Razorpay secrets, Resend key, Google secret, Vercel CLI token), none found |
-| No Vercel token committed | token read in-process, searched in tracked files + build + test output | **VERIFIED** — 448 files, not found |
+| No secret in the client bundle | `npm run check:secrets` | **VERIFIED** (19 Sep, `e59bf06` build) — 137 files, 10 server-only values, none found |
+| No secret in tracked files, build output, docs, logs | `node scripts/check-secret-config.mjs` | **VERIFIED** (19 Sep) — 686 files, **13** values (includes the Google OAuth client secret), none found. The Razorpay TEST secret is a sensitive Vercel variable and could not be read back, so it is **not** among the searched values; it was never on this machine and was never printed |
+| No secret anywhere in git history | full-patch search of every commit on every branch | **VERIFIED** (19 Sep) — 93 commits, 15 values (service-role keys, DB passwords, Supabase PAT, Razorpay secrets, Resend key, Google secret, Vercel CLI token), none found |
+| No Vercel token committed | token read in-process, searched in tracked files + build + test output | **VERIFIED** (19 Sep) — 571 files, not found |
 | No env file tracked | `git ls-files` | **VERIFIED** — only `.env.example`, `.env.local.example` |
-| No live Razorpay key on staging | build log + `vercel env ls preview` | **VERIFIED** — `Razorpay: no key`; Preview holds only a test webhook secret |
-| Service-role key only on the server | `server-only` import + call sites | **VERIFIED** — used only by `lib/payments/record.ts` (webhook) and `lib/payments/consultation.ts` (no call site) |
+| No live Razorpay key on staging | build log of the deployed commit | **VERIFIED** (19 Sep) — `Razorpay: test key` on `5a5339a` and `e59bf06`; a live key would fail the preview build, and the guard's synthetic "preview: live Razorpay key" case fails as expected |
+| Service-role key only on the server | `server-only` import + call sites | **VERIFIED** — used by `lib/payments/record.ts` (webhook), `lib/payments/consultation.ts` (no call site) and, since `0017`, `lib/payments/invoice-payment.ts` for exactly one call (`open_invoice_payment_request`, reason `payment-request`); `boundaries.test.ts` pins it to one place, one rpc, no table reads. Staff screens and server actions never use it (`actions-guard.test.ts`) |
 | No staging refs / test ids / credentials in runtime code | grep of `app`, `lib`, `components`, `content`, `messages`, `public` | **VERIFIED** — one staging sentence in a staff form hint, removed in `304130c` |
 | No test data seeded into production automatically | seed wiring | **VERIFIED** (§3) |
 | No production migration can run by accident | runner guards | **VERIFIED** — Tokyo refused by name; Mumbai production needs an explicit flag |
@@ -216,7 +226,7 @@ In Production the live pair is already present and `ordersAllowed` accepts it on
 | Check | Method | Result |
 | --- | --- | --- |
 | Razorpay secret server-only | `boundaries.test.ts`: `RAZORPAY_KEY_SECRET` appears only in `provider-order.ts`; no client component imports a server module; client bundle scan | **VERIFIED** — 135 files scanned, none found; no `rzp_` key in `.next/static` |
-| Service-role key never serves a staff or customer request | `boundaries.test.ts` over every billing file | **VERIFIED** — the invoice flow uses only the staff session or the anon key; `createAdminClient` remains solely in the webhook and the (no-call-site) consultation order |
+| Service-role key never serves a staff request, and serves a customer request only to record an order the server just created | `boundaries.test.ts` over every billing file | **VERIFIED, with one deliberate exception (`0017`)** — staff flows use only the staff session; the customer payment page reads through the anon key and `public_invoice_view`, and records its order with the privileged client under the named reason `payment-request`, because the alternative (letting the anon key record an order id) was exploitable (below) |
 | Payment endpoints protected | admin routes redirect anonymous users (local E2E + deployed staging); `/pay` accepts only a reference, rate limited; the DB re-checks amount and status | **VERIFIED** |
 | Customer page reveals no internal data | E2E and the deployed flow: customer name, email, phone, notes, address, internal id, Supabase ref, `rzp_`, `service_role` all absent from HTML and rendered DOM; `public_invoice_view` returns an explicit allow-list | **VERIFIED — STAGING** |
 | Webhook signature and idempotency still mandatory | webhook code and `record_payment_event` unchanged; 10/10 signed local probe; 401/401/400 on deployed staging | **VERIFIED** |
@@ -225,8 +235,21 @@ In Production the live pair is already present and `ordersAllowed` accepts it on
 | Anonymous users cannot reach admin billing data | anon has no privilege on `invoices`/`payments` (asserted); admin routes 307 | **VERIFIED** |
 | Staff cannot mark an invoice paid or unpaid | DB refuses `status = 'paid'` from a staff session; no transition out of paid or void | **VERIFIED** |
 | Candidate payment impossible | no job column on `payments` or `invoices`; enum has one value; structural test over billing code | **VERIFIED** |
-| Secrets scanned | bundle, repo+build+docs+logs (13 values), Vercel token, 89 commits of history | **VERIFIED** — none found |
-| No live Razorpay key outside Production | Preview holds no key id or secret; `check-staging-isolation.mjs` fails a preview build carrying one | **VERIFIED** |
+| Secrets scanned | bundle, repo+build+docs+logs (13 values), Vercel token, 93 commits of history | **VERIFIED** — none found (see the rows above; re-run 19 Sep) |
+| No live Razorpay key outside Production | Preview holds only a TEST pair (build log `Razorpay: test key`); `check-staging-isolation.mjs` fails a preview build carrying a live one (synthetic case in the 11-scenario run) | **VERIFIED** |
+
+**A defect in the billing MVP, found and fixed on 19 Sep (`e59bf06`, `0017`).** `open_invoice_payment_request`
+was executable by `anon` and stores a caller-supplied provider order id. With the public anon key,
+anyone could call it on any issued invoice (references are sequential) with an invented order id;
+reproduced on Mumbai staging — the call succeeded and the invoice became `payment_pending` with a
+fake order, which Razorpay would refuse when the real payer pressed Pay. No money moves and no data
+leaks, but a stranger could stop any invoice being paid. The function is now `service_role`-only and
+the payment page's server calls it after creating the order. Re-run against the fixed deployment: the
+same anonymous call is refused (`42501`), nothing is written, the invoice stays payable. The tests
+were each shown to fail against the old grant. **It shipped in the `15ca649` release candidate and its
+suites (386 SQL, 277 unit) passed with it present** — those suites had used the same door as the
+payer's browser and never attacked it. Worth remembering when reading any "N/N passed" in this file:
+the suites prove what they assert, not that nothing else is wrong. Nothing was on Production or Tokyo.
 
 ## 7. Jobs readiness — **VERIFIED — STAGING; BLOCKED in production on the cutover**
 
@@ -278,17 +301,29 @@ Storage failure afterwards leaves an "opened" entry for a document that did not 
 
 | Built | Not built |
 | --- | --- |
-| Contacts list and detail (read) | Editing a contact, merging, tags, notes UI |
+| Contacts list and detail (read) | Editing a contact, merging, tags |
 | Cases list and detail (read) | Case stage changes, tasks, activities, appointments UI |
-| Conversion from an application | Portal for customers (blocked on India DLT registration) |
-| Role and scope enforcement through RLS for all of the above | Role / permission management UI, settings UI, audit-log browser beyond per-job and per-application history |
+| Conversion from an application; team notes on the converted contact (`5a5339a`, existing `notes.team.*` permissions); assignee filter | Portal for customers (blocked on India DLT registration) |
+| Operations dashboard (real counts, attention list, recent activity) | Editing settings from the UI (the settings screen is read-only, honestly: nothing reads those flags yet) |
+| `/admin/staff` (change role, activate/deactivate; never yourself, never the last active SUPER_ADMIN), `/admin/roles` and `/roles/[key]` (edit grants; the reserved `roles.manage` / `permissions.manage` are never grantable from a screen), `/admin/audit`, `/admin/payments`, `/admin/integrations` (presence and mode only — never a value) | Inviting or creating staff from the UI (staff are created by the bootstrap script) |
+| Role and scope enforcement through RLS for all of the above | |
 
-**Roles vs the brief.** The staff roster script assigns `hello@gogulf.co` → SUPER_ADMIN,
-`admin@gogulf.co` → SUPER_ADMIN, `careers@gogulf.co` → ADMIN. In the `0008` catalogue (already on
-Mumbai production) **ADMIN also holds `audit.view`, `settings.manage` and `users.manage`**, and ADMIN
-cannot manage roles or permissions, promote itself, alter a SUPER_ADMIN or insert audit rows
-(`rbac-behaviour.test.sql`). Your brief lists audit history as SUPER_ADMIN-only; the current
-catalogue gives it to ADMIN too. Changing that needs a new migration and is your decision.
+**Roles, resolved in `0016`.** ADMIN is operational staff; SUPER_ADMIN is the system administrator.
+`hello@gogulf.co` → SUPER_ADMIN, `admin@gogulf.co` → SUPER_ADMIN (reserved), `careers@gogulf.co` →
+ADMIN in the bootstrap script. ADMIN runs jobs, applications, contacts, cases, billing and
+payments and reads the operational audit trail. ADMIN **cannot**: create, change, deactivate or
+promote staff; grant itself or anyone a permission; edit a role; change a setting; see audit
+entries about staff, roles or settings; forge, edit or delete an audit row; or alter a
+SUPER_ADMIN — each attempt is asserted refused in `admin-model.test.sql` beside a positive control,
+and the server actions check permission **before** creating a database client
+(`actions-guard.test.ts`). The screens hiding controls is a convenience; the database and the
+server checks are the enforcement. SUPER_ADMIN reads everything, changes roles, grants and revokes,
+and still cannot forge or delete audit rows. Two unchanged guards from `0009` remain as defence in
+depth, and `jobs.test.sql` / `rbac-behaviour.test.sql` now prove them by granting `users.manage` to
+ADMIN *inside their own rolled-back transactions*.
+
+**Not changed, on purpose:** creator and last editor of a job or invoice are visible to every role
+that can read the record (§13), not only SUPER_ADMIN.
 
 ## 10. Billing and payment readiness *(rewritten 19 Sep 2026 — billing MVP added in `15ca649`)*
 
@@ -305,8 +340,9 @@ consultation and service invoices only; candidate and job-application payment do
 | Payment link (`/pay/GG-INV-…`), copy, share (WhatsApp, email), open | built; the page itself is **VERIFIED — STAGING** |
 | QR code (SVG, generated locally, encodes only the URL), view, download, print | built; **NEEDS A HUMAN** to scan on a phone |
 | Customer payment page: Go Gulf, number, service, amount, status, Pay | **VERIFIED — STAGING** (no internal data, noindex, never cached, 404 for draft/unknown/malformed) |
-| Razorpay order creation (`createProviderOrder`), mode guard, one order per invoice, amount from the invoice | unit-tested with a stubbed provider; **NOT VERIFIED against Razorpay itself** — no TEST key exists (below) |
-| Webhook updates payment **and invoice** atomically; failure → retry; late success | **VERIFIED — STAGING** |
+| Razorpay order creation (`createProviderOrder`), mode guard, one order per invoice, amount from the invoice | **VERIFIED — STAGING against Razorpay's TEST API** (19 Sep): six real orders created by the deployed server (three paid, one declined, two abandoned unpaid while the browser driver was being set up), each for the invoice's exact total; pressing Pay again reused the open order; a retry after a decline created a new one (`docs/PAYMENTS.md` §10.12) |
+| Real Razorpay Checkout in a browser, TEST mode: success and decline | **VERIFIED — STAGING** — payments `pay_Tdeic3SjEjzBKh`, `pay_Tdk1CMWdsazMtx`, `pay_Tdk7X8I31ksMun` succeeded and `pay_Tdk4zUsfdAKh4g` was declined, in Razorpay's Test Mode |
+| Webhook updates payment **and invoice** atomically; failure → retry; late success | **VERIFIED — STAGING**, by **simulated delivery** (signed by a script with the real order and payment ids). **Razorpay's own webhook was not observed reaching staging** — see below |
 | Audit: created, edited, issued, payment link opened/reopened, paid, failed, voided | **VERIFIED — STAGING** |
 | Refunds / reversals, receipts by email, PDF invoice, contact/case picker in the form | **NOT BUILT** |
 | **GST treatment / "Tax Invoice" wording** | **NOT DECIDED** (D8). Nothing is assumed: the rate is optional and per invoice, and no page says "Tax Invoice" |
@@ -316,11 +352,15 @@ consultation and service invoices only; candidate and job-application payment do
 `0012` CHECK still refuses to publish a paid-access job; the intake still refuses applications to
 non-free jobs; and `lib/billing/boundaries.test.ts` fails if billing code ever mentions a job.
 
-**The one thing this cannot yet claim:** a real Razorpay **test-mode** payment has not been made.
-No TEST API key exists on this machine or in Vercel Preview (only live credentials, Production-only).
-Everything before the Razorpay API call and after Razorpay's signed event is verified; the call and
-`checkout.js` opening in a browser are not. Add `RAZORPAY_KEY_ID` (`rzp_test_…`) and
-`RAZORPAY_KEY_SECRET` to the Vercel **Preview** scope, then follow `PAYMENTS.md` §10.10.
+**What is still not claimed:** that **Razorpay's own webhook** reaches staging. Real TEST payments
+were made and accepted by Razorpay, but no event from Razorpay arrived in Mumbai staging (none in
+the ten minutes after the first payment; none within a minute of each later one). The cause is not
+established: the TEST webhook setting is in Razorpay's dashboard, which nothing used here can read
+or set, and Vercel's deployment protection answers requests lacking the bypass token before they
+reach the route. So the invoice was moved to paid by **signed deliveries that a script sent** with
+the real ids — the receiver, signature check, idempotency, ordering rules and audit are proven; the
+delivery itself is not. **Exact steps to close it are in `docs/PAYMENTS.md` §10.9.** Nothing may go
+to live before it has been observed working in test mode.
 
 ## 11. Razorpay readiness
 
@@ -350,42 +390,49 @@ one after `paid`) with the expected result each time — now with an **invoice**
 the payment, atomically. The webhook route, `record_payment_event`, `normaliseEvent` and
 `verifyWebhookSignature` are byte-for-byte unchanged since 18 Sep.
 
-**Credentials:** live → Production only; test webhook secret → Preview only. **No Razorpay API
-call has been made by anything in this work** (tests stub the provider; local runs refuse the live
-key; staging has no key). **The live webhook is not configured** in the Razorpay dashboard, and
-must not be until a checkout has been exercised in test mode and the checklist in
-`docs/PAYMENTS.md` §9 is met. Against production, only the unsigned probe may run.
+**Credentials:** live → Production only; TEST key pair and test webhook secret → Preview only.
+**Razorpay's API has been called with the TEST key only, by the deployed staging server** (six
+orders, §10). Nothing was called with a live key: local runs refuse it (the local server logged
+`wrong_mode` and contacted no third party, asserted by an e2e test), and the isolation guard would
+fail any preview build carrying one. **The live webhook is not configured** in the Razorpay
+dashboard, and must not be until Razorpay's own test delivery has been observed working (§10) and
+the checklist in `docs/PAYMENTS.md` §9 is met. Against production, only the unsigned probe may run.
 
-## 12. Test results — application code at `15ca649`, 19 September 2026
+## 12. Test results — application code at `e59bf06`, 19 September 2026
 
-(The release head adds documentation and a guard on `0015`'s three `create trigger` statements;
-the application code is identical, and the migration change was re-proved from an empty database.)
+Every row was run against `e59bf06` unless it says otherwise. The release head adds documentation
+only.
 
 | Suite | Command | Passed | Failed | Skipped | Flaky |
 | --- | --- | --- | --- | --- | --- |
-| Migration parse | `npm run db:validate` | 15 | 0 | 0 | 0 |
-| Unit | `npx vitest run` | **277** (21 files) | 0 | 0 | 0 |
-| SQL, local from empty | `supabase db reset --local` + `npm run db:test` | **386** (5 files) | 0 | 0 | 0 |
-| SQL, Mumbai staging | `db-remote --target=mumbai-staging test` | **386** | 0 | 0 | 0 |
-| Migration re-apply | each of `0011`, `0013`, `0014`, `0015` twice, rolled back | 4 | **1 (`0012`)** | 0 | 0 |
-| Lint | `npm run lint` | clean | 0 | — | — |
+| Migration parse | `npm run db:validate` | **17** | 0 | 0 | 0 |
+| Unit | `npx vitest run` | **325** (25 files) | 0 | 0 | 0 |
+| SQL, local from empty | `supabase db reset --local` + `npm run db:test` | **439** (6 files) | 0 | 0 | 0 |
+| SQL, Mumbai staging | `db-remote --target=mumbai-staging test` | **439** (**fourth** attempt; the first three ended in connection-level errors — `psql` exit 2 twice, then a statement timeout on `create schema am_test` — and none had an assertion fail; the fourth ran clean with no action taken on the database) | 0 | 0 | 0 |
+| Mutation check on `0017` | re-open the anon grant locally, run the suites | the new assertions **failed** as intended (`invoices` and `rls` files), then the grant was restored | — | — | — |
+| Lint | `npx eslint .` | clean | 0 | — | — |
 | Typecheck | `npm run typecheck` | clean | 0 | — | — |
-| Server build | `npm run build:server` | PASS (59/59 pages; adds `/pay/[reference]`, `/admin/invoices`, `/new`, `/[id]`) | 0 | — | — |
-| E2E + accessibility | `npx playwright test --workers=2` | **200** | **0** | **50** | **0** |
-| — of which axe | `a11y.spec.ts` | **64** | 0 | 0 | 0 |
-| — of which the new payment page | `pay.spec.ts` | **8** (incl. axe on phone and desktop) | 0 | 8 (mobile duplicates) | 0 |
-| Build guard scenarios | synthetic tokens, 11 cases | 11 | 0 | 0 | 0 |
-| Webhook, signed, local, real DB chain | `razorpay-webhook-probe.mjs` | 10 | 0 | 0 | 0 |
-| Secret scans | client bundle / repo+build+logs / Vercel token / full git history | 4 | 0 | 0 | 0 |
+| Server build | `npm run build:server` (local Supabase) | PASS, 59/59 pages | 0 | — | — |
+| E2E + accessibility | `npx playwright test --workers=2` | **208** | **0** | **58** | **0** |
+| — of which axe | `a11y.spec.ts`, `pay.spec.ts` | **66** | 0 | 0 | 0 |
+| — of which the payment page | `pay.spec.ts` | **9** (incl. the anon-key order-planting attack, axe on phone and desktop) | 0 | mobile duplicates | 0 |
+| Build guard scenarios | synthetic tokens, 11 cases | **11** | 0 | 0 | 0 |
+| Secret scans | client bundle (137 files) / repo+build+logs (686) / Vercel token (571) / git history (93 commits) | **4** | 0 | 0 | 0 |
 | Deployed staging | `verify-staging-deployment.mjs` | **14** | 0 | 0 | 0 |
 | Staging route sweep | 20 sitemap URLs + robots + 5 gated + 1 missing | **27** | 0 | 0 | 0 |
-| Staging, new routes | 3 admin invoice routes (307 to sign-in), 3 bad `/pay` references (404) | **6** | 0 | 0 | 0 |
-| Staging webhook, unsigned | `razorpay-webhook-probe.mjs --base=https://staging.gogulf.co` | 10 (all 401) | 0 | 0 | 0 |
-| **Staging invoice flow, deployed** | scratch script; synthetic data; signed events | **38** | 0 | 0 | 0 |
+| Staging, gated routes | 12 admin routes (`/admin`, `/payments`, `/audit`, `/staff`, `/roles`, `/roles/ADMIN`, `/roles/SUPER_ADMIN`, `/settings`, `/integrations`, `/applications`, `/jobs`, `/invoices`): 307 to sign-in, `noindex` | **12** | 0 | 0 | 0 |
+| Staging, invoice routes | 3 admin invoice routes (307), 3 bad `/pay` references (404) | **6** | 0 | 0 | 0 |
+| **Staging invoice flow, deployed** | scratch script; synthetic data; signed events; adds anon-refused check | **39** | 0 | 0 | 0 |
+| **Real Razorpay TEST payments, deployed** | browser-driven Checkout; `docs/PAYMENTS.md` §10.12 | 3 paid, 1 declined, 1 retry | 0 | 0 | 0 |
+| Simulated webhook delivery with the real ids | `sim-webhook.mjs` (scratch) | 13 of 14 on the first paid invoice, 9 of 9 on the retry; the one failure was a wrong entity name in the script, corrected | see §10.12 | 0 | 0 |
+| Webhook, signed, local probe; staging unsigned probe; migration re-apply | *(run at `15ca649`, 10 / 10 all-401 / 4 of 5)* | **not re-run at `e59bf06`** — the route, `record_payment_event`, `normaliseEvent` and `verifyWebhookSignature` are byte-for-byte unchanged since `15ca649` (`git diff` empty), and `0016`/`0017` are not migrations that were re-applied as a test | — | — | — |
 
-**The 50 skipped** are all deliberate viewport scoping: mobile copies of viewport-independent
-tests (`guard` 17, `pay` 8, `i18n` 8, `seo` 7, `layout` 5, `navigation` 1) and desktop copies of
-mobile-only ones (`navigation` 3, `i18n` 1). None depends on missing infrastructure.
+**The 58 skipped** are all deliberate viewport scoping: mobile copies of viewport-independent
+tests (the guard, payment-page, i18n, SEO, layout and navigation specs) and desktop copies of
+mobile-only ones. None depends on missing infrastructure. The local server logged one
+`invoice.payment.start_failed … wrong_mode` line: that is the fail-closed test running with the
+LIVE key from `.env.local` loaded into a local server, which correctly refuses it and contacts no
+third party (asserted by the test).
 
 **The staging invoice flow** covers: page content and leak checks (customer name, email, notes,
 internal id all absent), noindex and no caching, 404 for a draft and an unknown reference, no
@@ -402,7 +449,7 @@ synthetic invoices ("STAGING TEST") remain in Mumbai staging — invoices have n
 (it passed, alongside the 3 new anonymous-redirect guards); the earlier investigation stands
 (§12 of the 18 Sep version: memory starvation on this machine, not a logic race).
 
-**Two problems found and fixed while testing, both worth knowing about:**
+**Problems found and fixed while testing, all worth knowing about:**
 
 1. A trusted-transition flag inside `0015` was left set until the transaction ended, so a later
    staff write in the *same* transaction was judged against the wrong whitelist. Not reachable by
@@ -420,26 +467,38 @@ synthetic invoices ("STAGING TEST") remain in Mumbai staging — invoices have n
    that SUPER_ADMIN sees every invoice and its creator, and that `updated_by` records the person
    who last changed it.
 
+4. **The payment-request door was open to anyone (fixed 19 Sep, `0017`).** Found only because the
+   first real checkout was made and its setup used the same anon door a payer's browser would;
+   the full account is in §6. The 386-assertion and 277-test suites had passed with the hole present.
+
 **Not run for this document:** Lighthouse/INP; the static `npm run build` (fails on
 `/opengraph-image`, `/manifest.webmanifest`, `/robots.txt` — pre-existing, and production builds in
-server mode); any automated browser test of the admin screens (§13.2); any real Razorpay call (§10).
+server mode); any automated browser test of the admin screens (§13.2); Razorpay's own webhook
+delivery (§10); a second application of `0016`/`0017` on top of themselves.
 
 ## 13. Known limitations
 
 1. The release cannot run on Tokyo; **merge and cutover are one event** for production (§14).
-2. **The admin screens (jobs, applications, invoices) have no automated browser test.** A staff
-   session needs a real Google sign-in and the guard checks the sign-in method, so none can be
-   minted honestly here. Their rules are asserted in SQL as each role, and their code is
-   type-checked, linted and built; the visual behaviour needs manual QA (`PAYMENTS.md` §10.10).
-3. **No Razorpay TEST key exists anywhere usable**, so a real test-mode checkout has not been run
-   (§10). Nothing may go to live before it has.
+2. **The admin screens (dashboard, jobs, applications, invoices, payments, audit, staff, roles,
+   settings, integrations) have no automated browser test as a signed-in person.** A staff session
+   needs a real Google sign-in and the guard checks the sign-in method, so none can be minted
+   honestly here. Anonymous access to every one is proven (12 routes on deployed staging, 19 in the
+   guard spec); their rules are asserted in SQL as each role; each server action's permission
+   check is asserted on the source; the code is type-checked, linted and built. **Their visual
+   behaviour has never been looked at by a person or a test** and needs manual QA
+   (`PAYMENTS.md` §10.10).
+3. **Razorpay's own webhook delivery to staging has not been observed** (§10, exact steps in
+   `docs/PAYMENTS.md` §10.9). Real TEST payments were made; the invoice was moved to paid by signed
+   deliveries a script sent. Nothing may go to live before Razorpay's own delivery has been seen
+   working in test mode.
 4. **GST is undecided (D8).** No real invoice should be issued until the treatment, GSTIN display
    and numbering rules are decided; the system assumes nothing.
 5. No refund or reversal flow: a paid invoice can never be corrected inside the system.
 6. No receipt email, no PDF invoice, and the invoice form does not yet pick a contact or case.
-7. CRM screens are read-and-convert only (§9).
-8. ADMIN holds `audit.view`, `settings.manage`, `users.manage` — broader than the brief (§9).
-   Creator and last editor are visible to every role that can read a record, not only SUPER_ADMIN.
+7. CRM screens are read, convert and add-team-note only (§9); staff are created by the bootstrap
+   script, not from the UI; settings are displayed read-only.
+8. Creator and last editor are visible to every role that can read a record, not only
+   SUPER_ADMIN. (ADMIN's platform-administration rights were removed in `0016`; §9.)
 9. `0012` is not re-runnable (six unguarded `create trigger` statements; it is already applied on
    staging and applied migrations are not edited). `0015` is.
 10. Document-access audit is written before the link is issued (§8).
@@ -454,6 +513,17 @@ server mode); any automated browser test of the admin screens (§13.2); any real
 15. `main`'s branch-protection settings could not be read (no `gh` CLI).
 16. Staging's rehearsal documents are random bytes by design; a genuine document check needs a
     freshly submitted application.
+17. **Tokyo production has moved since the last backup.** `npm run backup:prod -- verify` on 19 Sep:
+    the 16 Sep backup is intact (34/34 document hashes match) but the live project now holds **15
+    applications and 39 documents against the backup's 14 and 34** — one new application (18 Sep)
+    and five documents, one set attached to an application that was already in the backup. Real
+    intake is continuing on Tokyo, so **the cutover must take a fresh backup after intake is frozen**
+    and reconcile before the import; the existing archive is not sufficient.
+18. **Running the SQL suites on Mumbai production consumes sequence numbers** (`GG-INV`, `GG-PAY`):
+    sequences are not rolled back with the transaction, so after the suites the first real invoice
+    would not be `GG-INV-2026-00001` (Mumbai staging is at `00089` after its runs). Run them before
+    real use only if a gap at the start of the numbering is acceptable, or reset the sequences
+    afterwards — a decision for the business, not made here.
 
 ## 14. Production cutover prerequisites
 
@@ -462,10 +532,10 @@ server mode); any automated browser test of the admin screens (§13.2); any real
 
 | # | Step | Owner |
 | --- | --- | --- |
-| 1 | Decisions: vacancy content, privacy review, **GST treatment**, Razorpay wording, ADMIN's audit access, switch-window policy | You |
-| 2 | Razorpay **TEST** keys in Vercel Preview; one full test-mode payment and one failure on staging | You (keys) + me |
-| 3 | Final Tokyo delta check (`npm run backup:prod -- verify`) | You, or me with approval |
-| 4 | Apply **`0012`–`0015`** to Mumbai production and run the suites (**386**) — only while it holds no live data | You, or me with approval |
+| 1 | Decisions: vacancy content, privacy review, **GST treatment**, Razorpay wording, switch-window policy. *(ADMIN's audit and settings access — decided and built, `0016`.)* | You |
+| 2 | Razorpay **TEST** keys in Vercel Preview — **done**; real TEST payments, success and decline — **done** (`PAYMENTS.md` §10.12). **Remaining:** add Razorpay's TEST webhook for staging and see one real delivery mark an invoice paid with no script (`PAYMENTS.md` §10.9) | You (dashboard) + me |
+| 3 | **Freeze intake**, then a **fresh** Tokyo backup and delta (`npm run backup:prod`, then `-- verify`). Today the live project holds 15 applications / 39 documents against the backup's 14 / 34 (§13.17) | You, or me with approval |
+| 4 | Apply **`0012`–`0017`** to Mumbai production and run the suites (**439**) — only while it holds no live data; mind sequence consumption (§13.18). A read-only dry run on 19 Sep confirms exactly these six are pending | You, or me with approval |
 | 5 | Google OAuth client (Internal) and Supabase auth settings for Mumbai production | You |
 | 6 | Bootstrap staff; each person signs in with Google once and is verified | You, or me with approval |
 | 7 | Import the Tokyo applications and documents from the **verified archive** | Both |
@@ -476,6 +546,27 @@ server mode); any automated browser test of the admin screens (§13.2); any real
 
 **Rollback:** promote `dpl_9RaneE2dUCaRfmGifXYfumUjWDL9` (`519cb85`) and restore the two Tokyo
 variables. Promotion does not rebuild, so the new guard does not affect it.
+
+### Where this stands, 19 September 2026 — the decision on `main`
+
+**`main` was not merged and the cutover was not performed.** The release is code-complete and
+verified on staging, but the production prerequisites in the table are not satisfied, and merging
+`main` before they are would break production (the production build refuses Tokyo, so it would fail
+and Vercel would keep serving the current deployment — safe, but a failed release — or, if the
+variables were switched first, would run against an empty Mumbai database). Specifically, at the
+time of writing:
+
+| Prerequisite | State |
+| --- | --- |
+| Mumbai production schema | at `0011`; `0012`–`0017` pending (dry run) — **not applied** |
+| Tokyo backup | 16 Sep backup intact but **stale** (15 vs 14 applications, 39 vs 34 documents) — **needs a fresh one after an intake freeze** |
+| Data import into Mumbai production | **not done**; belongs after the freeze and fresh backup |
+| Production Google OAuth client and staff sign-in | **not created / not verified** — needs a person in Google Cloud and Supabase (`docs/GOOGLE-OAUTH.md`); production cannot be declared operational without it |
+| Vercel Production variables | Supabase URL and anon key still name Tokyo (not switched — an edit made by you at the window) |
+| Razorpay TEST webhook delivery | not observed; **does not gate the cutover**, gates billing go-live |
+| Tests, staging, secrets | all green as recorded in §6 and §12 |
+
+Nothing was written to Tokyo or to Mumbai production in this work.
 
 ### Merge commands (do not run without explicit approval)
 
@@ -498,27 +589,37 @@ id will differ.
 
 1. **Decide the merge timing.** It belongs inside the cutover window (§14). Merging earlier is
    safe but produces a failed production build and leaves `main` ahead of what production runs.
-2. **Add Razorpay TEST keys to Vercel Preview** (`RAZORPAY_KEY_ID` = `rzp_test_…`,
-   `RAZORPAY_KEY_SECRET`) — never the live pair — then do the manual QA in `PAYMENTS.md` §10.10
-   as a Google-signed-in ADMIN and SUPER_ADMIN. This is also the only check of the admin invoice
-   screens and of the QR code on a real phone.
+2. **Configure Razorpay's TEST webhook for staging** (exact URL and secret rule in `PAYMENTS.md`
+   §10.9) and pay one synthetic invoice to see a real delivery. Then do the manual QA in
+   `PAYMENTS.md` §10.10 as a Google-signed-in ADMIN and SUPER_ADMIN. That is also the only check of
+   every admin screen as a signed-in person, and of the QR code on a real phone. *(The TEST key
+   pair is already in Vercel Preview.)*
 3. **Decide GST treatment and the invoice number format** (D8) before any real invoice.
 4. Review the **privacy policy** wording for Razorpay, and complete the privacy review of
    converting applications into CRM records and of payment records.
-5. Decide ADMIN's `audit.view` / `settings.manage` / `users.manage` (§9; `PAYMENTS.md` §10.6).
-6. Approve (or run) the database, staff and data steps of the runbook; create the Google OAuth
-   client and complete each staff sign-in; switch the two Supabase variables together.
-7. **Confirmation of what was not touched while preparing this update:** Tokyo production — no
-   read, no write. Mumbai production — no connection (migration `0015` was applied to **Mumbai
-   staging only**, and to the local database). Vercel Production environment — names listed
-   earlier, no value read or changed; Vercel **Preview** was read (the test webhook secret was
-   pulled to a temporary file that the script deleted immediately, and was never printed).
-   Razorpay — no dashboard change; live webhook not configured; **no Razorpay API call was made
-   by anything.** DNS, OAuth — unchanged. `main` — not merged, not pushed. Candidate and
-   job-application payments — not built, and refused by the schema. The only pushes went to
-   `origin/staging`.
+5. *(ADMIN's audit and settings access — resolved in `0016`; nothing to decide unless you want it
+   different.)*
+6. Freeze intake for the cutover window; approve (or run) the database, staff and data steps of the
+   runbook; create the Google OAuth client and complete each staff sign-in; switch the two
+   Supabase variables together.
+7. **Confirmation of what was and was not touched (19 Sep update):**
+   * **Tokyo production** — one **read-only** check (`backup:prod -- verify`: GET requests only, by
+     construction). No write. Counts and timestamps only were recorded here; no applicant name or
+     document name.
+   * **Mumbai production** — one read-only connection: `db push --dry-run`, which lists pending
+     migrations and applies nothing. No write.
+   * **Mumbai staging** — `0016` and `0017` applied; synthetic invoices, payments and audit rows
+     ("STAGING TEST") created and left (invoices have no DELETE by design).
+   * **Vercel** — Production: variable **names** listed, no value read or changed. Preview: the
+     staging webhook secret was pulled to a temporary file that a script deleted, never printed; the
+     TEST Razorpay pair reads back empty (sensitive) and was never seen. Deployments were made only
+     by pushing to `origin/staging`; no redeploy, promotion or environment edit was made.
+   * **Razorpay** — no dashboard change; **live webhook not configured**; the API was called with
+     the TEST key only, by the deployed staging server.
+   * DNS, OAuth, `main` — unchanged; `main` not merged or pushed. Candidate and job-application
+     payments — not built, and refused by the schema.
 
 ---
 
-**This document makes no recommendation and grants no approval. Production database cutover has
-NOT been performed. `main` has NOT been merged.**
+**This document grants no approval. Production database cutover has NOT been performed. `main`
+has NOT been merged.**
