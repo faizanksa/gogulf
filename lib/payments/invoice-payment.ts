@@ -1,6 +1,7 @@
 import "server-only";
 
 import { logger } from "@/lib/logger";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { publicBillingClient, getPublicInvoice } from "@/lib/billing/public-data";
 import { isPayable, normaliseReference } from "@/lib/billing/model";
 import { assertProviderReady, createProviderOrder, ProviderOrderError, type ProviderOrderDeps } from "./provider-order";
@@ -10,7 +11,8 @@ import { assertProviderReady, createProviderOrder, ProviderOrderError, type Prov
  *
  * THE ORDER OF THINGS, AND WHY
  *
- *   1. Read the invoice through public_invoice_view. Its total is the only amount used.
+ *   1. Read the invoice through public_invoice_view (anon, read-only, explicit column
+ *      allow-list). Its total is the only amount used.
  *   2. Ask open_invoice_payment_request with NO order id: if a live order already exists
  *      it is returned, so reloading the page or double-clicking never mints a second
  *      order at Razorpay.
@@ -18,6 +20,11 @@ import { assertProviderReady, createProviderOrder, ProviderOrderError, type Prov
  *      paise, no payer identity), then record it against the invoice with the same
  *      function. If a concurrent request won the race, the database hands back the
  *      winner's order and ours is simply never used.
+ *
+ * open_invoice_payment_request is called with the privileged client, and ONLY here (0017).
+ * It stores a caller-supplied provider order id, and an order id is only real if Razorpay
+ * issued it to us — which only this server knows. While anon could call it, anyone holding
+ * the public anon key could plant an invented order id on any issued invoice and jam it.
  *
  * What comes back is what Razorpay Checkout needs to OPEN. It is not a payment result:
  * only the signed webhook moves an invoice to paid (docs/PAYMENTS.md).
@@ -50,8 +57,7 @@ export async function startInvoicePayment(input: string, deps?: Partial<Provider
   const reference = normaliseReference(input);
   if (!reference) return { ok: false, reason: "not_found" };
 
-  const supabase = publicBillingClient();
-  if (!supabase) return { ok: false, reason: "unavailable" };
+  if (!publicBillingClient()) return { ok: false, reason: "unavailable" };
 
   const invoice = await getPublicInvoice(reference);
   if (!invoice) return { ok: false, reason: "not_found" };
@@ -60,6 +66,7 @@ export async function startInvoicePayment(input: string, deps?: Partial<Provider
   try {
     // Refuse a wrong-mode or missing key before touching anything.
     const { keyId } = assertProviderReady(deps);
+    const supabase = createAdminClient("payment-request");
 
     const opened = async (orderId?: string): Promise<OpenedRow | null> => {
       const { data, error } = await supabase.rpc("open_invoice_payment_request", {

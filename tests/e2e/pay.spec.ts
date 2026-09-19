@@ -29,7 +29,7 @@ function env(file: string): Record<string, string> {
   );
 }
 
-/** service-role for fixtures; anon for the one thing a payer's browser may call. */
+/** service-role for fixtures and for what the server does; anon to prove what a payer's browser may NOT do. */
 function clients(baseURL: string | undefined) {
   const make = (url: string, key: string) => createClient(url, key, { auth: { persistSession: false } });
   if (baseURL?.includes("staging.gogulf.co")) {
@@ -129,13 +129,14 @@ test.describe("payment page", () => {
   });
 
   test("a paid invoice says so and offers no payment; a voided one is not payable", async ({ page, baseURL }) => {
-    const { db, anon } = clients(baseURL);
+    const db = database(baseURL);
     const tag = Math.random().toString(36).slice(2, 8).toUpperCase();
 
-    // Paid: opened the way a payer opens it, then confirmed the way the signed webhook confirms it.
+    // Paid: the order is recorded the way the server records it once Razorpay has issued one
+    // (service role only since 0017), then confirmed the way the signed webhook confirms it.
     const paid = await makeInvoice(db, "STAGING TEST paid flow", "issued");
     const order = `order_TEST_E2E_${tag}`;
-    const opened = await anon.rpc("open_invoice_payment_request", { p_reference: paid.reference, p_provider_order_id: order });
+    const opened = await db.rpc("open_invoice_payment_request", { p_reference: paid.reference, p_provider_order_id: order });
     expect(opened.error).toBeNull();
     const event = await db.rpc("record_payment_event", {
       p_event_id: `evt_TEST_E2E_${tag}`,
@@ -160,6 +161,25 @@ test.describe("payment page", () => {
     await page.goto(`/pay/${voided.reference}`);
     await expect(page.getByRole("main").getByText("This invoice cannot be paid online")).toBeVisible();
     await expect(page.getByRole("main").getByRole("button")).toHaveCount(0);
+  });
+
+  test("a stranger with the public anon key cannot plant an order on someone's invoice", async ({ page, baseURL }) => {
+    // Found on staging during the first real TEST payment: while anon could call
+    // open_invoice_payment_request, an invented order id jammed any issued invoice (0017).
+    const { db, anon } = clients(baseURL);
+    const invoice = await makeInvoice(db, "STAGING TEST planted order", "issued");
+
+    const planted = await anon.rpc("open_invoice_payment_request", { p_reference: invoice.reference, p_provider_order_id: "order_PLANTED_BY_ANON" });
+    expect(planted.error?.code, "anon must be refused").toBe("42501");
+    const asked = await anon.rpc("open_invoice_payment_request", { p_reference: invoice.reference });
+    expect(asked.error?.code).toBe("42501");
+
+    // Nothing was written, the invoice is still open for payment, and the payer still sees Pay.
+    expect((await db.from("payments").select("id").eq("invoice_id", invoice.id)).data).toEqual([]);
+    expect((await db.from("invoices").select("status").eq("id", invoice.id).single()).data?.status).toBe("issued");
+    await page.goto(`/pay/${invoice.reference}`);
+    await expect(page.getByRole("main").getByText("Awaiting payment")).toBeVisible();
+    await expect(page.getByRole("main").getByRole("button", { name: /Pay .* securely/ })).toBeVisible();
   });
 
   test("Pay fails closed without test-mode credentials: says so, opens no checkout, contacts no third party", async ({ page, baseURL }) => {

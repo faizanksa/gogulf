@@ -2,17 +2,23 @@
  * CONTEXT 3 of 3 — Privileged client. BYPASSES ALL ROW LEVEL SECURITY.
  *
  * ===========================================================================
- * PERMITTED USES — this list is exhaustive:
+ * PERMITTED USES — this list is exhaustive (each one is an AdminReason):
  *
  *   1. Verified webhook handlers   (/api/webhooks/*, after signature checks)
  *   2. Scheduled jobs              (/api/cron/*, authenticated by CRON_SECRET)
  *   3. Controlled migration tooling
  *   4. System automation with no user in the request path
+ *   5. Recording a payment order the server has JUST created at the provider
+ *      ("payment-request"): the one call is open_invoice_payment_request, which
+ *      stores a provider order id. Only the server can know an order id is real,
+ *      so no browser-reachable role may call it (0017). The payer's request is
+ *      the trigger, never the authority: the amount comes from the invoice row
+ *      and nothing the payer sent is written anywhere.
  *
  * FORBIDDEN:
  *
- *   - Serving any customer or staff request. Those use createServerSupabase(),
- *     so RLS remains the last line of defence.
+ *   - Serving any other customer or staff request. Those use
+ *     createServerSupabase(), so RLS remains the last line of defence.
  *   - Working around an RLS policy that is blocking a legitimate read. If the
  *     policy is wrong, fix the policy.
  *   - Anything in a Client Component. The `server-only` import below turns that
@@ -34,7 +40,8 @@ export type AdminReason =
   | "webhook"
   | "cron"
   | "migration"
-  | "system-automation";
+  | "system-automation"
+  | "payment-request";
 
 let cached: ReturnType<typeof createClient<Database>> | undefined;
 

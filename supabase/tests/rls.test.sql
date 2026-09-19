@@ -303,39 +303,48 @@ begin
   --
   -- Our own trigger functions keep their explicit revokes in 0009 regardless.
   --
-  -- Two more names are allow-listed here, deliberately, by 0015: a payer is
-  -- never authenticated, so the invoice/payment flow has to have exactly one
-  -- door for them. Each is narrow by construction, not merely by discipline:
+  -- One more name is allow-listed here, deliberately, by 0015: a payer is never
+  -- authenticated, so the invoice flow needs a door for them. It is narrow by
+  -- construction, not merely by discipline:
   --   * public_invoice_view(text)          returns an explicit column
   --     allow-list (never billing address, contact_id, notes, seller_gstin),
   --     never a draft invoice, and takes no id — only the reference string.
-  --   * open_invoice_payment_request(text,text) computes the amount from the
-  --     invoice row itself (never a caller-supplied value), refuses unless
-  --     the invoice is issued/payment_pending, and reuses a live order
-  --     instead of piling up new ones (payments_invoice_open_order_uniq).
-  -- Adding a name here must be as deliberate as adding one anywhere else in
-  -- this list — it is not a way around the assertion, it is the assertion
-  -- stating precisely which two doors exist and why.
+  --     Read-only.
+  -- open_invoice_payment_request(text,text) WAS a second door in 0015 and is not
+  -- any more (0017): it stores a caller-supplied provider order id, so with the
+  -- public anon key anyone could plant an invented order on any issued invoice and
+  -- jam it (found on staging in the first real TEST payment). It is service_role
+  -- only, asserted below. Adding a name here must be as deliberate as adding one
+  -- anywhere else in this list — it is not a way around the assertion, it is the
+  -- assertion stating precisely which door exists and why.
   select string_agg(p.proname, ', ') into bad
     from pg_proc p join pg_namespace n on n.oid = p.pronamespace
    where n.nspname = 'public' and p.prosecdef
      and p.prorettype not in ('pg_catalog.trigger'::regtype, 'pg_catalog.event_trigger'::regtype)
-     and p.proname not in ('public_invoice_view', 'open_invoice_payment_request')
+     and p.proname not in ('public_invoice_view')
      and has_function_privilege('anon', p.oid, 'EXECUTE');
   perform test_assert(bad is null,
     coalesce('no SECURITY DEFINER function is executable by anon beyond the documented allow-list (found: ' || bad || ')',
              'no SECURITY DEFINER function is executable by anon beyond the documented allow-list'));
 
-  -- The allow-list itself is asserted shut: exactly these two names, and both
-  -- must still exist and still be SECURITY DEFINER — a migration that drops
-  -- or weakens one without updating this file is caught here, not missed by
-  -- the exclusion above quietly widening to cover its absence.
+  -- The allow-list itself is asserted shut: exactly this one name, and it must
+  -- still exist and still be SECURITY DEFINER — a migration that drops or weakens
+  -- it without updating this file is caught here, not missed by the exclusion
+  -- above quietly widening to cover its absence.
   perform test_assert(
     (select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
       where n.nspname = 'public' and p.prosecdef
-        and p.proname in ('public_invoice_view', 'open_invoice_payment_request')
-        and has_function_privilege('anon', p.oid, 'EXECUTE')) = 2,
-    'exactly the two documented functions are anon-executable SECURITY DEFINER — not fewer, not more');
+        and p.proname in ('public_invoice_view')
+        and has_function_privilege('anon', p.oid, 'EXECUTE')) = 1,
+    'exactly the one documented function is anon-executable SECURITY DEFINER — not fewer, not more');
+
+  -- The order-recording function is the server's alone: not anon, not signed-in
+  -- users, only service_role.
+  perform test_assert(
+    not has_function_privilege('anon', 'public.open_invoice_payment_request(text, text)', 'EXECUTE')
+      and not has_function_privilege('authenticated', 'public.open_invoice_payment_request(text, text)', 'EXECUTE')
+      and has_function_privilege('service_role', 'public.open_invoice_payment_request(text, text)', 'EXECUTE'),
+    'open_invoice_payment_request is executable by service_role alone (0017): no browser-reachable role can plant an order id');
 
   select string_agg(p.proname, ', ') into bad
     from pg_proc p join pg_namespace n on n.oid = p.pronamespace
@@ -344,12 +353,13 @@ begin
      and has_function_privilege('authenticated', p.oid, 'EXECUTE')
      -- record_document_access (0013) is staff-facing by design: it re-checks the caller's
      -- scope and document permission itself and writes only an attributed audit entry.
-     -- public_invoice_view and open_invoice_payment_request (0015) are the two payer-facing
-     -- doors documented in the anon allow-list above; they are granted to authenticated as
-     -- well so staff can preview a customer payment page or re-open a request, and they
-     -- check business state (invoice issued/unpaid), never the caller's identity.
+     -- public_invoice_view (0015) is the one payer-facing door documented in the anon
+     -- allow-list above; it is granted to authenticated as well so staff can preview a
+     -- customer payment page, and it checks business state (invoice issued/unpaid), never
+     -- the caller's identity. open_invoice_payment_request is NOT here: since 0017 it is
+     -- service_role only, and an authenticated staff session must not be able to call it.
      and p.proname not in ('has_perm', 'scope_allows', 'is_staff', 'current_contact_id', 'record_document_access',
-                           'public_invoice_view', 'open_invoice_payment_request');
+                           'public_invoice_view');
   perform test_assert(bad is null,
     coalesce('authenticated can execute no system-only SECURITY DEFINER function (found: ' || bad || ')',
              'authenticated can execute no system-only SECURITY DEFINER function'));

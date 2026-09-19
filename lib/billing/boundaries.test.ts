@@ -67,8 +67,34 @@ describe("secrets and privileged access", () => {
   it("never uses the service-role client for staff or customer requests", () => {
     for (const file of BILLING_FILES) {
       if (file === "lib/payments/consultation.ts" || file === "lib/payments/record.ts") continue; // pre-existing, documented (no call site / webhook)
+      if (file === "lib/payments/invoice-payment.ts") continue; // the one 0017 exception, pinned tightly below
       expect(code(file), file).not.toMatch(/createAdminClient|SUPABASE_SERVICE_ROLE_KEY|supabase\/admin/);
     }
+  });
+
+  it("uses the privileged client in exactly one billing place, for exactly one call, under its own reason (0017)", () => {
+    const source = code("lib/payments/invoice-payment.ts");
+    // One use, named for what it is, and it never reads a table: the only thing it can do here
+    // is record an order the server has just created.
+    expect(source.match(/createAdminClient\(/g)).toHaveLength(1);
+    expect(source).toMatch(/createAdminClient\("payment-request"\)/);
+    expect(source).not.toMatch(/\.from\(/);
+    expect(source.match(/\.rpc\(/g)).toHaveLength(1);
+    expect(source).toMatch(/\.rpc\("open_invoice_payment_request"/);
+    // The customer-facing reader must stay free of it: it is the anon side of the page.
+    expect(code("lib/billing/public-data.ts")).not.toMatch(/createAdminClient|open_invoice_payment_request|SERVICE_ROLE/);
+  });
+
+  it("makes open_invoice_payment_request server-only in the schema, and never grants it back (0017)", () => {
+    const migrations = listFiles("supabase/migrations").filter((f) => f.endsWith(".sql")).sort();
+    const grants = migrations.flatMap((file) =>
+      read(file).split("\n").map((line) => ({ file, line: line.replace(/--.*$/, "") })).filter(({ line }) => /grant\s+execute\s+on\s+function\s+public\.open_invoice_payment_request/i.test(line)),
+    );
+    const last = grants.at(-1);
+    if (!last) throw new Error("no grant on open_invoice_payment_request found in any migration");
+    expect(last.file).toContain("0017_");
+    expect(last.line).toMatch(/to\s+service_role\s*;/i);
+    expect(last.line).not.toMatch(/anon|authenticated|public\s*;/i);
   });
 
   it("reads the Razorpay secret only in the module that calls Razorpay", () => {

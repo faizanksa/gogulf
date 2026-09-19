@@ -1,6 +1,7 @@
 -- =============================================================================
--- Invoices (0015) — lifecycle, RBAC/RLS, the anon payment-request door, the
--- customer-safe read, and the webhook-driven sync onto payments (0014).
+-- Invoices (0015, 0017) — lifecycle, RBAC/RLS, the SERVER-ONLY payment-request
+-- function (no browser-reachable role may call it), the customer-safe read, and
+-- the webhook-driven sync onto payments (0014).
 --
 -- DISPOSABLE DATABASE ONLY. One transaction, rolled back.
 --
@@ -245,11 +246,14 @@ select invoices_test.check(
   invoices_test.error_of(format($$update public.invoices set status = 'issued' where id = %L$$, invoices_test.id('inv_void')))
     like '%invoice_transition_not_allowed%',
   'a voided invoice cannot be reopened');
+-- open_invoice_payment_request is server-only (0017): only service_role may call it.
+set local role service_role;
 select invoices_test.check(
   invoices_test.error_of(format($$select public.open_invoice_payment_request(%L, 'order_TEST_VOIDED')$$,
     invoices_test.ref('inv_void')))
     like '%invoice_not_payable%',
   'a voided invoice refuses a payment request');
+set local role authenticated; -- the staff claims set above are still in force
 
 -- ===========================================================================
 -- 3. RBAC / RLS — who can see and write what
@@ -329,8 +333,40 @@ select invoices_test.check(
   'anon cannot select from payments at all — the same door as before, still shut');
 
 -- ===========================================================================
--- 4. open_invoice_payment_request — the one thing anon may do
+-- 4. open_invoice_payment_request — SERVER-ONLY (0017)
+--
+-- It stores a caller-supplied provider order id, and an order id is only real if
+-- Razorpay issued it to the server. With the public anon key anyone could plant an
+-- invented one on any issued invoice (sequential references) and jam it — found on
+-- staging during the first real TEST payment. So neither anon nor authenticated may
+-- call it; the server does, after creating the order.
 -- ===========================================================================
+select invoices_test.check(
+  invoices_test.error_of(format($$select public.open_invoice_payment_request(%L, 'order_PLANTED_BY_ANON')$$, invoices_test.ref('inv_a')))
+    like '42501%',
+  'anon cannot plant an order id on an issued invoice — permission denied (the 0017 finding)');
+select invoices_test.check(
+  invoices_test.error_of(format($$select public.open_invoice_payment_request(%L)$$, invoices_test.ref('inv_a')))
+    like '42501%',
+  'anon cannot even ask whether an invoice has a live order');
+select invoices_test.check(
+  not has_function_privilege('anon', 'public.open_invoice_payment_request(text, text)', 'EXECUTE')
+    and not has_function_privilege('authenticated', 'public.open_invoice_payment_request(text, text)', 'EXECUTE')
+    and has_function_privilege('service_role', 'public.open_invoice_payment_request(text, text)', 'EXECUTE'),
+  'EXECUTE belongs to service_role alone: not anon, not authenticated');
+
+set local role authenticated;
+select invoices_test.act_as_staff('s_admin');
+select invoices_test.check(
+  invoices_test.error_of(format($$select public.open_invoice_payment_request(%L, 'order_PLANTED_BY_STAFF')$$, invoices_test.ref('inv_a')))
+    like '42501%',
+  'a signed-in ADMIN cannot call it either — only the server can vouch for an order id');
+select invoices_test.check(
+  (select count(*) from public.payments where invoice_id = invoices_test.id('inv_a')) = 0
+    and (select status = 'issued' from public.invoices where id = invoices_test.id('inv_a')),
+  'the refused attempts wrote nothing: no payments row, the invoice is still issued');
+
+set local role service_role;
 select invoices_test.check(
   invoices_test.error_of('select public.open_invoice_payment_request(''GG-INV-0000-99999'', ''order_TEST_X'')')
     like '%invoice_not_found%',
@@ -342,9 +378,8 @@ with req as (
 )
 insert into invoices_test.ids select 'pay_a', payment_id from req;
 
--- The write above genuinely happened as anon — a real customer's browser.
--- Verifying what it wrote needs a session that can read payments/invoices at
--- all, which anon structurally cannot (proven above); switch to staff for that.
+-- The write above is what the server does after creating the order at Razorpay.
+-- Verifying what it wrote is done as staff, who can read payments and invoices.
 set local role authenticated;
 select invoices_test.act_as_staff('s_admin');
 
@@ -358,6 +393,7 @@ select invoices_test.check(
   (select status = 'payment_pending' from public.invoices where id = invoices_test.id('inv_a')),
   'the invoice moves to payment_pending once a payment request is open — a trusted, not staff, transition');
 
+set local role service_role;
 select invoices_test.check(
   (select r.reused and r.payment_id = invoices_test.id('pay_a')
      from public.open_invoice_payment_request(
@@ -372,6 +408,9 @@ select invoices_test.check(
   (select r.reused and r.provider_order_id = 'order_TEST_A001' and r.payment_id = invoices_test.id('pay_a')
      from public.open_invoice_payment_request(invoices_test.ref('inv_a')) r),
   'asking with no order id returns the live order (and its order id), so a page reload never mints another at the provider');
+
+set local role authenticated;
+select invoices_test.act_as_staff('s_admin');
 
 -- ===========================================================================
 -- 5. public_invoice_view — exactly the customer-safe columns
@@ -414,18 +453,27 @@ select invoices_test.check(
   (select status = 'paid' from public.invoices where id = invoices_test.id('inv_a')),
   'and the invoice is never regressed off paid by it');
 
--- A payment_failed on a DIFFERENT invoice's order. Opening the request needs a
--- session open_invoice_payment_request actually grants EXECUTE to (anon or
--- authenticated) — service_role is not one of them, on purpose: the webhook
--- never opens payment requests, it only ever resolves ones already open.
+-- A payment_failed on a DIFFERENT invoice's order. Staff issue the invoice; the request
+-- itself is the server's call (0017: service_role only). The webhook never opens payment
+-- requests, it only ever resolves ones already open — record_payment_event is a separate
+-- function.
 set local role authenticated;
 select invoices_test.act_as_staff('s_admin');
 update public.invoices set status = 'issued' where id = invoices_test.id('inv_acc'); -- was draft; issue then request
+
+set local role service_role;
+-- One provider order belongs to one invoice: inv_acc cannot claim the order id inv_a already
+-- holds. Nothing is written for inv_acc and it stays issued.
+select count(*) as attempted from public.open_invoice_payment_request(invoices_test.ref('inv_acc'), 'order_TEST_A001');
+select invoices_test.check(
+  (select count(*) from public.payments where invoice_id = invoices_test.id('inv_acc')) = 0
+    and (select status = 'issued' from public.invoices where id = invoices_test.id('inv_acc'))
+    and (select invoice_id = invoices_test.id('inv_a') from public.payments where provider_order_id = 'order_TEST_A001'),
+  'an order id already bound to one invoice cannot be attached to another: no row for the second, the first is unchanged');
 -- A plain top-level call, not an unreferenced CTE: a WITH branch nothing
 -- selects from is not guaranteed to execute a volatile function inside it.
 select public.open_invoice_payment_request(invoices_test.ref('inv_acc'), 'order_TEST_ACC002');
 
-set local role service_role;
 select public.record_payment_event('evt_TEST_inv_acc_fail', 'payment.failed', 'order_TEST_ACC002', 'pay_TEST_ACC002',
   null, null, null, 'BAD_REQUEST_ERROR', 'card declined') as outcome \gset fail_
 select invoices_test.check(:'fail_outcome' = 'processed', 'a genuine failure processes');
@@ -436,13 +484,14 @@ select invoices_test.check(
   (select status = 'paid' from public.invoices where id = invoices_test.id('inv_a')),
   'inv_a — a completely different invoice — is untouched by inv_acc''s failure');
 
--- Retry after a decline: the payer opens a NEW request against the same invoice.
-set local role authenticated;
-select invoices_test.act_as_staff('s_admin');
+-- Retry after a decline: the payer's request opens a NEW order against the same invoice
+-- (the server's call — service_role, 0017).
 select invoices_test.check(
   (select not r.reused and r.payment_id <> invoices_test.id('pay_a')
      from public.open_invoice_payment_request(invoices_test.ref('inv_acc'), 'order_TEST_ACC003') r),
   'after a decline the payer gets a NEW order (the failed one is not reused)');
+set local role authenticated;
+select invoices_test.act_as_staff('s_admin');
 select invoices_test.check(
   (select status = 'payment_pending' from public.invoices where id = invoices_test.id('inv_acc')),
   'and the invoice moves payment_failed > payment_pending, a trusted transition');
@@ -468,6 +517,7 @@ with i as (
 )
 insert into invoices_test.ids select 'inv_late', id from i;
 update public.invoices set status = 'issued' where id = invoices_test.id('inv_late');
+set local role service_role; -- the server's calls from here (0017)
 select invoices_test.check(
   (select count(*) from public.open_invoice_payment_request(invoices_test.ref('inv_late'))) = 0,
   'asking with no order id, when no live order exists, returns nothing and creates nothing');
@@ -475,7 +525,6 @@ select invoices_test.check(
   (select count(*) from public.payments where invoice_id = invoices_test.id('inv_late')) = 0,
   'and no payments row appeared from the lookup');
 select public.open_invoice_payment_request(invoices_test.ref('inv_late'), 'order_TEST_LATE001');
-set local role service_role;
 select public.record_payment_event('evt_TEST_late_fail', 'payment.failed', 'order_TEST_LATE001', 'pay_TEST_LATE001', null, null, null, 'GATEWAY_ERROR', 'timeout') as outcome \gset lf_
 select invoices_test.check(
   (select status = 'payment_failed' from public.invoices where id = invoices_test.id('inv_late')),

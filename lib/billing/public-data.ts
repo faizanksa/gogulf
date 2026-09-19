@@ -2,9 +2,11 @@
  * What a payer's browser is allowed to know about an invoice.
  *
  * The client carries the public anon key and no cookies. anon has no privilege on
- * `invoices` or `payments` at all; the ONLY doors are two SECURITY DEFINER functions
- * (0015): public_invoice_view returns an explicit column allow-list, and
- * open_invoice_payment_request opens a payment against the invoice's own total.
+ * `invoices` or `payments` at all; the ONLY door is one read-only SECURITY DEFINER
+ * function (0015): public_invoice_view returns an explicit column allow-list. Recording a
+ * payment request is NOT available to this client — open_invoice_payment_request is
+ * server-only since 0017 (lib/payments/invoice-payment.ts calls it with the privileged
+ * client), because it stores a caller-supplied provider order id.
  * Nothing here can read a staff note, a billing address, a contact or an internal id.
  *
  * Deliberately not cached: a payer must see "Paid" the moment the webhook has recorded

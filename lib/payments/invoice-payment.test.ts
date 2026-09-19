@@ -9,9 +9,15 @@ const state = vi.hoisted(() => ({
 
 vi.mock("@/lib/billing/public-data", () => ({
   getPublicInvoice: vi.fn(async () => state.invoice),
-  publicBillingClient: () => ({ rpc: state.rpc }),
+  publicBillingClient: () => ({ rpc: vi.fn(() => { throw new Error("the anon client must never record a payment request (0017)"); }) }),
 }));
 
+// open_invoice_payment_request is server-only since 0017: it is reached through the privileged client.
+vi.mock("@/lib/supabase/admin", () => ({
+  createAdminClient: vi.fn(() => ({ rpc: state.rpc })),
+}));
+
+import { createAdminClient } from "@/lib/supabase/admin";
 import { startInvoicePayment } from "./invoice-payment";
 
 const REF = "GG-INV-2026-00001";
@@ -24,9 +30,17 @@ const deps = (fetch = orderFetch()) => ({ env: TEST_ENV, stage: "staging" as con
 beforeEach(() => {
   state.invoice = invoice();
   state.rpc.mockReset();
+  vi.mocked(createAdminClient).mockClear();
 });
 
 describe("startInvoicePayment", () => {
+  it("records the order through the privileged client, never the anon one (0017)", async () => {
+    state.rpc.mockResolvedValueOnce({ data: [], error: null }).mockResolvedValueOnce({ data: [opened({ provider_order_id: "order_NEWONE" })], error: null });
+    expect(await startInvoicePayment(REF, deps())).toMatchObject({ ok: true });
+    expect(createAdminClient).toHaveBeenCalledWith("payment-request");
+    // The anon mock throws if anything reaches it, so reaching ok:true proves it never did.
+  });
+
   it("resumes a live order without creating another at Razorpay", async () => {
     state.rpc.mockResolvedValueOnce({ data: [opened()], error: null });
     const d = deps();
