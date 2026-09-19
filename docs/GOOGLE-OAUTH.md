@@ -56,7 +56,22 @@ Mumbai refs are now fixed, so both values below are final.
 | Supabase `additional_redirect_urls` | `https://staging.gogulf.co/**` |
 | Post-sign-in destination | `/admin` |
 
-### Mumbai production — `exsnksrmkycloxiajwmx` — **NOT YET APPLIED**
+### Mumbai production — `exsnksrmkycloxiajwmx` — **applied by hand in the Supabase dashboard (read back 19 Sep 2026)**
+
+> **Do not run `supabase config push` against production from this repository.** Production's Google
+> provider was configured in the dashboard with a **production client that is different from staging's**
+> (verified by comparing the full client ids in-process; nothing printed). `.env.google-oauth.local`
+> holds the **staging** client, and `config push` sends every setting from `config.toml`, so it would
+> replace the production client with the staging one and break production sign-in. There is
+> deliberately no `[remotes.production]` block. Changes to production auth go through the dashboard, or
+> through the Management API with the specific fields only, after reading the current values back.
+>
+> Read back on 19 Sep (non-secret fields only): Google enabled; client id ≠ staging's; secret present;
+> `site_url` `https://www.gogulf.co`; `uri_allow_list` `https://www.gogulf.co/**`; `disable_signup`
+> true; custom-access-token hook enabled at `pg-functions://postgres/public/custom_access_token_hook`;
+> `jwt_exp` 3600. Supabase's redirect to Google carries the production callback URI and Google accepts
+> the client (GET probe, staging as control). **Not verifiable without a person:** the client secret
+> and the Internal consent screen — the first real sign-in is the test.
 
 | Setting | Value |
 | --- | --- |
@@ -95,8 +110,9 @@ npx supabase config push --project-ref noxireidrbeqcvsirjec     # staging
 Pushing with those variables unset writes an empty client id and breaks the
 provider, so export them first and confirm a second push reports no changes.
 
-Production is deliberately absent from that command. It gets the same treatment
-at cutover, not before.
+Production is deliberately absent from that command, and must stay absent: it was
+configured by hand in the dashboard with its own client (§3), and pushing this
+repository's config would overwrite that client with the staging one.
 
 ## 4a. The sign-in flow in the app (Phase 3)
 

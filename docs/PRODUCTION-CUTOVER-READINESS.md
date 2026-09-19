@@ -190,8 +190,8 @@ pass; now Production-only)**.
 
 | Change still required at cutover | Detail |
 | --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | → `https://exsnksrmkycloxiajwmx.supabase.co` |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | → Mumbai production anon key |
+| `NEXT_PUBLIC_SUPABASE_URL` | **Corrected 19 Sep:** already `https://exsnksrmkycloxiajwmx.supabase.co` (read back by `vercel env pull`, refs only). The live deployment predates the change and still serves Tokyo, because variables only affect new builds |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | **Corrected 19 Sep:** already Mumbai production's (claims `ref=exsnksrmkycloxiajwmx role=anon`) |
 | `SUPABASE_SERVICE_ROLE_KEY` | **Present.** Confirm it is Mumbai production's, not Tokyo's — see §10; it cannot be read back |
 | `PLATFORM_MODE` | Confirm `server`. *(Corrected 18 Sep: the live `519cb85` build is already server mode — this variable took effect although `main`'s `vercel.json` is `npm run build`. See `docs/MAIN-RELEASE-READINESS.md` §1.)* |
 | Build command | Comes with the merge: the branch's `vercel.json` is `cross-env PLATFORM_MODE=server npm run build` |

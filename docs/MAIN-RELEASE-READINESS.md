@@ -4,7 +4,8 @@ Written 18 September 2026; **updated 19 September 2026 with the billing MVP, and
 day with the completed admin model, migrations `0016`–`0017` and the first real Razorpay TEST
 payments** (§2–§6, §9–§14 changed; jobs and applications sections are as of the 18 Sep record, whose
 application code is unchanged). This is a **release-preparation record**, not an approval. Its
-conclusion is stated in §14: **`main` was not merged and the cutover was not performed.** Statuses
+state is in §14: **Mumbai production was prepared on 19 Sep (schema, staff, data); `main` has not been
+merged and traffic has not been switched.** Statuses
 are factual:
 
 | Status | Meaning |
@@ -27,7 +28,9 @@ are factual:
 > its first step with an explicit message**, and Vercel keeps serving the current deployment.
 > **In practice, the merge takes effect together with the Mumbai cutover** (§14).
 
-No production system was changed while preparing this document (§15.8).
+Up to the billing update no production system had been changed. **Since then Mumbai production
+(only) has been written to — schema, staff, imported data (§14, §15.7).** Tokyo, Vercel Production and
+the live site have not been changed.
 
 ---
 
@@ -160,8 +163,8 @@ was decrypted.
 
 | Variable (Production) | Today | Required when `main` deploys |
 | --- | --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | Tokyo | **→ `https://exsnksrmkycloxiajwmx.supabase.co`** |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Tokyo | **→ Mumbai production anon key** |
+| `NEXT_PUBLIC_SUPABASE_URL` | **Mumbai production** (set 16 Sep; read back 19 Sep. The live deployment was built 13 Sep and still serves Tokyo — variables only affect new builds) | unchanged |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | **Mumbai production** (claims `ref=exsnksrmkycloxiajwmx role=anon`) | unchanged |
 | `SUPABASE_SERVICE_ROLE_KEY` | Mumbai production (user-verified; write-only in Vercel) | unchanged |
 | `PLATFORM_MODE` | `server` | unchanged (`vercel.json` now also forces it) |
 | `NEXT_PUBLIC_SITE_URL` | `https://www.gogulf.co` | unchanged |
@@ -175,7 +178,7 @@ the production prebuild enforces it:
 
 | Production build sees | Result |
 | --- | --- |
-| Tokyo URL (today's environment) | **FAIL**, explicit message; live deployment untouched |
+| Tokyo URL | **FAIL**, explicit message; live deployment untouched |
 | Mumbai URL + Mumbai anon + Mumbai service role | PASS |
 | Mumbai URL + Tokyo anon, or + a service-role key from another project | **FAIL** (half-switched cutover) |
 | Keys that are not JWTs (new Supabase key format) | PASS on the URL check; cross-project check not possible |
@@ -534,39 +537,44 @@ delivery (§10); a second application of `0016`/`0017` on top of themselves.
 | --- | --- | --- |
 | 1 | Decisions: vacancy content, privacy review, **GST treatment**, Razorpay wording, switch-window policy. *(ADMIN's audit and settings access — decided and built, `0016`.)* | You |
 | 2 | Razorpay **TEST** keys in Vercel Preview — **done**; real TEST payments, success and decline — **done** (`PAYMENTS.md` §10.12). **Remaining:** add Razorpay's TEST webhook for staging and see one real delivery mark an invoice paid with no script (`PAYMENTS.md` §10.9) | You (dashboard) + me |
-| 3 | **Freeze intake**, then a **fresh** Tokyo backup and delta (`npm run backup:prod`, then `-- verify`). Today the live project holds 15 applications / 39 documents against the backup's 14 / 34 (§13.17) | You, or me with approval |
-| 4 | Apply **`0012`–`0017`** to Mumbai production and run the suites (**439**) — only while it holds no live data; mind sequence consumption (§13.18). A read-only dry run on 19 Sep confirms exactly these six are pending | You, or me with approval |
-| 5 | Google OAuth client (Internal) and Supabase auth settings for Mumbai production | You |
-| 6 | Bootstrap staff; each person signs in with Google once and is verified | You, or me with approval |
-| 7 | Import the Tokyo applications and documents from the **verified archive** | Both |
-| 8 | Switch `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to Mumbai production **in one edit** | You |
-| 9 | Merge the release head into `main` (below) | You |
-| 10 | Verify the build log and the live bundle; smoke test; final delta; revoke Tokyo's anonymous INSERT | Both |
+| 3 | Fresh Tokyo backup and delta (`npm run backup:prod`, then `-- verify`). **Done 19 Sep** — two fresh backups, 19 applications / 50 documents, 50/50 SHA-256, zero delta between them. *(No technical intake freeze exists that does not modify Tokyo or the live site, so the design is delta reconciliation: import, switch, then re-backup and re-import what arrived — see the runbook.)* | Done; repeat after the switch |
+| 4 | Apply **`0012`–`0017`** to Mumbai production and run the suites (**439**). **Done 19 Sep** — `schema_migrations` reads `0001`…`0017`; 439/439; sequences restored under guards (§13.18) | Done |
+| 5 | Google OAuth client (Internal) and Supabase auth settings for Mumbai production. **Configured by you in the Supabase dashboard** (a client different from staging's); the hand-off to Google was verified 19 Sep with a non-interactive probe; a real sign-in is still owed (step 6) | You |
+| 6 | Bootstrap staff — **done 19 Sep** (three distinct identities, roles verified, hook claims verified). **Each person signs in with Google once and is verified — not done** | You (sign-in), me (verification) |
+| 7 | Import the Tokyo applications and documents from the **verified archive** — **done 19 Sep** with `scripts/import-to-production.mjs`: 19/19 rows equal column by column, 50/50 documents re-downloaded and re-hashed | Done; re-run for the final delta |
+| 8 | Vercel Production variables — **verified 19 Sep, not switched by me**: `NEXT_PUBLIC_SUPABASE_URL` and the anon key already name Mumbai production (set 16 Sep; the live deployment predates that and still serves Tokyo). The service-role key is a sensitive variable that cannot be read back; the production build guard cross-checks it | Verified |
+| 9 | Merge the release head into `main` (below) — **pending**: the push was refused by the tool's safety classifier ("Production Deploy") and needs your permission or your own `git push` | You |
+| 10 | Verify the build log and the live bundle (`node scripts/verify-production-deployment.mjs`); smoke test; final delta (`backup:prod`, `-- verify`, `import-to-production.mjs`); decide whether to revoke Tokyo's anonymous INSERT | Both |
 | 11 | **Billing go-live, separately approved:** GST decided → live webhook (secret set *before* saving it in the dashboard) → one small supervised real payment → customers | You |
 
-**Rollback:** promote `dpl_9RaneE2dUCaRfmGifXYfumUjWDL9` (`519cb85`) and restore the two Tokyo
-variables. Promotion does not rebuild, so the new guard does not affect it.
+**Rollback:** promote `dpl_9RaneE2dUCaRfmGifXYfumUjWDL9` (`519cb85`, verified Ready and aliased to
+`www.gogulf.co` and `gogulf.co` on 19 Sep). Promotion does not rebuild: that deployment keeps the
+Tokyo configuration it was built with, so **no Production variable needs restoring for the rollback
+itself** (the variables already name Mumbai and only affect new builds). What a rollback does *not* undo
+is data: applications taken on Mumbai after the switch would have to be reconciled back to Tokyo.
 
-### Where this stands, 19 September 2026 — the decision on `main`
+### Where this stands, 19 September 2026 (afternoon) — cutover prepared, `main` push pending
 
-**`main` was not merged and the cutover was not performed.** The release is code-complete and
-verified on staging, but the production prerequisites in the table are not satisfied, and merging
-`main` before they are would break production (the production build refuses Tokyo, so it would fail
-and Vercel would keep serving the current deployment — safe, but a failed release — or, if the
-variables were switched first, would run against an empty Mumbai database). Specifically, at the
-time of writing:
+**`main` has not been merged: the push to it was refused by the tool's safety classifier ("Production
+Deploy") and is the one step waiting on you.** Everything the merge depends on has been done and
+verified; nothing more is needed from anyone before the push except your decision to make it.
 
 | Prerequisite | State |
 | --- | --- |
-| Mumbai production schema | at `0011`; `0012`–`0017` pending (dry run) — **not applied** |
-| Tokyo backup | 16 Sep backup intact but **stale** (15 vs 14 applications, 39 vs 34 documents) — **needs a fresh one after an intake freeze** |
-| Data import into Mumbai production | **not done**; belongs after the freeze and fresh backup |
-| Production Google OAuth client and staff sign-in | **not created / not verified** — needs a person in Google Cloud and Supabase (`docs/GOOGLE-OAUTH.md`); production cannot be declared operational without it |
-| Vercel Production variables | Supabase URL and anon key still name Tokyo (not switched — an edit made by you at the window) |
+| Mumbai production schema | **`0001`–`0017` applied 19 Sep**, verified against `schema_migrations`; 439/439 SQL assertions; 28 of 28 tables with RLS, 70 policies, RBAC 12/72/362 — identical to staging. One extra SECURITY DEFINER function exists on production only: `rls_auto_enable()`, Supabase's own `ensure_rls` event trigger (auto-enables RLS on new tables); the repo's `rls.test.sql` already anticipates it |
+| Sequences | inspected before and after the suites; restored under a guard that refuses unless the tables are empty and `reference` is uniquely indexed; `GG-INV`, `GG-PAY`, `GG-JOB` read "never used" (first real numbers `…-00001`); `case_number_seq` restored to its prior 12 |
+| Tokyo backup | **two fresh backups 19 Sep**: 19 applications, 50 documents (48 referenced by a row, 2 in the bucket but referenced by no row — imported anyway), 50/50 SHA-256, live == backup |
+| Data import into Mumbai production | **done**: 19/19 applications equal to the backup column by column; 50/50 documents re-downloaded and re-hashed; every path resolves; arrived as `new`, unassigned, unlinked; audit trail 375 rows (372 baseline + 3 staff creations), all `system`; a second dry run found nothing left to import |
+| Staff | admin@, hello@ = SUPER_ADMIN, careers@ = ADMIN; one row each, distinct `auth.users` and `staff_users`, Lucknow branch; the sign-in hook returns the right `app_role`, `app_staff_id`, `app_branch` for each |
+| Production Google OAuth | configured in Supabase by you (client differs from staging's); site URL and redirect allow-list are `www.gogulf.co`; `disable_signup` true; the JWT hook enabled; the hand-off to Google verified non-interactively. **Not verified: an actual sign-in, and the client secret** — both need a person |
+| Vercel Production variables | URL and anon key name Mumbai production; service-role key unreadable (sensitive) and verified by the build guard; `RAZORPAY_KEY_ID` is LIVE; webhook secret and Resend present; `APP_ENV` unset |
+| Release history | `origin/main` = `519cb85` is an ancestor of `origin/staging` = `b23c058`; 35 commits, one author, the only change since the tested code `e59bf06` is documentation |
 | Razorpay TEST webhook delivery | not observed; **does not gate the cutover**, gates billing go-live |
 | Tests, staging, secrets | all green as recorded in §6 and §12 |
 
-Nothing was written to Tokyo or to Mumbai production in this work.
+The database work above wrote to **Mumbai production** (migrations, three staff identities, 19
+applications, 50 documents, sequence values). **Nothing was written to Tokyo**, and no Vercel variable
+or deployment was changed.
 
 ### Merge commands (do not run without explicit approval)
 
@@ -587,8 +595,9 @@ id will differ.
 
 ## 15. Manual actions required from the operator
 
-1. **Decide the merge timing.** It belongs inside the cutover window (§14). Merging earlier is
-   safe but produces a failed production build and leaves `main` ahead of what production runs.
+1. **Make the `main` push** (or grant the tool permission to): `git push origin origin/staging:refs/heads/main`
+   after confirming `git rev-parse origin/staging` is the release head. It starts the Vercel production
+   build. With the database, data and variables already prepared, the merge is now the cutover itself.
 2. **Configure Razorpay's TEST webhook for staging** (exact URL and secret rule in `PAYMENTS.md`
    §10.9) and pay one synthetic invoice to see a real delivery. Then do the manual QA in
    `PAYMENTS.md` §10.10 as a Google-signed-in ADMIN and SUPER_ADMIN. That is also the only check of
@@ -599,27 +608,30 @@ id will differ.
    converting applications into CRM records and of payment records.
 5. *(ADMIN's audit and settings access — resolved in `0016`; nothing to decide unless you want it
    different.)*
-6. Freeze intake for the cutover window; approve (or run) the database, staff and data steps of the
-   runbook; create the Google OAuth client and complete each staff sign-in; switch the two
-   Supabase variables together.
-7. **Confirmation of what was and was not touched (19 Sep update):**
-   * **Tokyo production** — one **read-only** check (`backup:prod -- verify`: GET requests only, by
-     construction). No write. Counts and timestamps only were recorded here; no applicant name or
-     document name.
-   * **Mumbai production** — one read-only connection: `db push --dry-run`, which lists pending
-     migrations and applies nothing. No write.
-   * **Mumbai staging** — `0016` and `0017` applied; synthetic invoices, payments and audit rows
-     ("STAGING TEST") created and left (invoices have no DELETE by design).
-   * **Vercel** — Production: variable **names** listed, no value read or changed. Preview: the
-     staging webhook secret was pulled to a temporary file that a script deleted, never printed; the
-     TEST Razorpay pair reads back empty (sensitive) and was never seen. Deployments were made only
-     by pushing to `origin/staging`; no redeploy, promotion or environment edit was made.
-   * **Razorpay** — no dashboard change; **live webhook not configured**; the API was called with
-     the TEST key only, by the deployed staging server.
-   * DNS, OAuth, `main` — unchanged; `main` not merged or pushed. Candidate and job-application
-     payments — not built, and refused by the schema.
+6. After the merge: each administrator signs in with Google once (`admin@`, `hello@`, `careers@`),
+   so the sign-in can be verified and each Google identity linked; then re-run the Tokyo delta
+   (`backup:prod`, `-- verify`, `scripts/import-to-production.mjs`) for anything submitted between the
+   backup and the switch, and again later for stragglers with a stale page open.
+7. **Confirmation of what was and was not touched (19 Sep, cutover preparation):**
+   * **Tokyo production** — **read-only, GET requests only** (`backup:prod`, four runs including
+     `verify`). No write, no grant change, nothing deleted; the project is untouched. Counts and
+     timestamps only are recorded here; no applicant name or document name.
+   * **Mumbai production** — **written**: migrations `0012`–`0017`; three staff identities; 19
+     applications and 50 documents imported; sequence values restored; the SQL suites run (in rolled-back
+     transactions). Read: inventory, auth configuration (non-secret fields), function and sequence lists.
+   * **Mumbai staging** — read only in this phase (inventory and function list).
+   * **Vercel** — Production: variables pulled twice to a scratch file to read which project each names
+     (refs, modes and lengths only; no value printed), the file deleted at once; **no variable, deployment
+     or alias changed.** Preview untouched.
+   * **Google / Supabase Auth** — read only. Production's Google provider was configured by you; nothing
+     was pushed to it (a `supabase config push` from this repo would have replaced your production client
+     with the staging one — see `GOOGLE-OAUTH.md`).
+   * **Razorpay** — untouched; **live webhook not configured**; Production holds the LIVE pair, Preview
+     the TEST pair.
+   * DNS — unchanged. `main` — **not pushed** (refused by the safety classifier). Candidate and
+     job-application payments — not built, and refused by the schema.
 
 ---
 
-**This document grants no approval. Production database cutover has NOT been performed. `main`
-has NOT been merged.**
+**This document grants no approval. Mumbai production is prepared (schema, data, staff); traffic has
+NOT been switched and `main` has NOT been merged — that push is the remaining step.**
