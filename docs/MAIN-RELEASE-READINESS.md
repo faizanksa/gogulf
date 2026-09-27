@@ -120,6 +120,50 @@ the public still cannot choose a branch; with no default marked, an application 
 `jobs.test.sql`'s isolation fixture now uses a second branch (it relied on a branchless application,
 which `0020` makes impossible). SQL **506/506** on staging and locally.
 
+### 0.8 Production preflight — 28 Sep 2026 (read-only) and the decisions taken on it
+
+Run against Mumbai production (`exsnksrmkycloxiajwmx`) in `READ ONLY` transactions, rolled back. Nothing was
+written.
+
+| Check | Found |
+| --- | --- |
+| Migrations | exactly `0001`–`0017`; `0018`/`0019`/`0020` not applied; dry run lists exactly those three |
+| Applications | **23**: 19 imported from Tokyo (4–19 Sep) + **4 received on Mumbai after the switch** (19–24 Sep). **22 have no branch, all without a job** (the 19 imports and 3 of the new ones); 1 has Lucknow — converted by `hello@` on 27 Sep into case `GG-REC-2026-00013` |
+| Default intake branch | one branch, Lucknow (`LKO`), active; `is_default_intake` not yet present — `0020` resolves it unambiguously |
+| `0019` guards | 1 case, `recruitment`; `case_travel` 0, `case_visa` 0; no travel-role staff; no case on a travel pipeline (the Travel pipeline exists and is retired by `0019`) |
+| Staff | `admin@` SUPER_ADMIN and `hello@` SUPER_ADMIN, both Google-linked; `careers@` ADMIN, not yet Google-linked; all Lucknow |
+| Baseline | audit 392; roles 12; permissions 72; role_permissions 362; RLS policies 70; pipeline stages 23; documents 60 (50 imported + 10 since the switch); contacts 1; cases 1; jobs 0; invoices 2; payments 2; staff 3 |
+
+**Decision — `0020` backfills all 22** (owner, 28 Sep): the 3 applications received on Mumbai after the
+switch are legitimate and are treated exactly like the other job-less applications. Expected: 23 applications,
+22 without a branch before, **22 backfilled to Lucknow**, 0 without a branch after.
+
+**Tokyo reconciliation — accepted limitation** (owner, 28 Sep).
+* The last successful Tokyo verification (19 Sep 2026, 10:33 UTC, the `verify` run after the switch) found
+  **no late applications** (delta 0; 19 applications, 50 documents, all SHA-256 matched).
+* On 28 Sep 2026 Tokyo's Supabase endpoint `julbqkeyvzwluayokcdi.supabase.co` is **unreachable and does not
+  exist in DNS** (also per Google's public resolver); both Mumbai projects resolve. The project has been
+  paused or removed on Supabase's side; the Supabase CLI login on this machine cannot see its organisation.
+* The **19 Tokyo-imported applications are present in Mumbai** (verified byte-exact on 19 Sep; 19 counted
+  on 28 Sep). The 19 Sep archive still re-verifies (50/50).
+* **The period after the last successful check cannot be verified**, because the source project is no longer
+  reachable. No additional Tokyo application is inferred or assumed.
+* **No Tokyo restoration or import is part of this release** unless separately requested.
+
+**Live billing — discovered 28 Sep, and the records corrected.** Production billing is **live**:
+`hello@` created and issued two invoices on 27 Sep 2026.
+* `GG-INV-2026-00001` — issued; the payment link was opened (`GG-PAY-2026-00001`, `created`); **not paid**.
+* `GG-INV-2026-00002` — issued and **paid** through Razorpay (`GG-PAY-2026-00002`, `paid` at 15:40 UTC).
+* **Razorpay's live webhook confirmed the payment**: the payment and invoice were marked paid by the
+  webhook (`payment.paid`, actor `razorpay`; 3 payment events recorded). So the live webhook is configured and
+  delivering, contrary to earlier records.
+* **GST / D8 is now an outstanding business and compliance follow-up** for invoices already issued — no
+  longer an undecided question to settle "before any real invoice". The invoices themselves are not
+  modified by this release.
+
+Statements elsewhere in this record that billing is "built, not in use", that "no real invoice has been
+issued" or that the live webhook is "not configured" are superseded by this section.
+
 ### 0.5 Still owed before this release reaches production
 
 1. *(Done 27 Sep: sign-in and authorization on staging, and the full E2E suite — §0.3.)* Still open, and
@@ -127,8 +171,8 @@ which `0020` makes impossible). SQL **506/506** on staging and locally.
    user.
 2. The three production Google sign-ins (`hello@`, `admin@`, `careers@`) — **no record of any yet**.
 3. The runbook's Phase D approvals (below).
-4. `0020` on production (§0.7, runbook Phase D): it backfills every production application without a branch — the 19 imported from Tokyo among them — to Lucknow. Required before `careers@` becomes HR Manager there.
-4. A later Tokyo late-application check (the last one: delta 0 on 19 Sep, 10:33 UTC).
+4. `0020` on production (§0.7, runbook Phase D): it backfills every production application without a branch — **22** on 28 Sep: the 19 imported from Tokyo and 3 received on Mumbai (§0.8) — to Lucknow. Required before `careers@` becomes HR Manager there.
+4. ~~A later Tokyo late-application check~~ — not possible: Tokyo is unreachable; accepted limitation (§0.8).
 5. Your approval for Phase D of the runbook: `0018` then `0019` on Mumbai production, then `main`.
 
 The staging branch also carries the documentation and the `pay.spec.ts` test fix made after `53222d0`

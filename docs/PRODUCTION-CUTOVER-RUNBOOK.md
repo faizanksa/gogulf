@@ -233,14 +233,19 @@ be loaded" instead of statuses), so it goes second.
 * On staging: staff sign-in and authorization verified by the owner, and the full E2E suite green against
   the release (both done 27 Sep — readiness record §0.3). Onboarding a *new* staff member with a real
   Workspace user is not yet done manually; decide whether it gates this phase.
-* A Tokyo late-application check (Phase B step 1 / step 10 tools, GET-only); import anything new first.
+* ~~A Tokyo late-application check~~ — **not possible since 28 Sep**: Tokyo's endpoint no longer exists.
+  Accepted limitation (readiness record §0.8): the last successful check (19 Sep, 10:33 UTC) found none, the
+  19 imports are in Mumbai, the period after it cannot be verified, and no Tokyo restore or import is part of
+  this release.
 
 **D2. Pre-flight on Mumbai production** *(read-only)*
 * `schema_migrations` is exactly `0001`–`0017`.
 * Zero cases of a type other than `recruitment`/`support`; `case_travel` and `case_visa` empty; no staff
   member holds TRAVEL_MANAGER or TRAVEL_AGENT. (`0019` refuses on any of these by itself.)
-* Record a baseline: audit row count; applications with no branch (split: with / without a job); role_permissions (expect **362**); RLS policies (expect **70**);
-  counts of applications, documents, contacts, cases, jobs, invoices, payments, staff.
+* Must match the agreed baseline (28 Sep preflight, readiness record §0.8) exactly: applications **23**, of
+  which **22** without a branch (all without a job) and 1 in Lucknow; cases 1 (`recruitment`); audit **392**;
+  roles 12; permissions 72; role_permissions **362**; RLS policies **70**; pipeline stages 23; documents 60;
+  contacts 1; jobs 0; invoices 2; payments 2; staff 3. **Any difference is a stop.**
 
 **D3. Apply, in order** *(production write — go-ahead required)*
 
@@ -266,11 +271,15 @@ stop and investigate — never edit the guard to get past it.
 * Audit rows up by exactly **77**, all `system`: 69 `role_permissions.delete`, 2 `roles.retire`,
   1 `pipelines.retire`, 5 `permissions.relabel`. (`0018` writes none.)
 * `0020`: `branches.is_default_intake` true for Lucknow only; **no application without a branch**; the
-  number the migration reports as backfilled equals D2's count of applications with no branch (**19 expected**
-  — the Tokyo imports — plus any job-less application since); audit up by that same number more, each a
+  number the migration reports as backfilled is **exactly 22** (the 19 Tokyo imports and 3 applications
+  received on Mumbai; decided 28 Sep) — anything else is a stop; audit up by 22 more, each a
   `job_application.updated` `system` entry, old branch null → Lucknow. These are **writes to real applicant
   rows** (their `branch_id` and `updated_at`); nothing else in them changes.
-* Every other data count from D2 unchanged.
+* Every other data count from D2 unchanged. **Expected after `0018`–`0020`:** audit **491** (392 + 77 + 22);
+  roles 10; permissions 72; role_permissions 293; RLS policies 64; pipeline stages 12; applications 23, 0 without
+  a branch, 23 in Lucknow; documents 60; contacts 1; cases 1; jobs 0; invoices 2; payments 2; staff 3.
+* Billing is live (readiness record §0.8): the migrations do not touch `invoices`, `payments` or
+  `payment_events`; their counts and statuses must be identical before and after.
 * Prefer these read-only checks to the full SQL suites on production: the suites roll back their data but
   still consume case, invoice and payment sequence numbers (see 19 Sep, §14 of the readiness record).
 
