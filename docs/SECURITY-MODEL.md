@@ -206,7 +206,7 @@ could accidentally bridge them.
 | Storage keys | The document UUID, never a user-supplied filename. Original filename kept in a column for recognition |
 | Verification | `requested → uploaded → under_review → approved \| rejected → expired`, with `verified_by`, `verified_at`, `rejection_reason` |
 | Expiry | Daily job flags documents expiring in 90/30/7 days, creates a task, notifies the customer if consented |
-| Category permissions | `identity`, `employment`, `financial`, `travel`, `medical` — granted separately. See `RBAC-RLS.md` §3 |
+| Category permissions | `identity`, `employment`, `financial`, `travel`, `medical` — granted separately. `travel` is a selected candidate's deployment paperwork (visa, tickets); Go Gulf is not a travel agency (`0019`). See `RBAC-RLS.md` §3 |
 | Customer access | Own documents only, enforced by RLS **and** by the signing route |
 | Deletion | Soft delete → quarantine prefix → purge after the retention window. Gated on `documents.delete`, which almost nobody holds |
 

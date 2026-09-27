@@ -73,12 +73,12 @@ select test_assert(public.normalize_email('  Careers@GoGulf.CO ') = 'careers@gog
 -- ---------------------------------------------------------------------------
 -- 2. Seed data matches docs/RBAC-RLS.md
 -- ---------------------------------------------------------------------------
-select test_assert((select count(*) from public.roles) = 12, 'twelve roles seeded');
+select test_assert((select count(*) from public.roles) = 10, 'ten roles: the twelve seeded, less the two travel roles retired in 0019');
 select test_assert((select is_super from public.roles where key = 'SUPER_ADMIN'),
   'SUPER_ADMIN is flagged is_super');
 -- Exact, not a lower bound: an unexpected permission is catalogue drift.
 select test_assert((select count(*) from public.permissions) = 72,
-  'permission catalogue seeded with exactly 72 permissions');
+  'permission catalogue holds exactly 72 permissions (0019 relabelled the deployment ones; none was retired)');
 select test_assert(
   not exists (select 1 from public.role_permissions where role_key = 'SUPER_ADMIN'),
   'SUPER_ADMIN has no explicit grants — is_super short-circuits has_perm');
@@ -271,8 +271,8 @@ end $$;
 -- ---------------------------------------------------------------------------
 select test_assert(public.next_case_number('recruitment') like 'GG-REC-%',
   'recruitment case numbers are prefixed GG-REC');
-select test_assert(public.next_case_number('travel') like 'GG-TRV-%',
-  'travel case numbers are prefixed GG-TRV');
+select test_assert(public.next_case_number('support') like 'GG-SUP-%',
+  'support case numbers are prefixed GG-SUP');
 select test_assert(
   public.next_case_number('recruitment') <> public.next_case_number('recruitment'),
   'case numbers are unique across calls');

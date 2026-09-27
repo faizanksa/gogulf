@@ -29,14 +29,17 @@ behaviours, instead of an unmaintainable `contacts.view.own` / `.branch` / `.all
 
 ## 2. Roles
 
+> **27 Sep 2026 (`0019`):** Go Gulf is not a travel agency. TRAVEL_MANAGER and TRAVEL_AGENT were
+> retired. Their permissions were **kept and relabelled** for candidate deployment — a placed
+> candidate's travel and flights are part of recruitment: `travel.manage` (Arrange and manage travel for a placed candidate); `bookings.view` (View flight bookings for placed candidates); `bookings.manage` (Manage flight bookings for placed candidates); `suppliers.manage` (Recruitment and deployment suppliers (ticketing agents, medical centres, attestation)). They now sit in the `deployment` domain. `documents.view.travel` is the candidate's visa and
+> ticket documents. Ten roles and 72 permissions.
+
 | Key | Label | Shape of access |
 | --- | --- | --- |
 | `SUPER_ADMIN` | Super Admin | Everything. Bypasses permission checks; all actions audited |
 | `ADMIN` | Admin | Everything operational. **Not** roles, permissions or integrations |
 | `HR_MANAGER` | HR Manager | Recruitment at branch scope; verifies documents; sees HR-private notes |
 | `RECRUITER` | Recruiter | Assigned candidates only. Cannot verify documents |
-| `TRAVEL_MANAGER` | Travel Manager | Travel at branch scope |
-| `TRAVEL_AGENT` | Travel Agent | Assigned travel customers only |
 | `FINANCE_MANAGER` | Finance Manager | All money. Approves refunds. **No identity documents** |
 | `ACCOUNTS` | Accounts | Money at branch scope. Creates but cannot approve refunds |
 | `OPERATIONS_MANAGER` | Operations Manager | Cross-module case and task oversight; no finance writes |
@@ -50,84 +53,85 @@ behaviours, instead of an unmaintainable `contacts.view.own` / `.branch` / `.all
 
 **A** = all · **B** = branch · **O** = own/assigned · **✓** = unscoped capability · **–** = denied
 
-| Permission | SA | AD | HRM | REC | TVM | TVA | FIN | ACC | OPS | SUP | MKT | VO |
-| --- | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
-| `contacts.view` | A | A | B | O | B | O | A | B | B | B | B | B |
-| `contacts.create` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | – | – | ✓ | ✓ | ✓ | – |
-| `contacts.update` | A | A | B | O | B | O | – | – | B | O | – | – |
-| `contacts.delete` | A | A | – | – | – | – | – | – | – | – | – | – |
-| `contacts.merge` | A | A | B | – | B | – | – | – | B | – | – | – |
-| `contacts.assign` | A | A | B | – | B | – | – | – | B | – | – | – |
-| `contacts.export` | A | A | – | – | – | – | – | – | – | – | – | – |
-| `notes.team.view` | A | A | B | O | B | O | B | B | B | B | – | B |
-| `notes.team.create` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | – | – |
-| `notes.hr_private.view` | A | A | B | – | – | – | – | – | – | – | – | – |
-| `notes.finance_private.view` | A | A | – | – | – | – | A | B | – | – | – | – |
-| `tags.manage` | ✓ | ✓ | ✓ | – | ✓ | – | – | – | ✓ | – | ✓ | – |
-| `cases.view` | A | A | B | O | B | O | A | B | B | B | – | B |
-| `cases.create` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | – | – | ✓ | ✓ | – | – |
-| `cases.update` | A | A | B | O | B | O | – | – | B | – | – | – |
-| `cases.stage.change` | A | A | B | O | B | O | – | – | B | – | – | – |
-| `cases.assign` | A | A | B | – | B | – | – | – | B | – | – | – |
-| `cases.close` | A | A | B | – | B | – | – | – | B | – | – | – |
-| `cases.delete` | A | A | – | – | – | – | – | – | – | – | – | – |
-| `jobs.view` | A | A | A | A | – | – | – | – | A | A | A | A |
-| `jobs.manage` | ✓ | ✓ | ✓ | – | – | – | – | – | ✓ | – | – | – |
-| `employers.view` | A | A | A | B | – | – | A | B | A | – | – | B |
-| `employers.manage` | ✓ | ✓ | ✓ | – | – | – | – | – | – | – | – | – |
-| `applications.screen` | A | A | B | O | – | – | – | – | B | – | – | – |
-| `interviews.manage` | A | A | B | O | – | – | – | – | B | – | – | – |
-| `offers.manage` | A | A | B | – | – | – | – | – | B | – | – | – |
-| `travel.manage` | A | A | – | – | B | O | – | – | B | – | – | – |
-| `bookings.view` | A | A | – | – | B | O | A | B | B | B | – | B |
-| `bookings.manage` | A | A | – | – | B | O | – | – | B | – | – | – |
-| `suppliers.manage` | ✓ | ✓ | – | – | ✓ | – | – | – | ✓ | – | – | – |
-| `documents.view.identity` | A | A | B | O | B | O | – | – | B | – | – | – |
-| `documents.view.employment` | A | A | B | O | B | O | – | – | B | B | – | – |
-| `documents.view.financial` | A | A | – | – | – | – | A | B | B | – | – | – |
-| `documents.view.travel` | A | A | B | O | B | O | – | – | B | B | – | – |
-| `documents.view.medical` | A | A | B | – | – | – | – | – | B | – | – | – |
-| `documents.upload` | A | A | B | O | B | O | B | B | B | B | – | – |
-| `documents.verify` | A | A | B | – | B | – | – | – | B | – | – | – |
-| `documents.download` | A | A | B | O | B | O | B | B | B | – | – | – |
-| `documents.delete` | A | A | – | – | – | – | – | – | – | – | – | – |
-| `orders.view` | A | A | B | O | B | O | A | B | B | B | – | B |
-| `orders.create` | ✓ | ✓ | ✓ | – | ✓ | – | ✓ | ✓ | – | – | – | – |
-| `payments.view` | A | A | B | O | B | O | A | B | B | B | – | B |
-| `payments.record` | ✓ | ✓ | – | – | – | – | ✓ | ✓ | – | – | – | – |
-| `installments.manage` | A | A | – | – | – | – | A | B | – | – | – | – |
-| `refunds.create` | ✓ | ✓ | – | – | – | – | ✓ | ✓ | – | – | – | – |
-| `refunds.approve` | ✓ | ✓ | – | – | – | – | ✓ | – | – | – | – | – |
-| `invoices.view` | A | A | B | – | B | – | A | B | B | – | – | B |
-| `invoices.issue` | ✓ | ✓ | – | – | – | – | ✓ | ✓ | – | – | – | – |
-| `invoices.void` | ✓ | ✓ | – | – | – | – | ✓ | – | – | – | – | – |
-| `payments.reconcile` | ✓ | ✓ | – | – | – | – | ✓ | ✓ | – | – | – | – |
-| `communications.view` | A | A | B | O | B | O | B | B | B | B | – | B |
-| `communications.send` | A | A | B | O | B | O | B | B | B | B | – | – |
-| `whatsapp.reply` | A | A | B | O | B | O | – | – | B | B | – | – |
-| `calls.view` | A | A | B | O | B | O | – | – | B | B | – | B |
-| `calls.log` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | – | – | ✓ | ✓ | – | – |
-| `templates.manage` | ✓ | ✓ | ✓ | – | ✓ | – | – | – | ✓ | – | ✓ | – |
-| `campaigns.manage` | ✓ | ✓ | – | – | – | – | – | – | – | – | ✓ | – |
-| `lead_sources.manage` | ✓ | ✓ | – | – | – | – | – | – | ✓ | – | ✓ | – |
-| `tasks.view` | A | A | B | O | B | O | B | B | B | O | O | B |
-| `tasks.manage` | A | A | B | O | B | O | B | B | A | O | O | – |
-| `appointments.manage` | A | A | B | O | B | O | – | – | B | O | – | – |
-| `reports.operational` | A | A | B | O | B | O | A | B | A | B | B | B |
-| `reports.financial` | A | A | – | – | – | – | A | B | – | – | – | – |
-| `reports.marketing` | A | A | B | – | B | – | – | – | B | – | A | B |
-| `reports.staff_performance` | A | A | B | – | B | – | – | – | B | – | – | – |
-| `imports.run` | ✓ | ✓ | ✓ | – | ✓ | – | – | – | ✓ | – | ✓ | – |
-| `users.manage` | ✓ | ✓ | – | – | – | – | – | – | – | – | – | – |
-| `roles.manage` | ✓ | – | – | – | – | – | – | – | – | – | – | – |
-| `permissions.manage` | ✓ | – | – | – | – | – | – | – | – | – | – | – |
-| `settings.manage` | ✓ | ✓ | – | – | – | – | – | – | – | – | – | – |
-| `integrations.manage` | ✓ | – | – | – | – | – | – | – | – | – | – | – |
-| `audit.view` | ✓ | ✓ | – | – | – | – | ✓ | – | – | – | – | – |
+| Permission | SA | AD | HRM | REC | FIN | ACC | OPS | SUP | MKT | VO |
+| --- | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| `contacts.view` | A | A | B | O | A | B | B | B | B | B |
+| `contacts.create` | ✓ | ✓ | ✓ | ✓ | – | – | ✓ | ✓ | ✓ | – |
+| `contacts.update` | A | A | B | O | – | – | B | O | – | – |
+| `contacts.delete` | A | A | – | – | – | – | – | – | – | – |
+| `contacts.merge` | A | A | B | – | – | – | B | – | – | – |
+| `contacts.assign` | A | A | B | – | – | – | B | – | – | – |
+| `contacts.export` | A | A | – | – | – | – | – | – | – | – |
+| `notes.team.view` | A | A | B | O | B | B | B | B | – | B |
+| `notes.team.create` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | – | – |
+| `notes.hr_private.view` | A | A | B | – | – | – | – | – | – | – |
+| `notes.finance_private.view` | A | A | – | – | A | B | – | – | – | – |
+| `tags.manage` | ✓ | ✓ | ✓ | – | – | – | ✓ | – | ✓ | – |
+| `cases.view` | A | A | B | O | A | B | B | B | – | B |
+| `cases.create` | ✓ | ✓ | ✓ | ✓ | – | – | ✓ | ✓ | – | – |
+| `cases.update` | A | A | B | O | – | – | B | – | – | – |
+| `cases.stage.change` | A | A | B | O | – | – | B | – | – | – |
+| `cases.assign` | A | A | B | – | – | – | B | – | – | – |
+| `cases.close` | A | A | B | – | – | – | B | – | – | – |
+| `cases.delete` | A | A | – | – | – | – | – | – | – | – |
+| `jobs.view` | A | A | A | A | – | – | A | A | A | A |
+| `jobs.manage` | ✓ | ✓ | ✓ | – | – | – | ✓ | – | – | – |
+| `employers.view` | A | A | A | B | A | B | A | – | – | B |
+| `employers.manage` | ✓ | ✓ | ✓ | – | – | – | – | – | – | – |
+| `applications.screen` | A | A | B | O | – | – | B | – | – | – |
+| `interviews.manage` | A | A | B | O | – | – | B | – | – | – |
+| `offers.manage` | A | A | B | – | – | – | B | – | – | – |
+| `travel.manage` | A | A | – | – | – | – | B | – | – | – |
+| `bookings.view` | A | A | – | – | A | B | B | B | – | B |
+| `bookings.manage` | A | A | – | – | – | – | B | – | – | – |
+| `suppliers.manage` | ✓ | ✓ | – | – | – | – | ✓ | – | – | – |
+| `documents.view.identity` | A | A | B | O | – | – | B | – | – | – |
+| `documents.view.employment` | A | A | B | O | – | – | B | B | – | – |
+| `documents.view.financial` | A | A | – | – | A | B | B | – | – | – |
+| `documents.view.travel` | A | A | B | O | – | – | B | B | – | – |
+| `documents.view.medical` | A | A | B | – | – | – | B | – | – | – |
+| `documents.upload` | A | A | B | O | B | B | B | B | – | – |
+| `documents.verify` | A | A | B | – | – | – | B | – | – | – |
+| `documents.download` | A | A | B | O | B | B | B | – | – | – |
+| `documents.delete` | A | A | – | – | – | – | – | – | – | – |
+| `orders.view` | A | A | B | O | A | B | B | B | – | B |
+| `orders.create` | ✓ | ✓ | ✓ | – | ✓ | ✓ | – | – | – | – |
+| `payments.view` | A | A | B | O | A | B | B | B | – | B |
+| `payments.record` | ✓ | ✓ | – | – | ✓ | ✓ | – | – | – | – |
+| `installments.manage` | A | A | – | – | A | B | – | – | – | – |
+| `refunds.create` | ✓ | ✓ | – | – | ✓ | ✓ | – | – | – | – |
+| `refunds.approve` | ✓ | ✓ | – | – | ✓ | – | – | – | – | – |
+| `invoices.view` | A | A | B | – | A | B | B | – | – | B |
+| `invoices.issue` | ✓ | ✓ | – | – | ✓ | ✓ | – | – | – | – |
+| `invoices.void` | ✓ | ✓ | – | – | ✓ | – | – | – | – | – |
+| `payments.reconcile` | ✓ | ✓ | – | – | ✓ | ✓ | – | – | – | – |
+| `communications.view` | A | A | B | O | B | B | B | B | – | B |
+| `communications.send` | A | A | B | O | B | B | B | B | – | – |
+| `whatsapp.reply` | A | A | B | O | – | – | B | B | – | – |
+| `calls.view` | A | A | B | O | – | – | B | B | – | B |
+| `calls.log` | ✓ | ✓ | ✓ | ✓ | – | – | ✓ | ✓ | – | – |
+| `templates.manage` | ✓ | ✓ | ✓ | – | – | – | ✓ | – | ✓ | – |
+| `campaigns.manage` | ✓ | ✓ | – | – | – | – | – | – | ✓ | – |
+| `lead_sources.manage` | ✓ | ✓ | – | – | – | – | ✓ | – | ✓ | – |
+| `tasks.view` | A | A | B | O | B | B | B | O | O | B |
+| `tasks.manage` | A | A | B | O | B | B | A | O | O | – |
+| `appointments.manage` | A | A | B | O | – | – | B | O | – | – |
+| `reports.operational` | A | A | B | O | A | B | A | B | B | B |
+| `reports.financial` | A | A | – | – | A | B | – | – | – | – |
+| `reports.marketing` | A | A | B | – | – | – | B | – | A | B |
+| `reports.staff_performance` | A | A | B | – | – | – | B | – | – | – |
+| `imports.run` | ✓ | ✓ | ✓ | – | – | – | ✓ | – | ✓ | – |
+| `users.manage` | ✓ | ✓ | – | – | – | – | – | – | – | – |
+| `roles.manage` | ✓ | – | – | – | – | – | – | – | – | – |
+| `permissions.manage` | ✓ | – | – | – | – | – | – | – | – | – |
+| `settings.manage` | ✓ | ✓ | – | – | – | – | – | – | – | – |
+| `integrations.manage` | ✓ | – | – | – | – | – | – | – | – | – |
+| `audit.view` | ✓ | ✓ | – | – | ✓ | – | – | – | – | – |
 
-**72 permissions across 12 roles.** (An earlier revision of this document said 68; the matrix
-above and the seed in `0008_seed_rbac.sql` both have 72, and `rls.test.sql` now asserts the exact
-count so the two cannot drift apart silently.)
+**72 permissions across 10 roles.** `0008_seed_rbac.sql` seeded 72 permissions and 12 roles; `0019`
+retired the two travel-agency roles and relabelled, but kept, their deployment permissions.
+`rls.test.sql` and `admin-model.test.sql` assert the exact counts, and `lib/rbac.test.ts` checks the
+seed minus every recorded retirement, so the catalogue cannot drift silently.
 
 ### The denials that carry weight
 

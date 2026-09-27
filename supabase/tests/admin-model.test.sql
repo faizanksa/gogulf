@@ -94,7 +94,7 @@ select am_test.check(
                     'invoices.void', 'payments.view', 'audit.view', 'documents.view.identity', 'documents.view.employment')) = 11,
   'ADMIN keeps every operational permission: jobs, applications, CRM, invoices, payments, documents and operational audit');
 
-select am_test.check((select count(*) from public.permissions) = 72, 'the permission catalogue is unchanged: no permission was invented');
+select am_test.check((select count(*) from public.permissions) = 72, 'the permission catalogue is unchanged in size: no permission was invented or retired');
 select am_test.check(
   not exists (select 1 from public.role_permissions where role_key = 'SUPER_ADMIN'),
   'SUPER_ADMIN still has no explicit grants — it is unrestricted by is_super, and 0016 cannot change that');
@@ -238,8 +238,8 @@ select am_test.check(
   am_test.visible($$select 1 from public.audit_logs where entity_type = 'role_permissions'$$) >= 364,
   'SUPER_ADMIN reads the audit entries about role grants');
 select am_test.check(
-  am_test.visible($$select 1 from public.audit_logs where entity_type = 'settings'$$) = 6,
-  'SUPER_ADMIN reads the audit entries about system settings');
+  am_test.visible($$select 1 from public.audit_logs where entity_type = 'settings'$$) = 7,
+  'SUPER_ADMIN reads the audit entries about system settings: the six seeded, and the Travel pipeline retired by 0019');
 select am_test.check(
   am_test.visible($$select 1 from public.audit_logs where entity_type = 'staff_users'$$) >= 5,
   'SUPER_ADMIN reads the audit entries about staff records');

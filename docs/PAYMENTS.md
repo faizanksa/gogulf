@@ -395,7 +395,7 @@ the Pay button — nothing else. It is never cached, never indexed (`noindex`, a
 | Staff roster, roles, permissions, settings, integrations | `users.manage`, `roles.manage`, `permissions.manage`, `settings.manage`, `integrations.manage` | **no** (0016) | yes |
 
 Scope is enforced in the database (`scope_allows`): FINANCE_MANAGER is all-scope; ACCOUNTS
-issues within its branch; HR_MANAGER, TRAVEL_MANAGER, OPERATIONS_MANAGER and VIEW_ONLY can view
+issues within its branch; HR_MANAGER, OPERATIONS_MANAGER and VIEW_ONLY can view
 in their branch only and cannot create — asserted in `invoices.test.sql`. Creator and last
 editor are shown to every role that can read the invoice, not only SUPER_ADMIN.
 

@@ -336,82 +336,6 @@ export type Database = {
           },
         ]
       }
-      case_travel: {
-        Row: {
-          budget_paise: number | null
-          case_id: string
-          created_at: string
-          depart_date: string | null
-          destination: string | null
-          pax_adults: number
-          pax_children: number
-          return_date: string | null
-        }
-        Insert: {
-          budget_paise?: number | null
-          case_id: string
-          created_at?: string
-          depart_date?: string | null
-          destination?: string | null
-          pax_adults?: number
-          pax_children?: number
-          return_date?: string | null
-        }
-        Update: {
-          budget_paise?: number | null
-          case_id?: string
-          created_at?: string
-          depart_date?: string | null
-          destination?: string | null
-          pax_adults?: number
-          pax_children?: number
-          return_date?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "case_travel_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: true
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      case_visa: {
-        Row: {
-          application_ref: string | null
-          case_id: string
-          country_code: string | null
-          created_at: string
-          submitted_at: string | null
-          visa_type: string | null
-        }
-        Insert: {
-          application_ref?: string | null
-          case_id: string
-          country_code?: string | null
-          created_at?: string
-          submitted_at?: string | null
-          visa_type?: string | null
-        }
-        Update: {
-          application_ref?: string | null
-          case_id?: string
-          country_code?: string | null
-          created_at?: string
-          submitted_at?: string | null
-          visa_type?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "case_visa_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: true
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       cases: {
         Row: {
           branch_id: string | null
@@ -1922,7 +1846,7 @@ export type Database = {
         | "rejected"
         | "withdrawn"
       case_status: "open" | "won" | "lost" | "cancelled"
-      case_type: "recruitment" | "travel" | "visa" | "tour_booking" | "support"
+      case_type: "recruitment" | "support"
       identity_type:
         | "phone"
         | "email"
@@ -2093,7 +2017,7 @@ export const Constants = {
         "withdrawn",
       ],
       case_status: ["open", "won", "lost", "cancelled"],
-      case_type: ["recruitment", "travel", "visa", "tour_booking", "support"],
+      case_type: ["recruitment", "support"],
       identity_type: [
         "phone",
         "email",

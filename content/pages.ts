@@ -140,11 +140,6 @@ export const PAGES: PageEntry[] = validate(
       description: "Go Gulf sells no physical goods. How its services are delivered to you instead, and how any physical documents are handled.",
       breadcrumb: "Shipping & delivery", updatedOn: "2026-09-12", index: true, sitemap: { changeFrequency: "yearly", priority: 0.3 },
     },
-    {
-      id: "travel", path: "/travel", title: "Travel",
-      description: "Travel services from Go Gulf. This page is published only once the business confirms which travel services it offers (decision D2).",
-      breadcrumb: "Travel", updatedOn: "2026-09-11", index: false, sitemap: null,
-    },
   ],
   "content/pages.ts",
 );

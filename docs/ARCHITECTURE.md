@@ -17,13 +17,12 @@ app/
 │   ├── page.js                      home
 │   ├── about/ services/ contact/
 │   ├── jobs/ jobs/[slug]/ jobs/apply/
-│   ├── travel/ visa/                (Phase 6)
 │   └── privacy-policy/ terms-and-conditions/ pricing/
 │       cancellation-and-refunds/ shipping-policy/
 │
 ├── (portal)/portal/      customer · phone+OTP session · RLS: own records only
 │   ├── page.js                      "where am I / what's pending / what's due"
-│   ├── applications/ travel/ documents/ payments/ messages/ profile/
+│   ├── applications/ documents/ payments/ messages/ profile/
 │
 ├── (admin)/admin/        staff · Google Workspace SSO · RLS: permission + scope
 │   ├── page.js                      operational dashboard

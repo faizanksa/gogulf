@@ -48,7 +48,8 @@ test.describe("not found", () => {
     for (const content of robots) expect(content).toMatch(/noindex/);
   });
 
-  test("an unknown job and the unpublished travel page are 404s", async ({ page }) => {
+  // /travel is a permanent 404: Go Gulf is not a travel agency (0019).
+  test("an unknown job and /travel are 404s", async ({ page }) => {
     expect((await page.goto("/jobs/no-such-job"))?.status()).toBe(404);
     expect((await page.goto("/travel"))?.status()).toBe(404);
   });

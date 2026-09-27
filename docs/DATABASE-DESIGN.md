@@ -109,12 +109,18 @@ row; what they *are* is a function of `lifecycle_stage` plus the cases attached 
 
 ## 2. Work — one case container, typed extensions
 
-Recruitment applications, travel inquiries, visa services and tour bookings each need a pipeline, a
-stage, an owner, a timeline, tasks, documents, payments and notifications. Building those seven
-subsystems four times is how CRMs rot.
+Recruitment cases and support conversations each need a pipeline, a stage, an owner, a timeline,
+tasks, documents, payments and notifications. Building those subsystems once per line of work is how
+CRMs rot, so there is one case container with typed extensions.
+
+> **27 Sep 2026:** Go Gulf is not a travel agency. The standalone travel, visa and tour case types,
+> `case_travel` (a holiday booking), `case_visa` (a visa-only customer) and the travel-agency
+> pipeline were retired by `0019`. A selected candidate's visa, flight and journey to the job are
+> **recruitment**: the Visa Processing and Travel Preparation stages of the recruitment pipeline,
+> recorded on the recruitment case.
 
 ```sql
-create type case_type   as enum ('recruitment','travel','visa','tour_booking','support');
+create type case_type   as enum ('recruitment','support');   -- 0019; travel/visa/tour retired
 create type case_status as enum ('open','won','lost','cancelled');
 
 create table pipelines (
@@ -188,10 +194,10 @@ create table case_visa (
 
 **Stages are data, not code.** An administrator adds or reorders stages without a deploy. The
 stages listed in the Phase 0 audit are placeholders — the real ones come from a workshop with the
-recruitment and travel leads (decision I5).
+recruitment lead (decision I5).
 
-Adding a new service line later — Umrah packages, say — is a new `case_type`, one extension table
-and some pipeline rows. Not a new subsystem.
+Adding a new line of recruitment work later is a new `case_type`, one extension table and some
+pipeline rows. Not a new subsystem.
 
 ---
 
@@ -297,6 +303,7 @@ create type document_status   as enum
   ('requested','uploaded','under_review','approved','rejected','expired');
 create type document_category as enum
   ('identity','employment','financial','travel','medical','other');
+  -- 'travel' = a hired candidate's deployment paperwork (visa, tickets), not a travel service
 
 create table documents (
   id uuid primary key default gen_random_uuid(),
@@ -552,8 +559,10 @@ create table settings (
 ```
 
 Supporting tables added as their phases land: `lead_sources`, `campaigns`, `jobs`, `employers`,
-`interviews`, `offers`, `destinations`, `packages`, `bookings`, `booking_items`, `travelers`,
-`suppliers`, `message_templates`, `tags`, `case_tags`.
+`interviews`, `offers`, `message_templates`, `tags`, `case_tags`, and for candidate deployment,
+flight bookings for placed candidates and recruitment suppliers (ticketing agents, medical centres,
+attestation providers) — hung off the recruitment case, not a travel product. The travel-agency tables
+once listed here (destinations, packages, travellers) will not be built.
 
 **Phase 1 builds identity, access control and audit only.** Everything else lands with its module.
 

@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Overview" };
 export default function PortalHome() {
   return (
     <EmptyState icon="file" title="Your account is not available yet" headingLevel={2}>
-      <p>Tracking applications and bookings arrives in a later phase.</p>
+      <p>Tracking your applications arrives in a later phase.</p>
     </EmptyState>
   );
 }

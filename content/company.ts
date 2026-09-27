@@ -68,7 +68,7 @@ export const CLAIMS = validate(
     sectors: { status: "unresolved", decision: "D3", note: "Which sectors the business actually places into." },
     employerVerification: { status: "unresolved", decision: "D3", note: "No described employer-verification process." },
     responseTimeSla: { status: "unresolved", decision: "D3", note: "No committed response time." },
-    travelServices: { status: "unresolved", decision: "D2", note: "Which travel/tour services are sold." },
+    travelServices: { status: "refuted", decision: "D2", note: "Go Gulf is not a travel agency: no flights, tours, bookings or visa services for the public (decided 27 Sep 2026; 0019). For candidates SELECTED through Go Gulf, visa processing and flight and joining arrangements are part of recruitment, and may be described only in that way. The registered activity on the MCA record is reported as a fact on /verify, not as a service." },
     socialProfiles: { status: "unresolved", decision: "D3", note: "Ownership of the social profiles is not confirmed; see content/channels.ts." },
     gstCertificate: { status: "unresolved", decision: "D8", note: "GST certificate not supplied; GSTIN stays off structured data." },
   },

@@ -9,6 +9,18 @@ Covers three migrations running in parallel: the **website** (static → server-
 
 ## 1. Phase sequence
 
+> **Product scope, 27 Sep 2026.** Go Gulf = **recruitment + recruitment operations + candidate
+> deployment**. It is **not a travel agency**: no travel, tours, bookings or visa services for the
+> public. Phase 6 below is retired, and migration `0019` removed the standalone travel model it
+> would have built on (travel/visa/tour case types, `case_travel`, `case_visa`, the travel-agency
+> pipeline, the TRAVEL_MANAGER/TRAVEL_AGENT roles). **Candidate deployment stays**: for a candidate
+> selected through Go Gulf, visa processing, flight and joining arrangements are recruitment
+> fulfilment — the recruitment pipeline's Visa Processing and Travel Preparation stages, the
+> candidate's visa and ticket documents, and the travel / flight-booking / supplier permissions
+> (relabelled "deployment" in `0019`) all remain.
+> The phase ordering below is otherwise historical; the current order is in the latest progress
+> report.
+
 Revised from the Phase 0 audit with two changes: Resend moves forward to Phase 1.5, and the legacy
 data migration is downgraded from a major workstream to a half-day task (see §4).
 
@@ -22,7 +34,7 @@ data migration is downgraded from a major workstream to a half-day task (see §4
 | **3** | **Auth + customer portal.** Phone OTP on a DLT-registered sender, sessions, profile, consent, DPDP request flow. Cross-customer isolation tests | 1, 1.5 | M |
 | **4** | **CRM core.** Contacts, sources, campaigns, assignment, tags, notes, tasks, activity timeline, configurable pipelines, **Customer 360** | 1 | L |
 | **5** | **Recruitment.** Jobs and employers in the database — ending the deploy-per-vacancy problem. Applications as cases, screening, interviews, documents. `/jobs/apply` cut over. **Legacy data migrated** | 4 | L |
-| **6** | **Travel & service cases.** Inquiries, quotes, service cases, travel documents | 4 | M |
+| **6** | ~~Travel & service cases~~ — **retired 27 Sep 2026** (not a travel agency; candidate deployment lives in recruitment, Phase 5; `0019`) | — | — |
 | **7** | **Payments.** Orders, installments, Razorpay, verified idempotent webhooks, invoices, portal + admin financial views | 3, 4 | L |
 | **8** | *(absorbed into 1.5)* | — | — |
 | **9** | **WhatsApp.** Cloud API, templates, inbound webhook, conversation assignment, consent gating | 4, B7 | L |

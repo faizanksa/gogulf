@@ -31,7 +31,7 @@ test.describe("desktop header", () => {
     for (const name of ["Jobs", "Job seekers", "Employers", "About", "Contact"]) {
       await expect(nav.getByRole("link", { name, exact: true })).toBeVisible();
     }
-    // Travel stays out of the navigation until a travel service is confirmed (D2).
+    // No Travel section, ever: Go Gulf is not a travel agency (0019).
     await expect(nav.getByRole("link", { name: "Travel" })).toHaveCount(0);
     await expect(nav.getByRole("link", { name: "About" })).toHaveAttribute("aria-current", "page");
     await expect(page.getByRole("banner").getByRole("link", { name: "Find a job" })).toBeVisible();

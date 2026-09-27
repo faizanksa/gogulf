@@ -23,7 +23,7 @@
 | # | Question | Why it blocks |
 | --- | --- | --- |
 | D1 | Does the company hold an overseas **Recruiting Agent registration** (Emigration Act)? | Decides how recruitment may be described, and whether a registration number must appear on every job advert |
-| D2 | Which **travel/tour services** are actually sold? | `/travel` cannot be written without it; nothing will be invented |
+| D2 | Which **travel/tour services** are actually sold? | **Resolved 27 Sep 2026: none as a standalone business.** Go Gulf is not a travel agency; `/travel` stays a 404 and the travel items below are retired (`0019`). Flight and joining support is offered only to candidates selected through Go Gulf, as recruitment. Kept here as the historical plan |
 | D3 | The **claims register** (§10): placements, 2008 heritage holder, offices, countries, sectors, response times | Home, About, the social-share image and structured data all depend on it |
 | D4 | Are the **six job listings** real and current? Three are already past their structured-data expiry | Jobs pages and JobPosting markup cannot ship on unconfirmed listings |
 

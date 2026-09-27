@@ -16,7 +16,7 @@ const faq = z.object({
 export type Faq = z.infer<typeof faq>;
 
 export const FAQS = validate(
-  z.object({ jobSeekers: z.array(faq), employers: z.array(faq), travel: z.array(faq) }),
-  { jobSeekers: [], employers: [], travel: [] },
+  z.object({ jobSeekers: z.array(faq), employers: z.array(faq) }),
+  { jobSeekers: [], employers: [] },
   "content/faqs.ts",
 );

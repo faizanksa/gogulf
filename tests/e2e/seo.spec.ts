@@ -64,7 +64,7 @@ test("breadcrumb structured data matches the visible breadcrumbs", async ({ page
 test("sitemap lists indexable pages with content dates, and nothing unpublished", async ({ page }) => {
   const xml = await (await page.request.get("/sitemap.xml")).text();
   expect(xml).toContain("/verify</loc>");
-  expect(xml).not.toContain("/travel");
+  expect(xml).not.toContain("/travel"); // not a travel agency (0019)
   expect(xml).not.toContain("/admin");
   // An open published job is listed; a closed, draft or archived one never is.
   expect(xml).toContain(`${SAMPLE_JOB}</loc>`);

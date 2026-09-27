@@ -1,6 +1,5 @@
 import type { MessageKey } from "@/lib/i18n/translator";
 import { LEGAL_PAGES } from "@/lib/legal";
-import { TRAVEL_PUBLISHED } from "./travel";
 
 /**
  * Site navigation. Labels are catalogue keys (messages/en.json), translated by the
@@ -12,12 +11,11 @@ export interface NavItem {
   label: MessageKey;
 }
 
-/** Primary navigation. Travel appears only once a confirmed travel service exists. */
+/** Primary navigation. Go Gulf is a recruitment platform, not a travel agency: no Travel section (0019). */
 export const NAV_ITEMS: NavItem[] = [
   { href: "/jobs", label: "nav.jobs" },
   { href: "/candidates", label: "nav.jobSeekers" },
   { href: "/employers", label: "nav.employers" },
-  ...(TRAVEL_PUBLISHED ? [{ href: "/travel", label: "nav.travel" } satisfies NavItem] : []),
   { href: "/about", label: "nav.about" },
   { href: "/contact", label: "nav.contact" },
 ];

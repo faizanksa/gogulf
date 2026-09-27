@@ -36,6 +36,42 @@ test.describe("job-seeker hub", () => {
 });
 
 test.describe("service catalogue", () => {
+  // Go Gulf is not a travel agency (0019). Flights and joining are arranged only for
+  // candidates it has placed — part of recruitment — and the page says so.
+  test("offers flight and joining support only to selected candidates, never as a travel service", async ({ page }) => {
+    await page.goto("/services");
+    await expect(page.locator("#service-air-ticket-travel")).toHaveCount(0);
+    await expect(page.getByRole("main")).not.toContainText(/air ticket/i);
+
+    const flight = page.locator("#service-flight-joining-support");
+    await expect(flight).toContainText("Flight & Joining Support for Selected Candidates");
+    await expect(flight).toContainText("Only for candidates selected by an employer through Go Gulf");
+    await expect(flight).toContainText("We do not book flights or travel for anyone else.");
+
+    // Labels are the translated service names; values are the names the server routes on.
+    const select = page.getByLabel("What do you need?");
+    const labels = await select.locator("option").allTextContents();
+    const values = await select.locator("option").evaluateAll((els) => els.map((e) => (e as HTMLOptionElement).value));
+    for (const text of [...labels, ...values]) if (/flight|travel|ticket/i.test(text)) expect(text).toMatch(/selected candidates/i);
+    expect(values).not.toContain("Air Ticket & Travel Assistance");
+    // Recruitment deployment services are all still offered.
+    for (const value of ["Visa & Documentation Assistance", "Flight & Joining Support (Selected Candidates)", "Pre-Departure Orientation"]) {
+      expect(values).toContain(value);
+    }
+  });
+
+  test("the flight card's enquiry link preselects the selected-candidate option", async ({ page }) => {
+    await page.goto("/services");
+    await page.locator("#service-flight-joining-support").getByRole("link").click();
+    await expect(page).toHaveURL(/\?service=flight-joining-support#inquiry$/);
+    await expect(page.getByLabel("What do you need?")).toHaveValue("Flight & Joining Support (Selected Candidates)");
+  });
+
+  test("an old air-ticket link preselects nothing", async ({ page }) => {
+    await page.goto("/services?service=air-ticket-travel#inquiry");
+    await expect(page.getByLabel("What do you need?")).toHaveValue("");
+  });
+
   test("a service card preselects its service in the enquiry form", async ({ page }) => {
     await page.goto("/services");
     await page.locator("#service-bulk-sourcing").getByRole("link").click();

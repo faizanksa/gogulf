@@ -4,7 +4,8 @@ import { CHANNELS, CONFIRMED_SOCIAL } from "./channels";
 import { CLAIMS } from "./company";
 import { PAGES } from "./pages";
 import { validate } from "./schema";
-import { TRAVEL_PUBLISHED, TRAVEL_SERVICES } from "./travel";
+import { SERVICES } from "./services";
+import { CANDIDATE_SERVICES, EMPLOYER_SERVICES } from "@/lib/forms/service-options";
 import { organizationJsonLd } from "@/lib/seo";
 
 describe("content validation fails loudly", () => {
@@ -28,19 +29,50 @@ describe("page registry", () => {
     }
   });
 
-  it("keeps unpublished pages out of the index and the sitemap", () => {
-    const travel = PAGES.find((p) => p.path === "/travel")!;
-    expect(travel.index).toBe(false);
-    expect(travel.sitemap).toBeNull();
+  it("has no travel page: Go Gulf is not a travel agency (0019)", () => {
+    expect(PAGES.map((p) => p.path)).not.toContain("/travel");
+    expect(PAGES.map((p) => p.id)).not.toContain("travel");
+  });
+});
+
+// Go Gulf = recruitment + recruitment operations + candidate deployment (27 Sep 2026). It is
+// not a travel agency: flights and travel are offered ONLY to candidates it has placed.
+describe("recruitment scope", () => {
+  const TRAVEL = /air ?ticket|ticketing|flight|tour|holiday|booking|travel/i;
+  const SELECTED_ONLY = /selected/i;
+
+  it("offers no standalone travel service: any travel wording is limited to selected candidates", () => {
+    for (const s of SERVICES) {
+      const text = `${s.id} ${s.name} ${s.summary}`;
+      if (TRAVEL.test(text)) {
+        expect(s.audience, s.id).toBe("job-seekers");
+        expect(s.name, s.id).toMatch(SELECTED_ONLY);
+        expect(s.summary, s.id).toMatch(/only for candidates selected/i);
+        expect(s.summary, s.id).toMatch(/do not book flights or travel for anyone else/i);
+      }
+    }
+    expect(SERVICES.map((s) => s.id)).not.toContain("air-ticket-travel");
+    expect(SERVICES.map((s) => s.name).join(" ")).not.toMatch(/air ticket/i);
+  });
+
+  it("keeps flight and joining support for selected candidates", () => {
+    const flight = SERVICES.find((s) => s.id === "flight-joining-support");
+    expect(flight?.inquiryOption).toBe("Flight & Joining Support (Selected Candidates)");
+  });
+
+  it("offers travel in the enquiry form only as selected-candidate support, on the candidate desk", () => {
+    for (const option of EMPLOYER_SERVICES) expect(option).not.toMatch(TRAVEL);
+    for (const option of CANDIDATE_SERVICES) if (TRAVEL.test(option)) expect(option).toMatch(SELECTED_ONLY);
+    expect(CANDIDATE_SERVICES as readonly string[]).not.toContain("Air Ticket & Travel Assistance");
+  });
+
+  it("keeps the recruitment services a candidate's journey needs", () => {
+    const ids = SERVICES.map((s) => s.id);
+    for (const id of ["job-applications", "visa-documentation", "medical-coordination", "attestation-embassy", "pre-departure"]) expect(ids).toContain(id);
   });
 });
 
 describe("claims and structured data", () => {
-  it("publishes no travel services until one is confirmed", () => {
-    expect(TRAVEL_SERVICES).toEqual([]);
-    expect(TRAVEL_PUBLISHED).toBe(false);
-  });
-
   it("asserts only verified facts in the Organization node", () => {
     const org = organizationJsonLd() as Record<string, unknown>;
     expect(org.foundingDate).toBe("2024-02-22");
@@ -48,6 +80,7 @@ describe("claims and structured data", () => {
     expect(org).not.toHaveProperty("vatID");
     expect(org).not.toHaveProperty("areaServed");
     // Not EmploymentAgency: the company is not registered or licensed as a recruiting agent.
+    // Not TravelAgency either: whatever the registered activity reads, no travel service is sold.
     expect(org["@type"]).toBe("Organization");
     expect(JSON.stringify(org)).not.toMatch(/2008|placement|MOFA|verified/i);
     // No social profile is confirmed yet, so there is no sameAs.
@@ -59,8 +92,12 @@ describe("claims and structured data", () => {
     expect(CLAIMS.recruitingAgentRegistration.status).toBe("refuted");
   });
 
+  it("records travel services (as a standalone business) as refuted: a permanent decision", () => {
+    expect(CLAIMS.travelServices.status).toBe("refuted");
+  });
+
   it("keeps every unresolved claim flagged", () => {
-    for (const id of ["heritage2008", "placementNumbers", "officesOutsideLucknow", "countriesRecruitedFor", "sectors", "employerVerification", "responseTimeSla", "travelServices", "socialProfiles", "gstCertificate"] as const) {
+    for (const id of ["heritage2008", "placementNumbers", "officesOutsideLucknow", "countriesRecruitedFor", "sectors", "employerVerification", "responseTimeSla", "socialProfiles", "gstCertificate"] as const) {
       expect(CLAIMS[id].status).toBe("unresolved");
     }
   });

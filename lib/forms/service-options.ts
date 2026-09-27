@@ -13,6 +13,10 @@
 // agency ("Overseas Recruitment", "Gulf Job Placement", "Bulk Manpower Recruitment",
 // "Recruitment Process Outsourcing", "HR & Recruitment Support", "MOFA & Embassy
 // Processing"). Routing is unchanged: each list still decides the desk.
+//
+// 27 Sep 2026: "Air Ticket & Travel Assistance" replaced by "Flight & Joining Support
+// (Selected Candidates)". Go Gulf is not a travel agency: it arranges travel only for
+// candidates it has placed, as part of recruitment. The candidate desk still receives it.
 export const EMPLOYER_SERVICES = [
   "Employer Hiring Solutions",
   "Bulk Candidate Sourcing",
@@ -29,7 +33,7 @@ export const CANDIDATE_SERVICES = [
   "Medical Coordination",
   "Attestation & Embassy Formalities",
   "Immigration Support",
-  "Air Ticket & Travel Assistance",
+  "Flight & Joining Support (Selected Candidates)",
   "Pre-Departure Orientation",
   "Post-Joining Support",
 ] as const;

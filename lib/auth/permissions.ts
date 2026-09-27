@@ -30,9 +30,12 @@ export type Permission =
   // Recruitment
   | "jobs.view" | "jobs.manage" | "employers.view" | "employers.manage"
   | "applications.screen" | "interviews.manage" | "offers.manage"
-  // Travel
+  // Candidate deployment: a PLACED candidate's travel and flight bookings, and the
+  // recruitment suppliers behind them. Relabelled from "travel" in 0019 — Go Gulf sells
+  // no standalone travel service; this is recruitment fulfilment.
   | "travel.manage" | "bookings.view" | "bookings.manage" | "suppliers.manage"
-  // Documents — permissioned per category
+  // Documents — permissioned per category. documents.view.travel is a candidate's
+  // deployment paperwork (visa, tickets).
   | "documents.view.identity" | "documents.view.employment"
   | "documents.view.financial" | "documents.view.travel" | "documents.view.medical"
   | "documents.upload" | "documents.verify" | "documents.download" | "documents.delete"

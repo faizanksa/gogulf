@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { BUSINESS_EMAIL, CAREERS_EMAIL, CONFIRMED_SOCIAL, PHONE, WHATSAPP } from "@/content/channels";
 import { COMPANY } from "@/content/company";
 import { pageEntry } from "@/content/pages";
-import { TRAVEL_PUBLISHED } from "@/content/travel";
 import { DEFAULT, hreflangAlternates, isPseudo, localizedPath, LOCALES, type AnyLocale } from "@/lib/i18n/locales";
 import { pageLocales, pageText } from "@/lib/i18n/pages";
 
@@ -17,8 +16,9 @@ import { pageLocales, pageText } from "@/lib/i18n/pages";
  *
  * Its type is plain Organization. EmploymentAgency was dropped (12 Sep 2026): the
  * company is not registered or licensed as a recruiting agent, and a schema type is a
- * claim like any other. TravelAgency (its registered activity) is used only once a
- * confirmed travel service is published.
+ * claim like any other. TravelAgency is never used: Go Gulf is not a travel agency
+ * (27 Sep 2026) — it arranges travel only for candidates it places — whatever the
+ * company's registered activity reads.
  */
 
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.gogulf.co").replace(/\/+$/, "");
@@ -144,7 +144,7 @@ export function postalAddress() {
 export function organizationJsonLd() {
   const sameAs = CONFIRMED_SOCIAL.map((c) => c.href);
   return {
-    "@type": TRAVEL_PUBLISHED ? "TravelAgency" : "Organization",
+    "@type": "Organization",
     "@id": `${SITE_URL}/#organization`,
     name: SITE_NAME,
     legalName: COMPANY.legalName,
