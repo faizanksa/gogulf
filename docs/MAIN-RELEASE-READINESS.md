@@ -1,5 +1,82 @@
 # Main release readiness — Phase 3 platform onto `main`
 
+> ## Current state — 27 September 2026
+>
+> **The Mumbai cutover happened on 19 Sep 2026** and production has run on Mumbai since. Sections
+> 1–15 below are the **19 Sep release record, kept as written**; where they say "`main` push pending"
+> or "traffic has not been switched", that was true *then* and is superseded by §0.
+>
+> **Now:** production serves `c0d5b88` (`dpl_79zRS2gErERRLVD8tn72G88HYrdb`) on Mumbai production at
+> migrations `0001`–`0017`. The next release — staff onboarding (`0018`) and the travel-scope
+> retirement (`0019`) — is on **staging only**, awaiting approval (§0.3). `0018` and `0019` have
+> **not** been applied to production.
+
+## 0. Release history since 19 September 2026
+
+### 0.1 The Mumbai cutover — 19 Sep 2026, 10:28 UTC
+
+| | |
+| --- | --- |
+| Commit | `6639b9f` pushed to `main`; deployed as `dpl_AD8w3JjcgQcfLAsysb7MRvZLZq5T`, aliased to `www.gogulf.co` and `gogulf.co` |
+| Build guard | PASS — Environment production, Supabase API Mumbai production (`exsnksrmkycloxiajwmx`), Razorpay live key |
+| Verification | `scripts/verify-production-deployment.mjs` 43/43; anonymous smoke test including one synthetic submission (deleted and verified gone) |
+| Tokyo delta | 0 at 10:33 UTC (19 applications, 50 documents); importer dry run inserted nothing |
+| Rollback kept | `dpl_9RaneE2dUCaRfmGifXYfumUjWDL9` (`519cb85`, Tokyo) — **no longer the rollback target** (§0.4) |
+
+### 0.2 Navigation / scroll fix — 22 Sep 2026
+
+| | |
+| --- | --- |
+| Commit | `c0d5b88` — "fix(nav): stop the next page gliding up on navigation and Back/Forward" (`styles/base.css`, `tests/e2e/scroll.spec.ts`) |
+| Deployed | pushed to `staging` and `main`; production deployment **`dpl_79zRS2gErERRLVD8tn72G88HYrdb`**, created 22 Sep, aliased to `www.gogulf.co` and `gogulf.co` — **the deployment serving production today** |
+| Verification | `verify-production-deployment.mjs` 41/41 on 22 Sep (bundle names Mumbai production only); fix verified on production |
+| Database | unchanged — Mumbai production stays at `0001`–`0017` |
+
+### 0.3 The next release — on staging, not in production
+
+| Commit | What |
+| --- | --- |
+| `7bd95c3` | **Staff onboarding (`0018`)** — `/admin/staff/new`: the staff row through the caller's session (RLS + audit), then a confirmed, password-less sign-in account (the one service-role step, `lib/admin/staff-login.ts`), then the link; an Onboarding column on `/admin/staff` from `staff_sign_in_status()` (read-only, `users.manage` only). `docs/SECURITY-MODEL.md` §3 |
+| `ddd58b9` | Wording: what "no password" means for staff accounts |
+| `312f001` | **Travel-scope retirement (`0019`)** — Go Gulf is not a travel agency; candidate deployment stays. Retires the `travel`/`visa`/`tour_booking` case types, `case_travel`, `case_visa`, the travel-agency pipeline and the TRAVEL_MANAGER/TRAVEL_AGENT roles; **keeps** the recruitment pipeline's Visa Processing and Travel Preparation stages, `documents.view.travel`, and `travel.manage`/`bookings.*`/`suppliers.manage` relabelled for placed-candidate deployment. `/services` offers "Flight & Joining Support for Selected Candidates" in place of "Air Ticket & Travel" |
+| `53222d0` | Empty commit: re-triggered the staging build after Vercel never received the push event for `312f001` (no commit status on GitHub; both status pages green) |
+
+| Check, on staging | Result |
+| --- | --- |
+| Mumbai staging schema | `0001`–`0019`, verified against `schema_migrations` |
+| SQL suites on Mumbai staging | **489/489** across 8 files (incl. `staff-onboarding.test.sql`, `recruitment-scope.test.sql`); the same 489/489 locally from a clean `db reset` |
+| Unit | 365/365 · typecheck, lint, `db:validate` (19 files), client-secret scan: clean |
+| Local E2E (production build, local Supabase) | relevant specs 158 passed + fix re-run 18/18; accessibility 64/64 |
+| Deployed staging | `dpl_BnzCBrcAxLTFXC2eZvcBALZR1ZNM` = `53222d0` (GitHub's Vercel status for the commit points at it); build guard staging / `noxireidrbeqcvsirjec` / Razorpay test key; `verify-staging-deployment.mjs` 14/14; relevant E2E 105 passed, 0 failed |
+| **Full E2E suite vs `53222d0`** (27 Sep, 1 worker, 22.9 min) | **292 tests: 229 passed, 4 failed, 59 skipped** (skips are by design: viewport-only tests, local-only fixtures). All 4 then **passed**: `i18n.spec.ts:167` and `scroll.spec.ts:108` alone (timeouts under memory pressure); `pay.spec.ts:77` on re-run (a transient connect timeout from this machine to the staging API while creating its fixture — Node `fetch` then connected in 46–800 ms); `pay.spec.ts:108` after a **test-only fix** — it fetched `robots.txt` with Playwright's standalone `request` fixture, which does not carry the staging bypass cookie, and so received Vercel's login page; it now uses `page.request`. Re-run of the whole `pay.spec.ts`: 9 passed, 9 skipped (mobile). **No product defect found** |
+| Staff onboarding account step against staging Auth | 5/5 (created confirmed with no usable password; a retry adopts; unconfirmed and phone/customer accounts refused; outside-domain refused) |
+| Manual staff sign-in and authorization (27 Sep, by the owner) | **VERIFIED — STAGING.** `careers@` (ADMIN) signed in with Google; `/admin/staff` shows "Not available for your role". `admin@` (SUPER_ADMIN · Lucknow) signed in and opened Staff; the Staff page shows the Google sign-in status for `admin@`, `careers@` and `hello@`. Database: each Google identity linked onto its own pre-created account (`admin@` 15:20 UTC, `careers@` 15:11 UTC, `hello@` 16 Sep); one staff row each, roles SUPER_ADMIN / ADMIN / SUPER_ADMIN, all Lucknow; no shared login, no email mismatch, no orphan account, no row without a login; no staff-attributed audit write (sign-ins and a refused page write nothing) |
+| Manual onboarding of a **new** staff member (Add staff → "Awaiting first sign-in" → first Google sign-in → "Signed in with Google") | **Not done with a real person** — no new Workspace user was added. Covered by automated evidence only: 22 SQL assertions, unit tests of every path, and the account step against staging Auth (5/5) |
+
+### 0.4 Rollback target — changed
+
+The code rollback target is now the **current production deployment**, `dpl_79zRS2gErERRLVD8tn72G88HYrdb`
+(`c0d5b88`), not `dpl_9Rane…` (`519cb85`, Tokyo). Promoting the Tokyo build would move traffic back to
+Tokyo and strand every application taken on Mumbai since 19 Sep. `c0d5b88` runs unchanged against a
+database with `0018` and `0019` applied (it calls neither the new function nor any retired structure).
+**`0019` is not automatically reversible**: going back on the database would need a new, compensating
+migration. The procedure is in `docs/PRODUCTION-CUTOVER-RUNBOOK.md`, Phase D.
+
+### 0.5 Still owed before this release reaches production
+
+1. *(Done 27 Sep: sign-in and authorization on staging, and the full E2E suite — §0.3.)* Still open, and
+   your call whether it gates production: onboarding a **new** staff member end-to-end with a real Workspace
+   user.
+2. The three production Google sign-ins (`hello@`, `admin@`, `careers@`) — **no record of any yet**.
+3. The runbook's Phase D approvals (below).
+4. A later Tokyo late-application check (the last one: delta 0 on 19 Sep, 10:33 UTC).
+5. Your approval for Phase D of the runbook: `0018` then `0019` on Mumbai production, then `main`.
+
+The staging branch also carries the documentation and the `pay.spec.ts` test fix made after `53222d0`
+(no application code changed). Push the head that includes them, after confirming it.
+
+---
+
 Written 18 September 2026; **updated 19 September 2026 with the billing MVP, and again the same
 day with the completed admin model, migrations `0016`–`0017` and the first real Razorpay TEST
 payments** (§2–§6, §9–§14 changed; jobs and applications sections are as of the 18 Sep record, whose
@@ -553,7 +630,7 @@ Tokyo configuration it was built with, so **no Production variable needs restori
 itself** (the variables already name Mumbai and only affect new builds). What a rollback does *not* undo
 is data: applications taken on Mumbai after the switch would have to be reconciled back to Tokyo.
 
-### Where this stands, 19 September 2026 (afternoon) — cutover prepared, `main` push pending
+### Where this stood, 19 September 2026 (afternoon) — cutover prepared, `main` push pending *(historical: the push was made at 10:28 UTC that day — see §0.1)*
 
 **`main` has not been merged: the push to it was refused by the tool's safety classifier ("Production
 Deploy") and is the one step waiting on you.** Everything the merge depends on has been done and
@@ -633,5 +710,5 @@ id will differ.
 
 ---
 
-**This document grants no approval. Mumbai production is prepared (schema, data, staff); traffic has
-NOT been switched and `main` has NOT been merged — that push is the remaining step.**
+**This document grants no approval.** As of 27 Sep 2026: production serves `c0d5b88` on Mumbai production
+(`0001`–`0017`); `0018` and `0019` are on staging only (§0).

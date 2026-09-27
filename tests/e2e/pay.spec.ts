@@ -105,7 +105,7 @@ test.describe("payment page", () => {
     expect(html).not.toMatch(/[a-z0-9]{20}\.supabase\.co/);
   });
 
-  test("is never indexed or cached, and is kept out of robots.txt-crawled paths", async ({ page, request, baseURL }) => {
+  test("is never indexed or cached, and is kept out of robots.txt-crawled paths", async ({ page, baseURL }) => {
     const db = database(baseURL);
     const invoice = await makeInvoice(db, "STAGING TEST indexing check", "issued");
 
@@ -113,7 +113,10 @@ test.describe("payment page", () => {
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
     expect(response?.headers()["cache-control"] ?? "").not.toMatch(/s-maxage|public/);
 
-    const robots = await request.get("/robots.txt");
+    // page.request shares the browser context's cookies — on staging, the Vercel bypass
+    // (tests/e2e/fixtures.ts). The standalone `request` fixture does not, and got Vercel's
+    // own login page instead of our robots.txt.
+    const robots = await page.request.get("/robots.txt");
     // Production lists /pay/ among its private paths; staging and previews disallow everything.
     expect(await robots.text()).toMatch(/Disallow: \/pay\/|Disallow: \/\s*$/m);
   });

@@ -1,5 +1,10 @@
 # Production cutover runbook — Tokyo → Mumbai, with jobs, admin and billing
 
+> **27 Sep 2026.** Phases A–B (the Tokyo → Mumbai cutover) were **completed on 19 Sep 2026** and are kept
+> below as the record. Production has served Mumbai since; the current deployment is
+> `dpl_79zRS2gErERRLVD8tn72G88HYrdb` (`c0d5b88`). **Phase D** is the procedure for the next release —
+> `0018` then `0019`, then `main` — and **none of it has been run on production.**
+
 Written 19 September 2026 for release candidate **see `docs/MAIN-RELEASE-READINESS.md` §2**.
 This is the ordered procedure. The evidence and the reasoning are in
 `docs/PRODUCTION-CUTOVER-READINESS.md` (state of every environment) and `docs/PAYMENTS.md` §10
@@ -20,9 +25,9 @@ Two projects, and they must never be confused:
 
 | | Ref | Role |
 | --- | --- | --- |
-| Tokyo | `julbqkeyvzwluayokcdi` | **Live today.** Never a target of any script here. Never written to. |
-| Mumbai production | `exsnksrmkycloxiajwmx` | The target of this runbook. **Now at `0001`–`0017` with the Tokyo data imported and three staff identities (19 Sep)**; serves no traffic until `main` is merged. |
-| Mumbai staging | `noxireidrbeqcvsirjec` | Rehearsal. `0001`–`0017`, 439/439. |
+| Tokyo | `julbqkeyvzwluayokcdi` | Served production until 19 Sep; **no longer serves the site**. Kept, read-only, for the late-application delta. Never a target of any script here. Never written to. |
+| Mumbai production | `exsnksrmkycloxiajwmx` | **Live production since 19 Sep.** At `0001`–`0017`; `0018`–`0019` are Phase D. |
+| Mumbai staging | `noxireidrbeqcvsirjec` | Staging. `0001`–`0019`, 489/489 (27 Sep). |
 
 State on 19 Sep 2026: Mumbai production was at `0011` and empty before this was run. **Tokyo keeps
 receiving real applications** — 14 on 16 Sep, 15 that morning, 19 that afternoon (50 documents) — so
@@ -213,12 +218,86 @@ Billing is deployed and inert until these are done, in this order:
    **no refund flow**: any refund of that test payment is made in Razorpay's dashboard by hand.
 5. Only then share links with customers.
 
+## Phase D — release `53222d0`: staff onboarding (`0018`) and travel-scope retirement (`0019`)
+
+**Not run on production.** Each step needs your explicit go-ahead at the time. Staging evidence:
+`docs/MAIN-RELEASE-READINESS.md` §0.3.
+
+**Why the database goes first.** `0018` adds one read-only function; `0019` retires structures no code
+uses and relabels five permissions. The code serving production now (`c0d5b88`) calls neither, so it
+runs unchanged against the migrated database: the migrations need no downtime and do not depend on the
+code release. The new code *prefers* `0018` (without it the Staff page shows "Sign-in progress could not
+be loaded" instead of statuses), so it goes second.
+
+**D1. Preconditions** *(no production change)*
+* On staging: staff sign-in and authorization verified by the owner, and the full E2E suite green against
+  the release (both done 27 Sep — readiness record §0.3). Onboarding a *new* staff member with a real
+  Workspace user is not yet done manually; decide whether it gates this phase.
+* A Tokyo late-application check (Phase B step 1 / step 10 tools, GET-only); import anything new first.
+
+**D2. Pre-flight on Mumbai production** *(read-only)*
+* `schema_migrations` is exactly `0001`–`0017`.
+* Zero cases of a type other than `recruitment`/`support`; `case_travel` and `case_visa` empty; no staff
+  member holds TRAVEL_MANAGER or TRAVEL_AGENT. (`0019` refuses on any of these by itself.)
+* Record a baseline: audit row count; role_permissions (expect **362**); RLS policies (expect **70**);
+  counts of applications, documents, contacts, cases, jobs, invoices, payments, staff.
+
+**D3. Apply, in order** *(production write — go-ahead required)*
+
+```bash
+node scripts/db-remote.mjs --target=mumbai-production --yes-i-am-provisioning-production push --dry-run
+#   must list exactly 0018_staff_onboarding_status.sql and 0019_retire_travel_services.sql
+node scripts/db-remote.mjs --target=mumbai-production --yes-i-am-provisioning-production push
+```
+
+The runner applies them in filename order, `0018` then `0019`, each in its own transaction, and verifies
+against `schema_migrations` rather than the CLI's exit code. If `0019` refuses, it has changed nothing:
+stop and investigate — never edit the guard to get past it.
+
+**D4. Verify the database** *(read-only)* — expected values measured on a clean database and on staging:
+* `schema_migrations` `0001`–`0019`.
+* `case_type` = `{recruitment,support}`; `case_travel`/`case_visa` absent; roles **10**; permissions **72**;
+  role_permissions **293** (362 − 69); RLS policies **64** (70 − the 6 on the dropped tables); one
+  pipeline (recruitment) with **12** stages, Visa Processing and Travel Preparation included.
+* `travel.manage`, `bookings.view`, `bookings.manage`, `suppliers.manage` in domain `deployment`;
+  `documents.view.travel` in `documents`.
+* `staff_sign_in_status()` exists; anon cannot execute it; authenticated can.
+* Audit rows up by exactly **77**, all `system`: 69 `role_permissions.delete`, 2 `roles.retire`,
+  1 `pipelines.retire`, 5 `permissions.relabel`. (`0018` writes none.)
+* Every data count from D2 unchanged.
+* Prefer these read-only checks to the full SQL suites on production: the suites roll back their data but
+  still consume case, invoice and payment sequence numbers (see 19 Sep, §14 of the readiness record).
+
+**D5. Release the code** *(go-ahead required)* — `git push origin 53222d0:refs/heads/main` (or the
+approved head including the release-record commit; confirm the hash first). Confirm GitHub shows a Vercel
+status for the commit: on 27 Sep a push event to `staging` never reached Vercel. For production, do not
+re-trigger without asking.
+
+**D6. Verify production**
+* Build log: "Supabase API: PRODUCTION Mumbai", "Razorpay: live key".
+* `node scripts/verify-production-deployment.mjs` — all PASS.
+* `/services` shows "Flight & Joining Support for Selected Candidates" and no "Air Ticket & Travel";
+  `/travel` 404; sitemap and navigation have no travel entry; `/admin/staff/new` redirects a visitor
+  without a session to `/admin/login`.
+* One synthetic application submitted and deleted, as on 19 Sep.
+* The three staff sign in with Google once each; the Staff page shows "Signed in with Google" and
+  read-only SQL confirms one Google identity per staff record, the right role, nothing merged.
+
+**D7. Stop conditions** — do not push `main` if: D2 finds anything other than `0001`–`0017`, any
+retired-model data, or a travel-role holder; `0019` refused; any D4 value differs (in particular the
+audit delta is not exactly 77, or any data count changed); the staging E2E suite is not green against the
+exact commit being pushed. Roll the code back (below) if, after the push, applications fail to submit,
+documents cannot be opened, staff sign-in or roles are wrong, travel wording or a Travel section reappears,
+or any unauthenticated read of protected data succeeds.
+
 ## Rollback
 
 | Stage | Action |
 | --- | --- |
 | Mumbai migrated only | nothing to undo — it serves no traffic |
-| New build live | promote `dpl_9RaneE2dUCaRfmGifXYfumUjWDL9` (`519cb85`; verified Ready and aliased to `www.gogulf.co` and `gogulf.co` on 19 Sep). It keeps the Tokyo configuration it was built with, so **no Production variable needs restoring for the rollback** (the variables already name Mumbai and only affect new builds; Tokyo's public anon key is not stored on this machine and is only needed if you later want the *variables* back on Tokyo — read it from the Vercel dashboard first). Tokyo still holds every row taken before the switch. Promotion does not rebuild, so the guard does not interfere. Anything submitted to Mumbai after the switch must be reconciled back |
+| **Phase D code live (current)** | **promote `dpl_79zRS2gErERRLVD8tn72G88HYrdb` (`c0d5b88`, production since 22 Sep).** It runs unchanged against `0018` + `0019` and needs no variable change. The only visible difference: the old "Air Ticket & Travel" card returns until you roll forward. Do **not** promote the Tokyo build below — it would move traffic back to Tokyo |
+| **Phase D database** | **`0019` is not automatically reversible.** It dropped two empty tables, rebuilt `case_type` without three values, deleted two roles and their grants, and relabelled five permissions. No rollback is needed for the code to run; if the database itself had to go back, that is a **new compensating migration** (recreate the enum values, tables, roles and grants — the retired definitions are in `0004`/`0008` and in `0019`'s audit entries), written and tested on staging first. `0018` only added a function |
+| *(historical, 19 Sep)* New build live | promote `dpl_9RaneE2dUCaRfmGifXYfumUjWDL9` (`519cb85`; verified Ready and aliased to `www.gogulf.co` and `gogulf.co` on 19 Sep). It keeps the Tokyo configuration it was built with, so **no Production variable needs restoring for the rollback** (the variables already name Mumbai and only affect new builds; Tokyo's public anon key is not stored on this machine and is only needed if you later want the *variables* back on Tokyo — read it from the Vercel dashboard first). Tokyo still holds every row taken before the switch. Promotion does not rebuild, so the guard does not interfere. Anything submitted to Mumbai after the switch must be reconciled back |
 | Live, Tokyo intake still open | same, plus replay the switch-window applications into Tokyo (policy A6) |
 | After Tokyo `anon` INSERT is revoked | **one-way door**: restore the grant and reconcile both directions |
 | Payments misbehaving after billing go-live | remove the live webhook in the Razorpay dashboard (deliveries then stop and Razorpay retries later) and void unpaid invoices in `/admin`; never edit invoice or payment rows by hand |
@@ -229,4 +308,4 @@ Stop before switching traffic if: `0012`–`0017` are not all in `schema_migrati
 
 Roll back after switching if: applications fail to submit or documents cannot be retrieved; data reaches the wrong project; any unauthenticated access to `job_applications`, `contacts`, `cases`, `payments`, `invoices` or the bucket succeeds; the customer payment page shows anything beyond number, service, amount and status; staff sign-in or roles are wrong; staging or test content is live, or `noindex` reaches production; unexplained 5xx after the first hour.
 
-**This runbook grants no approval. Mumbai production is prepared; traffic has NOT been switched and `main` has NOT been merged.**
+**This runbook grants no approval.** The Tokyo → Mumbai cutover was completed on 19 Sep 2026. Phase D (`0018`, `0019`, `main`) has **not** been run on production.
