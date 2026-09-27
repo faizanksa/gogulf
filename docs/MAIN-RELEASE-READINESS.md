@@ -6,8 +6,8 @@
 > 1–15 below are the **19 Sep release record, kept as written**; where they say "`main` push pending"
 > or "traffic has not been switched", that was true *then* and is superseded by §0.
 >
-> **Now:** production serves `c0d5b88` (`dpl_79zRS2gErERRLVD8tn72G88HYrdb`) on Mumbai production at
-> migrations `0001`–`0017`. The next release — staff onboarding (`0018`) and the travel-scope
+> **Now (28 Sep):** Mumbai production is at migrations `0001`–`0020` (**applied 28 Sep**, §0.9); the code
+> release to `main` follows. Before it, production served `c0d5b88` (`dpl_79zRS2gErERRLVD8tn72G88HYrdb`). The next release — staff onboarding (`0018`) and the travel-scope
 > retirement (`0019`) — is on **staging only**, awaiting approval (§0.3). `0018` and `0019` have
 > **not** been applied to production.
 
@@ -163,6 +163,22 @@ switch are legitimate and are treated exactly like the other job-less applicatio
 
 Statements elsewhere in this record that billing is "built, not in use", that "no real invoice has been
 issued" or that the live webhook is "not configured" are superseded by this section.
+
+### 0.9 Production database migrations — EXECUTED 28 Sep 2026
+
+Owner-approved, gated on an exact-match preflight. Mumbai production (`exsnksrmkycloxiajwmx`), with
+`scripts/db-remote.mjs --target=mumbai-production --yes-i-am-provisioning-production`.
+
+| Step | Result |
+| --- | --- |
+| Final read-only preflight | **24/24 MATCH** against the agreed baseline (§0.8) |
+| Dry run | exactly `0018`, `0019`, `0020` |
+| `push` | applied in order, no refusal; `0020` reported **"22 application(s) backfilled to the default intake branch"**; `schema_migrations` `0001`–`0020` |
+| Read-only verification | **32/32 MATCH**: `staff_sign_in_status()` present (anon no, authenticated yes); `case_type` `{recruitment,support}`; `case_travel`/`case_visa` absent; roles 10, permissions 72, role_permissions 293, RLS policies 64; one pipeline (recruitment), 12 stages incl. Visa Processing and Travel Preparation; travel/booking/supplier permissions in `deployment`; `next_case_number` grants as `0009`; default intake branch LKO; applications 23, **0 without a branch, 23 in Lucknow**; 22 backfill audit entries; audit 392 → **491** (77 from `0019` + 22 from `0020`); case, contact, documents (60), jobs (0), invoices, payments (statuses unchanged), payment events (3) and staff roles **unchanged** |
+| Live site afterwards | still `dpl_79zRS2gErERRLVD8tn72G88HYrdb` (`c0d5b88`) — it runs unchanged on the new schema; public pages 200, `/travel` 404, `/admin` 307 |
+
+Not done in this step, by design: the code release (`main`), the production role change, `careers@`'s first
+Google sign-in, and the synthetic application in D6 (a production write; needs its own go-ahead).
 
 ### 0.5 Still owed before this release reaches production
 

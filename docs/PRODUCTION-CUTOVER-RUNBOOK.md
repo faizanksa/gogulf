@@ -220,7 +220,8 @@ Billing is deployed and inert until these are done, in this order:
 
 ## Phase D — this release: staff onboarding (`0018`), travel-scope retirement (`0019`), application branch routing (`0020`)
 
-**Not run on production.** Each step needs your explicit go-ahead at the time. Staging evidence:
+**D1–D4 executed on 28 Sep 2026** (owner-approved; preflight 24/24, dry run exactly the three, `0020`
+backfilled 22, verification 32/32 — readiness record §0.9). **D5 onwards** each needs its own go-ahead. Staging evidence:
 `docs/MAIN-RELEASE-READINESS.md` §0.3.
 
 **Why the database goes first.** `0018` adds one read-only function; `0019` retires structures no code
