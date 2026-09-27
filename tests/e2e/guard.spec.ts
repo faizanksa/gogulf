@@ -61,6 +61,7 @@ test.describe("anonymous visitors", () => {
     ["/admin/payments", "/admin/login"],
     ["/admin/audit", "/admin/login"],
     ["/admin/staff", "/admin/login"],
+    ["/admin/staff/new", "/admin/login"],
     ["/admin/roles", "/admin/login"],
     ["/admin/roles/ADMIN", "/admin/login"],
     ["/admin/settings", "/admin/login"],

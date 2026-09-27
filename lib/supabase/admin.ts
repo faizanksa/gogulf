@@ -14,6 +14,14 @@
  *      so no browser-reachable role may call it (0017). The payer's request is
  *      the trigger, never the authority: the amount comes from the invoice row
  *      and nothing the payer sent is written anywhere.
+ *   6. Creating a staff member's sign-in account ("staff-onboarding"), in
+ *      lib/admin/staff-login.ts only: an auth.users row with a confirmed email and
+ *      NO password (docs/SECURITY-MODEL.md §3). The Auth admin API is the only way
+ *      to create one. It runs after the caller holds users.manage AND RLS has
+ *      already accepted the staff_users row for that address through the caller's
+ *      own session, so the database — not this client — decides who is onboarded.
+ *      It never sets a password, metadata or a role, and never reads other users
+ *      beyond finding an existing account for that one address.
  *
  * FORBIDDEN:
  *
@@ -41,7 +49,8 @@ export type AdminReason =
   | "cron"
   | "migration"
   | "system-automation"
-  | "payment-request";
+  | "payment-request"
+  | "staff-onboarding";
 
 let cached: ReturnType<typeof createClient<Database>> | undefined;
 

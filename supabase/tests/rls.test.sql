@@ -358,8 +358,11 @@ begin
      -- customer payment page, and it checks business state (invoice issued/unpaid), never
      -- the caller's identity. open_invoice_payment_request is NOT here: since 0017 it is
      -- service_role only, and an authenticated staff session must not be able to call it.
+     -- staff_sign_in_status (0018) is staff-facing by design: read-only, it returns rows only
+     -- when the caller holds users.manage, and only booleans and a time — asserted in
+     -- staff-onboarding.test.sql.
      and p.proname not in ('has_perm', 'scope_allows', 'is_staff', 'current_contact_id', 'record_document_access',
-                           'public_invoice_view');
+                           'public_invoice_view', 'staff_sign_in_status');
   perform test_assert(bad is null,
     coalesce('authenticated can execute no system-only SECURITY DEFINER function (found: ' || bad || ')',
              'authenticated can execute no system-only SECURITY DEFINER function'));

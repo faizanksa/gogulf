@@ -1888,6 +1888,16 @@ export type Database = {
         Args: { perm: string; row_branch: string; row_owner: string }
         Returns: boolean
       }
+      staff_sign_in_status: {
+        Args: never
+        Returns: {
+          email_confirmed: boolean
+          google_last_sign_in: string
+          google_linked: boolean
+          has_login: boolean
+          staff_id: string
+        }[]
+      }
       write_audit_log: {
         Args: {
           p_action: string

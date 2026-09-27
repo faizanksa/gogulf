@@ -154,6 +154,32 @@ The onboarding procedure that follows from this: create the `auth.users` row wit
 `email_confirm: true`, create the matching `staff_users` row, and let the person's first Google
 sign-in link the identity. Never enable signups to onboard someone.
 
+#### Onboarding from the Staff screen — added 27 Sep 2026
+
+`/admin/staff/new` performs the same procedure as `npm run bootstrap:admins`, in this order
+(`lib/admin/staff-onboarding.ts`):
+
+1. **The `staff_users` row, through the caller's own session.** `users.manage` is required, and a
+   `SUPER_ADMIN` row additionally needs `roles.manage` — checked by the action and enforced by the
+   0009 policies. The `@gogulf.co` CHECK still applies. The audit trigger records the insert
+   against the caller.
+2. **The sign-in account** — `auth.users`, email confirmed, **no password, no metadata**. Only the
+   Auth admin API can create one, so this is the single service-role call in any staff action
+   (`lib/admin/staff-login.ts`, `AdminReason` `"staff-onboarding"`). It runs only after RLS has
+   accepted step 1. An existing account for the address is adopted only if it is confirmed and
+   carries no sign-in method other than email/Google; anything else is refused, never "fixed".
+3. **The link** (`staff_users.auth_user_id`), again through the caller's session and audited.
+   An account can belong to one staff row only (unique constraint).
+
+Nothing is emailed. The person is told to sign in with Google at `/admin/login`. Re-adding the
+same address resumes an interrupted attempt instead of duplicating it.
+
+The Staff screen shows where each person is — *Awaiting first sign-in* / *Signed in with Google* /
+*Invitation incomplete* / *Account needs checking* — from `staff_sign_in_status()` (0018): a
+read-only SECURITY DEFINER function that returns rows only to `users.manage` holders, and only
+booleans and a timestamp, so the workspace never reads `auth.users` with the service-role key.
+This is also how the production staff sign-ins can be confirmed from the screen.
+
 ### Separation
 
 Customer sessions and staff sessions are distinct. A customer session can never satisfy

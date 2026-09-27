@@ -9,6 +9,7 @@ import "server-only";
 import { PAGE_SIZE, rangeOf } from "@/lib/admin/params";
 import { createServerSupabase } from "@/lib/supabase/server";
 import type { Grants, Scope } from "./rbac-model";
+import type { SignInStatus } from "./staff-onboarding";
 
 // ---------------------------------------------------------------------------
 // Audit trail
@@ -111,6 +112,23 @@ export async function listStaff(): Promise<{ rows: StaffListRow[]; failed: boole
     .order("is_active", { ascending: false })
     .order("full_name");
   return { rows: (data ?? []) as unknown as StaffListRow[], failed: Boolean(error) };
+}
+
+/**
+ * Where each person is in onboarding (0018): whether their sign-in account exists and has
+ * signed in with Google. The function returns rows only to users.manage holders.
+ */
+export async function listStaffSignInStatus(): Promise<{ byStaff: Map<string, SignInStatus>; failed: boolean }> {
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase.rpc("staff_sign_in_status");
+  const rows = (data ?? []) as SignInStatus[];
+  return { byStaff: new Map(rows.map((r) => [r.staff_id, r])), failed: Boolean(error) };
+}
+
+export async function listActiveBranches(): Promise<{ id: string; name: string }[]> {
+  const supabase = await createServerSupabase();
+  const { data } = await supabase.from("branches").select("id,name").eq("is_active", true).order("name");
+  return data ?? [];
 }
 
 export interface RoleRow {
