@@ -68,7 +68,7 @@ migration. The procedure is in `docs/PRODUCTION-CUTOVER-RUNBOOK.md`, Phase D.
 | --- | --- | --- | --- |
 | `hello@gogulf.co` | `SUPER_ADMIN` (`is_super`) | Super Admin | Everything, every scope; **the only account that manages staff**, roles, settings and integrations. Staff page allowed; sees all 15 staging applications |
 | `admin@gogulf.co` | `ADMIN` | Admin | All operational work at every scope — applications, jobs, CRM, documents, invoices, payments, audit (operational), candidate deployment. **No** staff, roles or settings (`0016`). Staff page refused; sees 15 of 15 applications |
-| `careers@gogulf.co` | `HR_MANAGER` | HR Manager | Recruitment at **branch** scope (applications, CRM, interviews, offers, document verification incl. identity documents); jobs and employers at all scope; no staff, roles, settings, audit or invoice issuing. Staff page and `/admin/staff/new` refused (`users.manage` false). **Sees 0 of 15 staging applications — see below** |
+| `careers@gogulf.co` | `HR_MANAGER` | HR Manager | Recruitment at **branch** scope (applications, CRM, interviews, offers, document verification incl. identity documents); jobs and employers at all scope; no staff, roles, settings, audit or invoice issuing. Staff page and `/admin/staff/new` refused (`users.manage` false). Saw 0 of 15 applications until `0020` (§0.7); **15 of 15 since** |
 
 **How it is implemented.** All three are existing catalogue roles whose labels already read "Super Admin",
 "Admin" and "HR Manager" (`roles.label`, shown by the Staff page and the workspace header). **No role,
@@ -84,15 +84,41 @@ audit trail as a `system` `staff_users.update`. Pinned by `lib/admin/staff-roste
 (recovery if that account is lost: the bootstrap script, which needs developer access). `admin@` can no
 longer open Staff.
 
-**Open decision — branch routing (blocks `careers@` = HR Manager on production).** Branch-scoped roles
-see a record only when its `branch_id` equals theirs (`scope_allows`, `0006`). An application takes its
-branch from its job (`0013`), and jobs take the branch of the staff member who creates them (`0012`) —
-so applications to jobs posted by Lucknow staff will be visible to the HR Manager. **Applications with no
-job have no branch**: 14 of 15 on staging, and the 19 applications imported from Tokyo on production. The
-HR Manager cannot see those, and nothing in the workspace can assign a branch to an application. The
-suggested fix is a small migration: new applications with no job are routed to the default intake branch,
-and existing ones are backfilled to it (Go Gulf has one branch, Lucknow). It changes intake behaviour and
-real production rows, so it needs your approval; until then, production should keep `careers@` as ADMIN.
+**Branch routing** — resolved by `0020` (§0.7): `careers@` now sees 15 of 15 on staging.
+
+### 0.7 Application branch routing — `0020`, decided and built 27 Sep 2026; staging only
+
+**The gap.** Branch-scoped roles (HR Manager among them) see a record only when its `branch_id` equals
+theirs (`scope_allows`, `0006`). An application took its branch from its job (`0013`) and a job takes the
+creating staff member's branch (`0012`), but **an application with no job got no branch** — so the HR
+Manager saw 0 of 15 applications on staging (§0.6), and would see none of the 19 imported on production.
+
+**The rule.** An application to a job keeps inheriting the job's branch, exactly as before. Anything still
+without a branch — no job, or a job that has none — goes to the **default intake branch, Lucknow**.
+Existing applications without a branch are backfilled to it. HR Manager stays branch-scoped.
+
+**The implementation** (`supabase/migrations/0020_application_intake_branch.sql`), at the intake layer:
+
+| Part | What |
+| --- | --- |
+| `branches.is_default_intake` | New boolean, default false; a partial unique index allows **at most one** default. Lucknow (`LKO`) is marked — only if no branch is marked yet. The default is data, never a name or id in code; moving intake is a one-row change |
+| `job_applications_intake()` | The existing `BEFORE INSERT`, `SECURITY DEFINER` trigger, replaced: the job-linked block is byte-for-byte as in `0013`; one step is added at the end — a still-empty `branch_id` takes the active default intake branch. With no default marked it stays empty: **public intake is never refused** by branch routing |
+| Backfill | Every application with no branch gets the default intake branch. Refuses — changing nothing — unless exactly one active default exists. Each row is audited by the existing `job_applications_audit` trigger (`job_application.updated`, `system`, old branch null → Lucknow). Re-running touches nothing |
+| Unchanged | Every RLS policy and grant (the public's INSERT grant still excludes `branch_id`), every role, permission and scope. `branch_id` stays nullable on purpose — a NOT NULL would turn a configuration mistake into refused applicants — and the tests assert that none is left empty instead |
+
+**On staging** (`noxireidrbeqcvsirjec`, now `0001`–`0020`): before, 15 applications, 15 with no branch (14
+without a job, 1 on a seeded test job that has no branch); **15 backfilled**; after, 0 without a branch, 15 in
+Lucknow; audit +15, each a `job_application.updated` system entry. Measured as each person:
+`careers@` (HR Manager, Lucknow) **15 of 15**, Staff and `/admin/staff/new` refused; `admin@` 15 of 15,
+Staff refused; `hello@` 15 of 15, Staff allowed.
+
+**Tests.** `supabase/tests/intake-branch.test.sql` (17 assertions, as the anonymous public form and as
+each role): job-linked → job's branch; job-less → Lucknow; branchless job → Lucknow; no application left
+without a branch; the Lucknow HR Manager sees Lucknow's and nothing else; another branch's HR Manager sees
+its own and not Lucknow's (isolation both ways); ADMIN still sees all; HR Manager still branch-scoped;
+the public still cannot choose a branch; with no default marked, an application is still accepted.
+`jobs.test.sql`'s isolation fixture now uses a second branch (it relied on a branchless application,
+which `0020` makes impossible). SQL **506/506** on staging and locally.
 
 ### 0.5 Still owed before this release reaches production
 
@@ -101,7 +127,7 @@ real production rows, so it needs your approval; until then, production should k
    user.
 2. The three production Google sign-ins (`hello@`, `admin@`, `careers@`) — **no record of any yet**.
 3. The runbook's Phase D approvals (below).
-4. **The branch-routing decision in §0.6**, before `careers@` becomes HR Manager on production.
+4. `0020` on production (§0.7, runbook Phase D): it backfills every production application without a branch — the 19 imported from Tokyo among them — to Lucknow. Required before `careers@` becomes HR Manager there.
 4. A later Tokyo late-application check (the last one: delta 0 on 19 Sep, 10:33 UTC).
 5. Your approval for Phase D of the runbook: `0018` then `0019` on Mumbai production, then `main`.
 

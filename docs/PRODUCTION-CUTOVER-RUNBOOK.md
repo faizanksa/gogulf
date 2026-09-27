@@ -3,7 +3,7 @@
 > **27 Sep 2026.** Phases A–B (the Tokyo → Mumbai cutover) were **completed on 19 Sep 2026** and are kept
 > below as the record. Production has served Mumbai since; the current deployment is
 > `dpl_79zRS2gErERRLVD8tn72G88HYrdb` (`c0d5b88`). **Phase D** is the procedure for the next release —
-> `0018` then `0019`, then `main` — and **none of it has been run on production.**
+> `0018`, `0019`, `0020`, then `main` — and **none of it has been run on production.**
 
 Written 19 September 2026 for release candidate **see `docs/MAIN-RELEASE-READINESS.md` §2**.
 This is the ordered procedure. The evidence and the reasoning are in
@@ -218,7 +218,7 @@ Billing is deployed and inert until these are done, in this order:
    **no refund flow**: any refund of that test payment is made in Razorpay's dashboard by hand.
 5. Only then share links with customers.
 
-## Phase D — release `53222d0`: staff onboarding (`0018`) and travel-scope retirement (`0019`)
+## Phase D — this release: staff onboarding (`0018`), travel-scope retirement (`0019`), application branch routing (`0020`)
 
 **Not run on production.** Each step needs your explicit go-ahead at the time. Staging evidence:
 `docs/MAIN-RELEASE-READINESS.md` §0.3.
@@ -239,18 +239,19 @@ be loaded" instead of statuses), so it goes second.
 * `schema_migrations` is exactly `0001`–`0017`.
 * Zero cases of a type other than `recruitment`/`support`; `case_travel` and `case_visa` empty; no staff
   member holds TRAVEL_MANAGER or TRAVEL_AGENT. (`0019` refuses on any of these by itself.)
-* Record a baseline: audit row count; role_permissions (expect **362**); RLS policies (expect **70**);
+* Record a baseline: audit row count; applications with no branch (split: with / without a job); role_permissions (expect **362**); RLS policies (expect **70**);
   counts of applications, documents, contacts, cases, jobs, invoices, payments, staff.
 
 **D3. Apply, in order** *(production write — go-ahead required)*
 
 ```bash
 node scripts/db-remote.mjs --target=mumbai-production --yes-i-am-provisioning-production push --dry-run
-#   must list exactly 0018_staff_onboarding_status.sql and 0019_retire_travel_services.sql
+#   must list exactly 0018_staff_onboarding_status.sql, 0019_retire_travel_services.sql and
+#   0020_application_intake_branch.sql
 node scripts/db-remote.mjs --target=mumbai-production --yes-i-am-provisioning-production push
 ```
 
-The runner applies them in filename order, `0018` then `0019`, each in its own transaction, and verifies
+The runner applies them in filename order, `0018`, `0019`, then `0020`, each in its own transaction, and verifies
 against `schema_migrations` rather than the CLI's exit code. If `0019` refuses, it has changed nothing:
 stop and investigate — never edit the guard to get past it.
 
@@ -264,7 +265,12 @@ stop and investigate — never edit the guard to get past it.
 * `staff_sign_in_status()` exists; anon cannot execute it; authenticated can.
 * Audit rows up by exactly **77**, all `system`: 69 `role_permissions.delete`, 2 `roles.retire`,
   1 `pipelines.retire`, 5 `permissions.relabel`. (`0018` writes none.)
-* Every data count from D2 unchanged.
+* `0020`: `branches.is_default_intake` true for Lucknow only; **no application without a branch**; the
+  number the migration reports as backfilled equals D2's count of applications with no branch (**19 expected**
+  — the Tokyo imports — plus any job-less application since); audit up by that same number more, each a
+  `job_application.updated` `system` entry, old branch null → Lucknow. These are **writes to real applicant
+  rows** (their `branch_id` and `updated_at`); nothing else in them changes.
+* Every other data count from D2 unchanged.
 * Prefer these read-only checks to the full SQL suites on production: the suites roll back their data but
   still consume case, invoice and payment sequence numbers (see 19 Sep, §14 of the readiness record).
 
@@ -288,8 +294,8 @@ admin@ Admin, careers@ HR Manager (readiness record §0.6). Two ways, both audit
 roles on the Staff page (attributed to `hello@`), or `npm run bootstrap:admins -- --target=mumbai-production
 --yes-bootstrap-production-admins` converges all three to the roster (attributed to `system`). The roster
 already holds the new mapping, so a later run cannot revert it. **Do not make `careers@` HR Manager on
-production until the branch-routing decision in §0.6 is made and applied** — otherwise the careers desk
-loses sight of every application without a job, including the 19 imported from Tokyo. Verify afterwards:
+production until `0020` is applied and verified (D4)** — otherwise the careers desk loses sight of every
+application without a branch, including the 19 imported from Tokyo. Verify afterwards:
 `careers@` refused on `/admin/staff` and `/admin/staff/new`; `admin@` refused on `/admin/staff`;
 `hello@` allowed; application visibility per role as in §0.6.
 
@@ -306,6 +312,7 @@ or any unauthenticated read of protected data succeeds.
 | --- | --- |
 | Mumbai migrated only | nothing to undo — it serves no traffic |
 | **Phase D code live (current)** | **promote `dpl_79zRS2gErERRLVD8tn72G88HYrdb` (`c0d5b88`, production since 22 Sep).** It runs unchanged against `0018` + `0019` and needs no variable change. The only visible difference: the old "Air Ticket & Travel" card returns until you roll forward. Do **not** promote the Tokyo build below — it would move traffic back to Tokyo |
+| **Phase D database — `0020`** | Not automatically reversible either: it marks a default branch, replaces the intake trigger and backfills `branch_id`. The old code runs unchanged against it. To undo the backfill, a compensating migration can restore `branch_id = null` for exactly the rows whose `job_application.updated` audit entry records old branch null → Lucknow, and restore the `0013` trigger body |
 | **Phase D database** | **`0019` is not automatically reversible.** It dropped two empty tables, rebuilt `case_type` without three values, deleted two roles and their grants, and relabelled five permissions. No rollback is needed for the code to run; if the database itself had to go back, that is a **new compensating migration** (recreate the enum values, tables, roles and grants — the retired definitions are in `0004`/`0008` and in `0019`'s audit entries), written and tested on staging first. `0018` only added a function |
 | *(historical, 19 Sep)* New build live | promote `dpl_9RaneE2dUCaRfmGifXYfumUjWDL9` (`519cb85`; verified Ready and aliased to `www.gogulf.co` and `gogulf.co` on 19 Sep). It keeps the Tokyo configuration it was built with, so **no Production variable needs restoring for the rollback** (the variables already name Mumbai and only affect new builds; Tokyo's public anon key is not stored on this machine and is only needed if you later want the *variables* back on Tokyo — read it from the Vercel dashboard first). Tokyo still holds every row taken before the switch. Promotion does not rebuild, so the guard does not interfere. Anything submitted to Mumbai after the switch must be reconciled back |
 | Live, Tokyo intake still open | same, plus replay the switch-window applications into Tokyo (policy A6) |

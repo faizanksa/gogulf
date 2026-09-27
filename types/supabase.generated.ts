@@ -257,6 +257,7 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean
+          is_default_intake: boolean
           name: string
           region: string | null
           updated_at: string
@@ -268,6 +269,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          is_default_intake?: boolean
           name: string
           region?: string | null
           updated_at?: string
@@ -279,6 +281,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          is_default_intake?: boolean
           name?: string
           region?: string | null
           updated_at?: string

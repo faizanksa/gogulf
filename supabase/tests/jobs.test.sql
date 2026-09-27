@@ -609,7 +609,11 @@ select jobs_test.check(
 
 insert into jobs_test.ids values ('a_one', '11111111-0000-4000-8000-000000000001');
 -- More, as the system: one from the same person (same phone, new email), one
--- general, one with no branch at all.
+-- general, and one in ANOTHER branch. (Before 0020 the last had no branch at all; since 0020
+-- every application gets one — a job-less one goes to Lucknow — so isolation is now tested
+-- against a second branch.)
+insert into public.branches (name, code, city, country_code) values ('JT Other Branch', 'JTO', 'Test City', 'IN');
+insert into jobs_test.ids select 'b_other', id from public.branches where code = 'JTO';
 select jobs_test.act_as_system();
 insert into public.job_applications (id, job_id, job_title, full_name, email, phone, cv_path, passport_path, branch_id)
 values ('11111111-0000-4000-8000-000000000002', jobs_test.id('j_prof'), 'x', 'JT Applicant One', 'jt.one.other@example.com',
@@ -621,10 +625,11 @@ values ('11111111-0000-4000-8000-000000000003', 'General Application', 'JT Appli
         '+91 90000 33333', '11111111-0000-4000-8000-000000000003/cv-c.pdf', '11111111-0000-4000-8000-000000000003/passport-c.png',
         jobs_test.id('b_lko'));
 insert into jobs_test.ids values ('a_general', '11111111-0000-4000-8000-000000000003');
-insert into public.job_applications (id, job_title, full_name, email, phone, cv_path, passport_path)
+insert into public.job_applications (id, job_title, full_name, email, phone, cv_path, passport_path, branch_id)
 values ('11111111-0000-4000-8000-000000000004', 'General Application', 'JT Applicant Four', 'jt.four@example.com',
-        '+91 90000 44444', '11111111-0000-4000-8000-000000000004/cv-d.pdf', '11111111-0000-4000-8000-000000000004/passport-d.png');
-insert into jobs_test.ids values ('a_nobranch', '11111111-0000-4000-8000-000000000004');
+        '+91 90000 44444', '11111111-0000-4000-8000-000000000004/cv-d.pdf', '11111111-0000-4000-8000-000000000004/passport-d.png',
+        jobs_test.id('b_other'));
+insert into jobs_test.ids values ('a_otherbranch', '11111111-0000-4000-8000-000000000004');
 
 create view jobs_test.fixture_apps as
   select a.* from public.job_applications a join jobs_test.ids i on i.v = a.id where i.k like 'a\_%';
@@ -647,7 +652,7 @@ select jobs_test.check(jobs_test.visible('select 1 from jobs_test.fixture_apps')
 
 select jobs_test.act_as_staff('s_hr');
 select jobs_test.check(jobs_test.visible('select 1 from jobs_test.fixture_apps') = 3,
-  'HR_MANAGER sees the applications in their branch, not the one without a branch');
+  'HR_MANAGER sees the applications in their branch, not the one in another branch');
 select jobs_test.check(
   jobs_test.affected(format($$update public.job_applications set assignee_id = %L, status = 'screening' where id = %L$$,
     jobs_test.id('s_rec1'), jobs_test.id('a_general'))) = 1,
