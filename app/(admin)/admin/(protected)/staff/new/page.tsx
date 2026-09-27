@@ -25,7 +25,7 @@ export default async function NewStaffPage() {
       <PageTitle
         eyebrow="Staff"
         title="Add staff member"
-        description="They must already have a Go Gulf Google Workspace account (an @gogulf.co address). After you add them here, they sign in once with Google and their access starts with the role you choose. No password is created, and nothing is emailed — you tell them to sign in."
+        description="They must already have a Go Gulf Google Workspace account (an @gogulf.co address). After you add them here, they sign in once with Google and their access starts with the role you choose. They are never given a password, and nothing is emailed — you tell them to sign in."
       />
       {branches.length === 0 ? (
         <AlertView tone="error" toneLabel="Error" title="No active branch exists, so nobody can be added. Ask a developer to check the branches." />

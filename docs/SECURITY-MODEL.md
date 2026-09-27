@@ -171,6 +171,12 @@ sign-in link the identity. Never enable signups to onboard someone.
 3. **The link** (`staff_users.auth_user_id`), again through the caller's session and audited.
    An account can belong to one staff row only (unique constraint).
 
+"No password" precisely: we never supply one, and Supabase Auth then stores a random bcrypt hash
+that nobody knows (observed locally and on staging, 27 Sep 2026 — `encrypted_password` is a 60-char
+`$2a$` value, never empty). That is not a usable password, and even a password session could not
+open the workspace: the route guard requires `amr: oauth` with the `google` provider
+(`STAFF_SIGN_IN`), which `tests/e2e/guard.spec.ts` proves against staging.
+
 Nothing is emailed. The person is told to sign in with Google at `/admin/login`. Re-adding the
 same address resumes an interrupted attempt instead of duplicating it.
 
