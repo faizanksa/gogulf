@@ -50,7 +50,7 @@
 | Deployed staging | `dpl_BnzCBrcAxLTFXC2eZvcBALZR1ZNM` = `53222d0` (GitHub's Vercel status for the commit points at it); build guard staging / `noxireidrbeqcvsirjec` / Razorpay test key; `verify-staging-deployment.mjs` 14/14; relevant E2E 105 passed, 0 failed |
 | **Full E2E suite vs `53222d0`** (27 Sep, 1 worker, 22.9 min) | **292 tests: 229 passed, 4 failed, 59 skipped** (skips are by design: viewport-only tests, local-only fixtures). All 4 then **passed**: `i18n.spec.ts:167` and `scroll.spec.ts:108` alone (timeouts under memory pressure); `pay.spec.ts:77` on re-run (a transient connect timeout from this machine to the staging API while creating its fixture — Node `fetch` then connected in 46–800 ms); `pay.spec.ts:108` after a **test-only fix** — it fetched `robots.txt` with Playwright's standalone `request` fixture, which does not carry the staging bypass cookie, and so received Vercel's login page; it now uses `page.request`. Re-run of the whole `pay.spec.ts`: 9 passed, 9 skipped (mobile). **No product defect found** |
 | Staff onboarding account step against staging Auth | 5/5 (created confirmed with no usable password; a retry adopts; unconfirmed and phone/customer accounts refused; outside-domain refused) |
-| Manual staff sign-in and authorization (27 Sep, by the owner) | **VERIFIED — STAGING.** `careers@` (ADMIN) signed in with Google; `/admin/staff` shows "Not available for your role". `admin@` (SUPER_ADMIN · Lucknow) signed in and opened Staff; the Staff page shows the Google sign-in status for `admin@`, `careers@` and `hello@`. Database: each Google identity linked onto its own pre-created account (`admin@` 15:20 UTC, `careers@` 15:11 UTC, `hello@` 16 Sep); one staff row each, roles SUPER_ADMIN / ADMIN / SUPER_ADMIN, all Lucknow; no shared login, no email mismatch, no orphan account, no row without a login; no staff-attributed audit write (sign-ins and a refused page write nothing) |
+| Manual staff sign-in and authorization (27 Sep, by the owner) | **VERIFIED — STAGING** (before the role mapping in §0.6). `careers@` (then ADMIN) signed in with Google; `/admin/staff` shows "Not available for your role". `admin@` (SUPER_ADMIN · Lucknow) signed in and opened Staff; the Staff page shows the Google sign-in status for `admin@`, `careers@` and `hello@`. Database: each Google identity linked onto its own pre-created account (`admin@` 15:20 UTC, `careers@` 15:11 UTC, `hello@` 16 Sep); one staff row each, roles SUPER_ADMIN / ADMIN / SUPER_ADMIN, all Lucknow; no shared login, no email mismatch, no orphan account, no row without a login; no staff-attributed audit write (sign-ins and a refused page write nothing) |
 | Manual onboarding of a **new** staff member (Add staff → "Awaiting first sign-in" → first Google sign-in → "Signed in with Google") | **Not done with a real person** — no new Workspace user was added. Covered by automated evidence only: 22 SQL assertions, unit tests of every path, and the account step against staging Auth (5/5) |
 
 ### 0.4 Rollback target — changed
@@ -62,6 +62,38 @@ database with `0018` and `0019` applied (it calls neither the new function nor a
 **`0019` is not automatically reversible**: going back on the database would need a new, compensating
 migration. The procedure is in `docs/PRODUCTION-CUTOVER-RUNBOOK.md`, Phase D.
 
+### 0.6 Staff role mapping — decided 27 Sep 2026; applied on staging only
+
+| Account | Role key | Shown as | Scope of access (measured on staging with `has_perm()` and RLS, acting as each person) |
+| --- | --- | --- | --- |
+| `hello@gogulf.co` | `SUPER_ADMIN` (`is_super`) | Super Admin | Everything, every scope; **the only account that manages staff**, roles, settings and integrations. Staff page allowed; sees all 15 staging applications |
+| `admin@gogulf.co` | `ADMIN` | Admin | All operational work at every scope — applications, jobs, CRM, documents, invoices, payments, audit (operational), candidate deployment. **No** staff, roles or settings (`0016`). Staff page refused; sees 15 of 15 applications |
+| `careers@gogulf.co` | `HR_MANAGER` | HR Manager | Recruitment at **branch** scope (applications, CRM, interviews, offers, document verification incl. identity documents); jobs and employers at all scope; no staff, roles, settings, audit or invoice issuing. Staff page and `/admin/staff/new` refused (`users.manage` false). **Sees 0 of 15 staging applications — see below** |
+
+**How it is implemented.** All three are existing catalogue roles whose labels already read "Super Admin",
+"Admin" and "HR Manager" (`roles.label`, shown by the Staff page and the workspace header). **No role,
+permission, key or migration was added or renamed**; permission checks are unchanged. The mapping lives in
+the roster of `scripts/bootstrap-super-admins.mjs` — the mechanism that owns these three accounts, and
+which converges each row to its listed role on every run, so the roster is the source of truth (a change
+made only in the database would be reverted by the next run). The roster now refuses to run without a
+SUPER_ADMIN. Applied on Mumbai staging with `npm run bootstrap:admins -- --target=mumbai-staging`:
+`admin@` SUPER_ADMIN → ADMIN, `careers@` ADMIN → HR_MANAGER, `hello@` unchanged; each change is on the
+audit trail as a `system` `staff_users.update`. Pinned by `lib/admin/staff-roster.test.ts`.
+
+**Consequences to know.** `hello@` is now the only Super Admin, so the only person who can manage staff
+(recovery if that account is lost: the bootstrap script, which needs developer access). `admin@` can no
+longer open Staff.
+
+**Open decision — branch routing (blocks `careers@` = HR Manager on production).** Branch-scoped roles
+see a record only when its `branch_id` equals theirs (`scope_allows`, `0006`). An application takes its
+branch from its job (`0013`), and jobs take the branch of the staff member who creates them (`0012`) —
+so applications to jobs posted by Lucknow staff will be visible to the HR Manager. **Applications with no
+job have no branch**: 14 of 15 on staging, and the 19 applications imported from Tokyo on production. The
+HR Manager cannot see those, and nothing in the workspace can assign a branch to an application. The
+suggested fix is a small migration: new applications with no job are routed to the default intake branch,
+and existing ones are backfilled to it (Go Gulf has one branch, Lucknow). It changes intake behaviour and
+real production rows, so it needs your approval; until then, production should keep `careers@` as ADMIN.
+
 ### 0.5 Still owed before this release reaches production
 
 1. *(Done 27 Sep: sign-in and authorization on staging, and the full E2E suite — §0.3.)* Still open, and
@@ -69,6 +101,7 @@ migration. The procedure is in `docs/PRODUCTION-CUTOVER-RUNBOOK.md`, Phase D.
    user.
 2. The three production Google sign-ins (`hello@`, `admin@`, `careers@`) — **no record of any yet**.
 3. The runbook's Phase D approvals (below).
+4. **The branch-routing decision in §0.6**, before `careers@` becomes HR Manager on production.
 4. A later Tokyo late-application check (the last one: delta 0 on 19 Sep, 10:33 UTC).
 5. Your approval for Phase D of the runbook: `0018` then `0019` on Mumbai production, then `main`.
 

@@ -283,6 +283,16 @@ re-trigger without asking.
 * The three staff sign in with Google once each; the Staff page shows "Signed in with Google" and
   read-only SQL confirms one Google identity per staff record, the right role, nothing merged.
 
+**D6a. Staff role mapping** *(production write — go-ahead required; after D6)* — hello@ Super Admin,
+admin@ Admin, careers@ HR Manager (readiness record §0.6). Two ways, both audited: `hello@` changes the two
+roles on the Staff page (attributed to `hello@`), or `npm run bootstrap:admins -- --target=mumbai-production
+--yes-bootstrap-production-admins` converges all three to the roster (attributed to `system`). The roster
+already holds the new mapping, so a later run cannot revert it. **Do not make `careers@` HR Manager on
+production until the branch-routing decision in §0.6 is made and applied** — otherwise the careers desk
+loses sight of every application without a job, including the 19 imported from Tokyo. Verify afterwards:
+`careers@` refused on `/admin/staff` and `/admin/staff/new`; `admin@` refused on `/admin/staff`;
+`hello@` allowed; application visibility per role as in §0.6.
+
 **D7. Stop conditions** — do not push `main` if: D2 finds anything other than `0001`–`0017`, any
 retired-model data, or a travel-role holder; `0019` refused; any D4 value differs (in particular the
 audit delta is not exactly 77, or any data count changed); the staging E2E suite is not green against the

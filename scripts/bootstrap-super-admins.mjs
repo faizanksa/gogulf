@@ -64,11 +64,26 @@ const TARGETS = {
 // from the seeded RBAC catalogue — never invented here, and never a bespoke role
 // created to fit one person. If a role does not exist in public.roles the script
 // refuses rather than falling back to something broader.
+//
+// Role mapping decided 27 Sep 2026 (catalogue roles, unchanged permission sets):
+//   hello@   SUPER_ADMIN  "Super Admin" — the system administrator; the only one who manages staff
+//   admin@   ADMIN        "Admin"       — operational staff (0016): no staff, roles or settings
+//   careers@ HR_MANAGER   "HR Manager"  — recruitment at branch scope; no staff management
+// This script CONVERGES existing rows to these roles on every run, so this list is the
+// source of truth: change a role here, or a later run silently changes it back.
 const STAFF = [
-  { email: "admin@gogulf.co", full_name: "Go Gulf Administrator", role: "SUPER_ADMIN" },
   { email: "hello@gogulf.co", full_name: "Go Gulf Operations", role: "SUPER_ADMIN" },
-  { email: "careers@gogulf.co", full_name: "Go Gulf Careers", role: "ADMIN" },
+  { email: "admin@gogulf.co", full_name: "Go Gulf Administrator", role: "ADMIN" },
+  { email: "careers@gogulf.co", full_name: "Go Gulf Careers", role: "HR_MANAGER" },
 ];
+
+// Someone must always be able to administer the platform. The database already refuses
+// to demote or deactivate the last active SUPER_ADMIN from the Staff screen; the roster
+// must never be the way round that.
+if (!STAFF.some((p) => p.role === "SUPER_ADMIN")) {
+  console.error("\nFAIL - the roster has no SUPER_ADMIN. Nobody could administer the platform.\n");
+  process.exit(1);
+}
 
 const BRANCH = "Lucknow";
 

@@ -216,20 +216,22 @@ select pay_test.check(
 -- ---------------------------------------------------------------------------
 set local role anon;
 select pay_test.act_as_anon();
-select pay_test.check(pay_test.visible('select 1 from public.payments where provider_order_id like ''order_TEST_%''') <= 0, 'anon cannot read payments');
+-- Visibility is counted on this suite's own two orders only. Payments are never deleted, and
+-- tests/e2e/pay.spec.ts leaves real order_TEST_E2E_* rows on staging, so a prefix count drifts.
+select pay_test.check(pay_test.visible('select 1 from public.payments where provider_order_id in (''order_TEST_A'', ''order_TEST_B'')') <= 0, 'anon cannot read payments');
 select pay_test.check(pay_test.visible('select 1 from public.payment_events where event_id in (''evt_A1'', ''evt_A2'', ''evt_A3'', ''evt_A4'', ''evt_B1'', ''evt_S1'', ''evt_X1'')') <= 0, 'anon cannot read payment events');
 reset role;
 
 set local role authenticated;
 select pay_test.act_as_staff('s_finance');
-select pay_test.check(pay_test.visible('select 1 from public.payments where provider_order_id like ''order_TEST_%''') = 2, 'a finance manager reads payments');
+select pay_test.check(pay_test.visible('select 1 from public.payments where provider_order_id in (''order_TEST_A'', ''order_TEST_B'')') = 2, 'a finance manager reads payments');
 select pay_test.check(
   pay_test.error_of($$update public.payments set status = 'paid' where provider_order_id = 'order_TEST_B'$$) is not null
   or (select status from public.payments where provider_order_id = 'order_TEST_B') = 'failed',
   'a finance manager cannot mark a payment paid by hand');
 
 select pay_test.act_as_staff('s_rec');
-select pay_test.check(pay_test.visible('select 1 from public.payments where provider_order_id like ''order_TEST_%''') = 0, 'a recruiter sees no payments');
+select pay_test.check(pay_test.visible('select 1 from public.payments where provider_order_id in (''order_TEST_A'', ''order_TEST_B'')') = 0, 'a recruiter sees no payments');
 select pay_test.check(pay_test.visible('select 1 from public.payment_events where event_id in (''evt_A1'', ''evt_A2'', ''evt_A3'', ''evt_A4'', ''evt_B1'', ''evt_S1'', ''evt_X1'')') = 0, 'a recruiter sees no payment events');
 
 select pay_test.act_as_staff('s_view');
@@ -237,7 +239,7 @@ select pay_test.check(pay_test.visible('select 1 from public.payment_events wher
   'view-only cannot read the raw webhook log — that needs payments.reconcile');
 
 select pay_test.act_as_staff('s_admin');
-select pay_test.check(pay_test.visible('select 1 from public.payments where provider_order_id like ''order_TEST_%''') = 2, 'an admin reads payments');
+select pay_test.check(pay_test.visible('select 1 from public.payments where provider_order_id in (''order_TEST_A'', ''order_TEST_B'')') = 2, 'an admin reads payments');
 -- Seven deliveries were made above: A1, A2, A3, A4, X1, S1, B1. The replay of A1
 -- is deliberately not among them — that is the point of the idempotency check.
 select pay_test.check(pay_test.visible('select 1 from public.payment_events where event_id in (''evt_A1'', ''evt_A2'', ''evt_A3'', ''evt_A4'', ''evt_B1'', ''evt_S1'', ''evt_X1'')') = 7, 'an admin reconciles the whole webhook log');
