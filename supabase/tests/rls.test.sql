@@ -361,8 +361,11 @@ begin
      -- staff_sign_in_status (0018) is staff-facing by design: read-only, it returns rows only
      -- when the caller holds users.manage, and only booleans and a time — asserted in
      -- staff-onboarding.test.sql.
+     -- merge_contacts (0021) is staff-facing by design: it re-checks contacts.merge scope on both
+     -- contacts itself (cross-branch only at all scope) and runs as one audited transaction —
+     -- asserted in contact-merge.test.sql.
      and p.proname not in ('has_perm', 'scope_allows', 'is_staff', 'current_contact_id', 'record_document_access',
-                           'public_invoice_view', 'staff_sign_in_status');
+                           'public_invoice_view', 'staff_sign_in_status', 'merge_contacts');
   perform test_assert(bad is null,
     coalesce('authenticated can execute no system-only SECURITY DEFINER function (found: ' || bad || ')',
              'authenticated can execute no system-only SECURITY DEFINER function'));

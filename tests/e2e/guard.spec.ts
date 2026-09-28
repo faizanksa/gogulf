@@ -55,6 +55,8 @@ test.describe("anonymous visitors", () => {
     ["/admin/jobs/new", "/admin/login"],
     ["/admin/applications", "/admin/login"],
     ["/admin/contacts", "/admin/login"],
+    ["/admin/contacts/11111111-0000-4000-8000-000000000001/edit", "/admin/login"],
+    ["/admin/contacts/11111111-0000-4000-8000-000000000001/merge", "/admin/login"],
     ["/admin/cases", "/admin/login"],
     ["/admin/invoices", "/admin/login"],
     ["/admin/invoices/new", "/admin/login"],

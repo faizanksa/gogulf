@@ -76,7 +76,7 @@ export interface StaffContact extends ContactRow {
   branch: { name: string } | null;
 }
 
-export const LIFECYCLE_STAGES: readonly LifecycleStage[] = ["subscriber", "lead", "opportunity", "customer", "past_customer", "disqualified"];
+export { LIFECYCLE_STAGES } from "./contact-edit";
 
 export async function listContacts(filters: { q: string; stage: LifecycleStage | ""; page: number }) {
   const supabase = await createServerSupabase();
@@ -84,6 +84,8 @@ export async function listContacts(filters: { q: string; stage: LifecycleStage |
   let query = supabase.from("contacts").select("*, owner:staff_users!contacts_owner_id_fkey(full_name), branch:branches(name)", { count: "exact" });
   if (filters.q) query = query.or(`full_name.ilike.*${filters.q}*,primary_email.ilike.*${filters.q}*,primary_phone_e164.ilike.*${filters.q}*`);
   if (filters.stage) query = query.eq("lifecycle_stage", filters.stage);
+  // A merged contact lives on only as history, reached from the contact it was merged into.
+  query = query.is("merged_into_id", null);
   const { data, count, error } = await query.order("created_at", { ascending: false }).range(from, to);
   return { contacts: (data ?? []) as unknown as StaffContact[], total: count ?? 0, failed: Boolean(error) };
 }
@@ -106,6 +108,79 @@ export async function getContact(id: string) {
     applications: (applications.data ?? []) as { id: string; job_title: string; status: ApplicationStatus; created_at: string }[],
     activities: (activities.data ?? []) as { id: string; verb: string; summary: string; actor_type: string; occurred_at: string }[],
   };
+}
+
+// ---------------------------------------------------------------------------
+// Merging (0021)
+// ---------------------------------------------------------------------------
+
+export interface ContactMergeContext {
+  /** Set when this contact was merged away: the contact it lives on in. */
+  mergedInto: { id: string; full_name: string } | null;
+  /** Contacts merged into this one. */
+  mergedFrom: { id: string; full_name: string }[];
+  /**
+   * Invoices and payments of this contact AND of the contacts merged into it. A merge
+   * never changes an issued invoice or a payment (0021), so those stay linked to the
+   * merged contact and are shown here through the merge.
+   */
+  invoices: { id: string; reference: string; status: string; total_minor: number; contact_id: string | null }[];
+  payments: { id: string; reference: string; status: string; amount_minor: number; contact_id: string | null }[];
+}
+
+export async function getContactMergeContext(id: string, mergedIntoId: string | null): Promise<ContactMergeContext> {
+  const supabase = await createServerSupabase();
+  const [into, from] = await Promise.all([
+    mergedIntoId ? supabase.from("contacts").select("id,full_name").eq("id", mergedIntoId).maybeSingle() : Promise.resolve({ data: null }),
+    supabase.from("contacts").select("id,full_name").eq("merged_into_id", id).order("full_name"),
+  ]);
+  const mergedFrom = (from.data ?? []) as { id: string; full_name: string }[];
+  const ids = [id, ...mergedFrom.map((c) => c.id)];
+  const [invoices, payments] = await Promise.all([
+    supabase.from("invoices").select("id,reference,status,total_minor,contact_id").in("contact_id", ids).order("created_at", { ascending: false }),
+    supabase.from("payments").select("id,reference,status,amount_minor,contact_id").in("contact_id", ids).order("created_at", { ascending: false }),
+  ]);
+  return {
+    mergedInto: (into.data as { id: string; full_name: string } | null) ?? null,
+    mergedFrom,
+    invoices: (invoices.data ?? []) as ContactMergeContext["invoices"],
+    payments: (payments.data ?? []) as ContactMergeContext["payments"],
+  };
+}
+
+/** Contacts that could be merged into `survivorId`: visible to the caller, not merged, not itself. */
+export async function searchMergeCandidates(survivorId: string, q: string) {
+  const term = q.replace(/[%*,()]/g, " ").trim();
+  if (term.length < 2) return [];
+  const supabase = await createServerSupabase();
+  const { data } = await supabase
+    .from("contacts")
+    .select("id,full_name,primary_email,primary_phone_e164,created_at, branch:branches(name)")
+    .is("merged_into_id", null)
+    .neq("id", survivorId)
+    .or(`full_name.ilike.*${term}*,primary_email.ilike.*${term}*,primary_phone_e164.ilike.*${term}*`)
+    .order("created_at", { ascending: false })
+    .limit(20);
+  return (data ?? []) as unknown as { id: string; full_name: string; primary_email: string | null; primary_phone_e164: string | null; created_at: string; branch: { name: string } | null }[];
+}
+
+/** What a merge would move, counted as the caller can see it — shown before they confirm. */
+export async function mergePreview(mergedId: string) {
+  const supabase = await createServerSupabase();
+  const count = async (table: "contact_identities" | "job_applications" | "cases" | "notes" | "tasks" | "activities") =>
+    (await supabase.from(table).select("id", { count: "exact", head: true }).eq("contact_id", mergedId)).count ?? 0;
+  const [identities, applications, cases, notes, tasks, activities, draftInvoices, otherInvoices, payments] = await Promise.all([
+    count("contact_identities"),
+    count("job_applications"),
+    count("cases"),
+    count("notes"),
+    count("tasks"),
+    count("activities"),
+    supabase.from("invoices").select("id", { count: "exact", head: true }).eq("contact_id", mergedId).eq("status", "draft").then((r) => r.count ?? 0),
+    supabase.from("invoices").select("id", { count: "exact", head: true }).eq("contact_id", mergedId).neq("status", "draft").then((r) => r.count ?? 0),
+    supabase.from("payments").select("id", { count: "exact", head: true }).eq("contact_id", mergedId).then((r) => r.count ?? 0),
+  ]);
+  return { identities, applications, cases, notes, tasks, activities, draftInvoices, otherInvoices, payments };
 }
 
 // ---------------------------------------------------------------------------

@@ -1754,6 +1754,10 @@ export type Database = {
         }
         Returns: string
       }
+      merge_contacts: {
+        Args: { p_merged: string; p_reason?: string; p_survivor: string }
+        Returns: string
+      }
       next_case_number: {
         Args: { p_type: Database["public"]["Enums"]["case_type"] }
         Returns: string
