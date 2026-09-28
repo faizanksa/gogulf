@@ -354,6 +354,7 @@ export type Database = {
           closed_at: string | null
           contact_id: string
           created_at: string
+          created_by: string | null
           deleted_at: string | null
           id: string
           legacy_id: string | null
@@ -376,6 +377,7 @@ export type Database = {
           closed_at?: string | null
           contact_id: string
           created_at?: string
+          created_by?: string | null
           deleted_at?: string | null
           id?: string
           legacy_id?: string | null
@@ -398,6 +400,7 @@ export type Database = {
           closed_at?: string | null
           contact_id?: string
           created_at?: string
+          created_by?: string | null
           deleted_at?: string | null
           id?: string
           legacy_id?: string | null
@@ -426,6 +429,13 @@ export type Database = {
             columns: ["contact_id"]
             isOneToOne: false
             referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cases_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "staff_users"
             referencedColumns: ["id"]
           },
           {
@@ -1799,6 +1809,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      activity_is_customer_visible: {
+        Args: { p_verb: string }
+        Returns: boolean
+      }
       can_view_application_document: {
         Args: { p_name: string }
         Returns: boolean
@@ -1922,6 +1936,7 @@ export type Database = {
           staff_id: string
         }[]
       }
+      untrusted_staff_write: { Args: never; Returns: boolean }
       write_audit_log: {
         Args: {
           p_action: string

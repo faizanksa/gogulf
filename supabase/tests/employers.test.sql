@@ -150,7 +150,7 @@ select em_test.check(em_test.visible('EMT ') = 2, 'SUPER_ADMIN sees employers of
 select em_test.act_as_staff('s_admin');
 select em_test.check(em_test.visible('EMT ') = 2, 'ADMIN (all scope) sees employers of every branch');
 select em_test.act_as_staff('s_hr');
-select em_test.check(em_test.visible('EMT ') = 2, 'HR_MANAGER holds employers.view at ALL scope in the seeded RBAC, so sees every branch');
+select em_test.check(em_test.visible('EMT ') = 2, 'HR_MANAGER holds employers.view at ALL scope, so sees every branch''s employers');
 select em_test.act_as_staff('s_rec');
 select em_test.check(em_test.visible('EMT ') = 1 and em_test.visible('EMT Lucknow') = 1,
   'RECRUITER (branch scope) in Lucknow sees the Lucknow employer only');
@@ -178,7 +178,13 @@ set local role authenticated;
 
 select em_test.act_as_staff('s_hr');
 select em_test.check(em_test.affected($$insert into public.employers (name, country_code) values ('EMT HR Created', 'OM')$$) = 1,
-  'HR_MANAGER creates an employer (employers.manage, all scope)');
+  'HR_MANAGER creates an employer in its own branch (employers.manage, branch scope since 0023)');
+select em_test.check(em_test.error_of(format($$insert into public.employers (name, country_code, branch_id) values ('EMT HR Elsewhere', 'OM', %L)$$, em_test.id('b_oth'))) like '42501:%',
+  'HR_MANAGER cannot create an employer in another branch (0023)');
+select em_test.check(em_test.affected(format($$update public.employers set notes = 'hr edit' where id = %L$$, em_test.id('e_oth'))) = 0,
+  'HR_MANAGER cannot edit another branch''s employer, though it can see it (0023)');
+select em_test.check(em_test.affected(format($$update public.employers set branch_id = %L where id = %L$$, em_test.id('b_oth'), em_test.id('e_lko'))) <= 0,
+  'HR_MANAGER cannot move its branch''s employer to another branch (0023)');
 reset role;
 select em_test.check((select b.code from public.employers e join public.branches b on b.id = e.branch_id where e.name = 'EMT HR Created') = 'LKO',
   'an employer created without a branch gets the creator''s branch');

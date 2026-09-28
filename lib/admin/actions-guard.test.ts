@@ -47,6 +47,17 @@ describe("staff server actions", () => {
     }
   }
 
+  // 0023: the timeline is written only by database functions, and tasks are cancelled, never
+  // deleted. The database refuses both anyway; this keeps a screen from being built on them.
+  it("never writes the timeline directly or deletes a task", () => {
+    for (const file of ACTION_FILES) {
+      const source = readFileSync(file, "utf8");
+      expect(source, file).not.toMatch(/from\("activities"\)\s*\.(insert|upsert|update|delete)\(/);
+      expect(source, file).not.toMatch(/rpc\("log_activity"/);
+      expect(source, file).not.toMatch(/from\("tasks"\)\s*\.delete\(/);
+    }
+  });
+
   it("never reaches for the service-role client directly", () => {
     for (const file of ACTION_FILES) {
       expect(readFileSync(file, "utf8"), file).not.toMatch(/createAdminClient|SUPABASE_SERVICE_ROLE_KEY|supabase\/admin/);

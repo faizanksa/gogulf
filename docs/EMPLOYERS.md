@@ -25,7 +25,7 @@ exactly as before `0022`.
 | Permission | Seeded scopes (`0008`) |
 | --- | --- |
 | `employers.view` | ADMIN all · HR_MANAGER **all** · FINANCE_MANAGER all · OPERATIONS_MANAGER all · RECRUITER branch · ACCOUNTS branch · VIEW_ONLY branch |
-| `employers.manage` | ADMIN all · HR_MANAGER **all** |
+| `employers.manage` | ADMIN all · HR_MANAGER **branch** (was all until `0023`) |
 
 SUPER_ADMIN bypasses permission lookup. No permission or role was added or changed.
 
@@ -39,10 +39,11 @@ SUPER_ADMIN bypasses permission lookup. No permission or role was added or chang
 - `created_by` / `created_at` are not writable by staff; `created_by` is set to the creator.
 - The same name in the same country is one employer (case- and space-insensitive unique index).
 
-**HR Manager note.** The seed gives HR_MANAGER `employers.view` and `employers.manage` at **all** scope
-(like `jobs.*`), so careers@ sees and manages employers of every branch. HR Manager's *case* access stays
-branch-scoped: they can link an employer only to cases in their own branch. Narrowing HR's employer
-scope to `branch` would be a `role_permissions` change and needs an explicit decision.
+**HR Manager (decided 28 Sep 2026, applied in `0023`).** Employers are a shared directory with
+branch-owned editing: HR_MANAGER keeps `employers.view` at **all** scope (so duplicates stay findable) and
+holds `employers.manage` at **branch** scope — it creates and edits its own branch's employers only and
+cannot move one out. ADMIN and SUPER_ADMIN manage every branch. HR Manager's *case* access stays
+branch-scoped: they link an employer only to cases in their own branch.
 
 ## Audit
 

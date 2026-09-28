@@ -1,8 +1,10 @@
 # Branch-scope audit — ownership bypasses branch isolation
 
 **28 September 2026.** Read-only audit, prompted by the contact scope-hop found and closed in `0021`.
-**Nothing in cases, tasks, notes or applications has been changed.** The fix is scheduled for
-Recruitment Operations increment 4 (`0023`).
+
+> **Status: fixed in `0023`** (increment 4a). Every "succeeded" row below is refused since `0023`,
+> proven by `supabase/tests/branch-scope.test.sql`. The wider matrix, and what was found but left for a
+> decision, are in `BRANCH-SCOPE-HARDENING.md`.
 
 ## The mechanism
 

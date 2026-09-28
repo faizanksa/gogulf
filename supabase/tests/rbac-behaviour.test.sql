@@ -316,10 +316,12 @@ select rls_test.check(
      where p.case_type = 'recruitment' and p.is_default and s.key = 'new'$$,
     rls_test.id('c_rec2'), rls_test.id('s_rec1'), rls_test.id('b_lko'))) <= 0,
   'RECRUITER cannot open a case on a candidate they cannot see');
+-- 0023: staff write nothing to the timeline directly — every entry comes from a database
+-- function or trigger, so no entry can be forged. (Until 0023 this was a positive control.)
 select rls_test.check(
   rls_test.affected(format($$insert into public.activities (contact_id, actor_type, actor_id, verb, summary)
-    values (%L, 'staff', %L, 'call.logged', 'Called the candidate')$$, rls_test.id('c_rec1'), rls_test.id('s_rec1'))) = 1,
-  'positive control: RECRUITER logs an activity on their own candidate');
+    values (%L, 'staff', %L, 'call.logged', 'Called the candidate')$$, rls_test.id('c_rec1'), rls_test.id('s_rec1'))) <= 0,
+  'RECRUITER cannot write a timeline entry directly, even on their own candidate (0023)');
 select rls_test.check(
   rls_test.affected(format($$insert into public.activities (contact_id, actor_type, actor_id, verb, summary)
     values (%L, 'staff', %L, 'call.logged', 'x')$$, rls_test.id('c_rec2'), rls_test.id('s_rec1'))) <= 0,
@@ -378,6 +380,11 @@ select rls_test.check(
 -- ===========================================================================
 -- 7. Customer isolation
 -- ===========================================================================
+-- A staff-side timeline entry on the customer's own record, written the only way one can be
+-- since 0023: by a database function.
+reset role;
+select public.log_activity(rls_test.id('c_rec1'), null, 'staff', rls_test.id('s_rec1'), 'call.logged', 'Called the candidate');
+set local role authenticated;
 select rls_test.act_as_customer(rls_test.id('u_customer'));
 select rls_test.check(rls_test.visible('select 1 from rls_test.fixture_contacts') = 1,
   'a customer sees exactly their own contact record');
@@ -388,9 +395,12 @@ select rls_test.check(rls_test.visible('select 1 from public.notes') = 0, 'a cus
 select rls_test.check(rls_test.visible('select 1 from public.staff_users') = 0, 'a customer cannot enumerate staff');
 select rls_test.check(rls_test.visible('select 1 from public.audit_logs') = 0, 'a customer reads no audit log');
 select rls_test.check(rls_test.visible('select 1 from public.tasks') = 0, 'a customer reads no internal tasks');
+-- 0023: a candidate sees only verbs on the explicit allow-list, which is empty until one is
+-- approved. (Until 0023 every verb but internal.*, note.* and assignment.* was visible.)
 select rls_test.check(
-  rls_test.visible($$select 1 from public.activities where verb = 'call.logged'$$) = 1,
-  'positive control: a customer sees their own timeline');
+  rls_test.visible($$select 1 from public.activities where verb = 'call.logged'$$) = 0
+  and not public.activity_is_customer_visible('call.logged'),
+  'a customer does not see a staff-only entry on their own timeline (0023 allow-list)');
 
 -- ===========================================================================
 -- 8. Deactivation takes effect on the next query, not at token expiry
