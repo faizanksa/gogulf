@@ -322,8 +322,31 @@ or any unauthenticated read of protected data succeeds.
 
 ## Phase E — Recruitment Operations: `0021` → `0022` → `0023` → `0024`, with the code that uses them
 
-**Status: PREPARED, NOT EXECUTED (28 Sep 2026).** Approved for preparation only; every step marked
-*production write* waits for an explicit "GO". Staging evidence: `BRANCH-SCOPE-HARDENING.md`,
+**Status: COMPLETE — 28 Sep 2026 (~22:20 IST).** Production database `0001`–`0024`; `main` = `c7b8582`,
+serving `dpl_BWBMkTTn15zSyZnH9ecnWfgJ5x4C`; rollback target `dpl_5JhjV9eyKXFwFGqXJdiw9K2NK27D` (`04bd8fc`).
+* E2 re-run immediately before E3: identical to the baseline below. Dry run: exactly the four files.
+* E3: all four applied, verified against `schema_migrations` (the CLI's known post-apply `pgdelta`
+  certificate error was ignored, as designed).
+* E4: 29/29 checks as expected, plus **functions 117** (not 116): Supabase's own `rls_auto_enable()`
+  (the `ensure_rls` event trigger) has existed on production since 19 Sep and not on staging — expected.
+  Data fingerprint of invoices, payments, applications, contacts, identities, cases, case_recruitment,
+  timeline and staff **identical before and after**; audit **494 → 495** (the one `system`
+  `role_permissions.update`). Billing grants, policies and triggers identical to staging (only `0023`'s two
+  invoice guard triggers added).
+* E6: production verifier — every check passed. Staff: each of the three has one Google identity (plus the
+  `email` identity from the 19 Sep bootstrap, unchanged; password sessions are refused by design), right
+  role, Lucknow, no other auth users. The browser sign-ins themselves are a manual owner check.
+* **Backup gate.** The GO stated a backup existed; the Free plan in fact has no project backups — learned
+  after E3. Taken afterwards, both read-only: a `pg_dump` of `public`, `auth`, `storage`,
+  `supabase_migrations` (`backups/mumbai-prod-20260928T165446Z/`, SHA-256 `c1ca9a11…1467`; row counts equal
+  to production for 62/62 tables; **restore-tested** in a throwaway local database — counts, data fingerprint,
+  migrations `0001`–`0024` and 364 SQL assertions identical/passing — then destroyed), and the Storage files
+  (`backups/exsnksrmkycloxiajwmx-2026-09-28T17-23-44-573Z/`, 63 objects, 43.66 MiB, every file SHA-256'd in
+  `manifest.json`; verified 63/63 and against live). Both are gitignored and hold applicant PII. A paid plan
+  with automatic backups is still to be decided.
+
+*Preparation record (as written before execution):* approved for preparation only; every step marked
+*production write* waited for an explicit "GO". Staging evidence: `BRANCH-SCOPE-HARDENING.md`,
 `EMPLOYERS.md`, and the increment reports.
 
 | Migration | What it is |
@@ -345,7 +368,9 @@ signature and result are unchanged. The gap between the two steps is therefore s
 * The release commit is a fast-forward of `main` (`04bd8fc` is its ancestor). **No new environment
   variable** is introduced between `04bd8fc` and the release.
 * Confirm in the Supabase dashboard that Mumbai production has a recent automatic backup (or take one)
-  before E3 — the migrations are forward-only.
+  before E3 — the migrations are forward-only. **The Free plan has none**: take the two read-only backups
+  first — `pg_dump` (see the Phase E status) and `node scripts/backup-production.mjs
+  --target=mumbai-production` then `… verify` for Storage — and check them before any migration.
 
 **E2. Pre-flight on Mumbai production** *(read-only — `scripts` query in a `transaction read only`,
 rolled back)*. Baseline taken 28 Sep 2026, ~21:30 IST:
@@ -446,4 +471,4 @@ Stop before switching traffic if: `0012`–`0017` are not all in `schema_migrati
 
 Roll back after switching if: applications fail to submit or documents cannot be retrieved; data reaches the wrong project; any unauthenticated access to `job_applications`, `contacts`, `cases`, `payments`, `invoices` or the bucket succeeds; the customer payment page shows anything beyond number, service, amount and status; staff sign-in or roles are wrong; staging or test content is live, or `noindex` reaches production; unexplained 5xx after the first hour.
 
-**This runbook grants no approval.** The Tokyo → Mumbai cutover was completed on 19 Sep 2026. Phase D (`0018`–`0020`, `main` = `04bd8fc`, the role change) was completed on 28 Sep 2026. Phase E (`0021`–`0024` and the code that uses them) is prepared, not executed.
+**This runbook grants no approval.** The Tokyo → Mumbai cutover was completed on 19 Sep 2026. Phase D (`0018`–`0020`, `main` = `04bd8fc`, the role change) was completed on 28 Sep 2026. Phase E (`0021`–`0024`, `main` = `c7b8582`) was completed on 28 Sep 2026.

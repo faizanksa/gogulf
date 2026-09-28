@@ -1,6 +1,7 @@
 /**
- * Take — and later verify — a complete, hash-checked backup of the TOKYO
- * production project, before the Mumbai migration.
+ * Take — and later verify — a complete, hash-checked backup of a production
+ * project's applications and Storage documents: Tokyo by default (the cutover
+ * backup), Mumbai with --target=mumbai-production (see TARGETS below).
  *
  *   npm run backup:prod                  # inventory + data + documents + manifest
  *   npm run backup:prod -- verify        # re-check the newest backup, and diff it
@@ -35,11 +36,27 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-// The Tokyo production project, and nothing else. Hard-coded so a mistyped or
-// swapped credential file cannot silently point this at staging, at Mumbai, or
-// at another account's project and produce a confident, worthless backup.
-const PRODUCTION_REF = "julbqkeyvzwluayokcdi";
-const ENV_FILE = ".env.tokyo-prod.local";
+// The production projects, and nothing else. Each is pinned to its ref, so a mistyped
+// or swapped credential file cannot silently point this at staging or at another
+// account's project and produce a confident, worthless backup. Tokyo is the default
+// (the cutover backup); Mumbai — production since 19 Sep — must be named explicitly:
+//
+//   node scripts/backup-production.mjs --target=mumbai-production
+//   node scripts/backup-production.mjs --target=mumbai-production verify [dir]
+//
+// For Mumbai the application rows are NOT written to the backup: the database is
+// backed up separately by pg_dump, and a second copy of applicant PII gains nothing.
+// The rows are still read, in memory, to prove every document they reference is present.
+const TARGETS = {
+  "tokyo-production": { ref: "julbqkeyvzwluayokcdi", envFile: ".env.tokyo-prod.local", label: "Tokyo production", writeRows: true },
+  "mumbai-production": { ref: "exsnksrmkycloxiajwmx", envFile: ".env.prod-supabase.local", label: "Mumbai production", writeRows: false },
+};
+const targetName = (process.argv.find((a) => a.startsWith("--target=")) ?? "--target=tokyo-production").split("=")[1];
+if (!TARGETS[targetName]) {
+  console.error(`\nFAIL — unknown target "${targetName}". Known: ${Object.keys(TARGETS).join(", ")}.\n`);
+  process.exit(1);
+}
+const { ref: PRODUCTION_REF, envFile: ENV_FILE, label: LABEL, writeRows: WRITE_ROWS } = TARGETS[targetName];
 const BUCKET = "job-applications";
 const TABLE = "job_applications";
 const ROOT = "backups";
@@ -56,7 +73,7 @@ const fail = (msg) => {
 if (!existsSync(ENV_FILE)) {
   fail(
     `${ENV_FILE} not found.\n\n` +
-      "  It should contain the TOKYO production project's URL and service-role key:\n\n" +
+      `  It should contain the ${LABEL} project's URL and service-role key:\n\n` +
       `    NEXT_PUBLIC_SUPABASE_URL=https://${PRODUCTION_REF}.supabase.co\n` +
       "    SUPABASE_SERVICE_ROLE_KEY=…\n\n" +
       "  The file is gitignored (.env.*.local) and Next.js never loads it.",
@@ -82,7 +99,7 @@ const refInUrl = url.match(/https:\/\/([a-z0-9]{20})\.supabase\./i)?.[1] ?? null
 if (!key) fail(`SUPABASE_SERVICE_ROLE_KEY is missing from ${ENV_FILE}.`);
 if (refInUrl !== PRODUCTION_REF) {
   fail(
-    `${ENV_FILE} does not point at Tokyo production.\n\n` +
+    `${ENV_FILE} does not point at ${LABEL}.\n\n` +
       `  expected: ${PRODUCTION_REF}\n` +
       `  found:    ${refInUrl ?? "(no Supabase project URL)"}\n\n` +
       "  Refusing rather than backing up the wrong project under a name that\n" +
@@ -135,25 +152,30 @@ async function collect() {
   const authPage = await (await get("/auth/v1/admin/users?per_page=1")).json();
   const authCount = authPage.total ?? (authPage.users ?? []).length;
 
-  const folders = (await list("")).map((o) => o.name);
-  const objects = [];
-  for (const folder of folders) {
-    for (const o of await list(`${folder}/`)) {
-      objects.push({ path: `${folder}/${o.name}`, metadata: o.metadata ?? {} });
+  // Recursive: a listing entry with no id is a folder. (Tokyo's layout was one folder
+  // deep; walking every level means a deeper layout cannot be missed silently.)
+  async function walk(prefix) {
+    const out = [];
+    for (const o of await list(prefix)) {
+      if (o.id === null || o.id === undefined) out.push(...(await walk(`${prefix}${o.name}/`)));
+      else out.push({ path: `${prefix}${o.name}`, metadata: o.metadata ?? {} });
     }
+    return out;
   }
+  const objects = await walk("");
   return { rows, buckets, authCount, objects };
 }
 
 async function backup() {
-  console.log(`Source: PRODUCTION ${PRODUCTION_REF} (read-only)\n`);
+  console.log(`Source: ${LABEL} ${PRODUCTION_REF} (read-only)\n`);
   const { rows, buckets, authCount, objects } = await collect();
 
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
   const dir = join(ROOT, `${PRODUCTION_REF}-${stamp}`);
+  if (existsSync(dir)) fail(`${dir} already exists. Refusing to overwrite a backup.`);
   mkdirSync(join(dir, "documents"), { recursive: true });
 
-  writeFileSync(join(dir, `${TABLE}.json`), JSON.stringify(rows, null, 2));
+  if (WRITE_ROWS) writeFileSync(join(dir, `${TABLE}.json`), JSON.stringify(rows, null, 2));
 
   let bytes = 0;
   const documents = [];
@@ -220,7 +242,7 @@ async function backup() {
     fail(`${missing.length} document path(s) referenced by rows are not in the bucket:\n  ${missing.join("\n  ")}`);
   }
   console.log("\nPASS — backup complete and internally consistent.");
-  console.log("Not yet a proven backup: run `npm run backup:prod -- verify` and rehearse the restore.");
+  console.log(`Not yet a proven backup: run it again with "verify"${targetName === "tokyo-production" ? "" : ` (--target=${targetName})`} and rehearse the restore.`);
 }
 
 // ---------------------------------------------------------------------------
@@ -283,7 +305,7 @@ async function verify(dir) {
   );
 }
 
-const [command, arg] = process.argv.slice(2);
+const [command, arg] = process.argv.slice(2).filter((a) => !a.startsWith("--target="));
 if (!command) await backup();
 else if (command === "verify") await verify(arg ?? newest());
 else fail("usage: npm run backup:prod [-- verify [dir]]");
