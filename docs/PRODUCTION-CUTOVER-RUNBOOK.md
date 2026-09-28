@@ -320,12 +320,119 @@ exact commit being pushed. Roll the code back (below) if, after the push, applic
 documents cannot be opened, staff sign-in or roles are wrong, travel wording or a Travel section reappears,
 or any unauthenticated read of protected data succeeds.
 
+## Phase E — Recruitment Operations: `0021` → `0022` → `0023` → `0024`, with the code that uses them
+
+**Status: PREPARED, NOT EXECUTED (28 Sep 2026).** Approved for preparation only; every step marked
+*production write* waits for an explicit "GO". Staging evidence: `BRANCH-SCOPE-HARDENING.md`,
+`EMPLOYERS.md`, and the increment reports.
+
+| Migration | What it is |
+| --- | --- |
+| `0021_contact_editing_and_merge` | contact editing (column-level UPDATE, `contacts_guard`) and `merge_contacts()` |
+| `0022_employers` | the employers table; optional `jobs.employer_id`; foreign key on `case_recruitment.employer_id` |
+| `0023_branch_scope_hardening` | **security**: branch guard, parent-derived branches, fixed parents and creator fields, no task deletion, case/task audit, timeline hardening; HR_MANAGER `employers.manage` all → branch |
+| `0024_integrity_hardening` | **security/integrity**: portal identity (`auth_user`, `verified_at`) not staff-assertable; merge records only from `merge_contacts()`; no staff DELETE of recruitment details or identities; identities audited; `cases.deleted_at` needs `cases.delete`; `converted` only by conversion; note visibility locked |
+
+**Why the database goes first.** The new code reads `employers` and embeds it from jobs and cases, so
+it must not run before `0022`. The code now serving production (`04bd8fc`) runs unchanged against
+`0021`–`0024`: it never updates contacts, never writes the timeline or deletes tasks, sets application
+status only to non-`converted` values (as `0024` requires), and calls `convert_job_application`, whose
+signature and result are unchanged. The gap between the two steps is therefore safe; keep it short.
+
+**E1. Preconditions** *(no production change)*
+* Staging at `0024`; SQL **718/718** on staging and on a clean local reset; unit 461; build and secret
+  scan pass; staging verifier 14/14; staging E2E green against the **exact** commit to be pushed.
+* The release commit is a fast-forward of `main` (`04bd8fc` is its ancestor). **No new environment
+  variable** is introduced between `04bd8fc` and the release.
+* Confirm in the Supabase dashboard that Mumbai production has a recent automatic backup (or take one)
+  before E3 — the migrations are forward-only.
+
+**E2. Pre-flight on Mumbai production** *(read-only — `scripts` query in a `transaction read only`,
+rolled back)*. Baseline taken 28 Sep 2026, ~21:30 IST:
+* `schema_migrations` ends at `0020` (`0018`, `0019`, `0020` after `0017`).
+* None of the new objects exists: `merge_contacts`, `contacts_guard_trg`, `employers`,
+  `employer_status`, `jobs.employer_id`, `case_recruitment_employer_fk`, `cases.created_by`,
+  `branch_write_guard`, `contact_identities_guard_trg`.
+* **Every precondition count is 0**: `case_recruitment.employer_id` set (the `0022` guard); tasks/notes
+  whose case belongs to another contact, applications converted without a case, applications linked but
+  not converted (the `0023` guard); contacts/cases/applications/invoices/jobs without a branch; tasks and
+  notes (none exist); invoice–case mismatches; stages from another pipeline; converted applications without
+  a timeline entry; active non-super staff without a branch; `contact_merges` rows; `auth_user`
+  identities; verified identities; soft-deleted cases; notes with non-team visibility.
+* Baseline counts: contacts 1, identities 2 (1 phone, 1 email, none verified), cases 1,
+  case_recruitment 1, applications 24, jobs 0, invoices 2, payments 2, activities 1
+  (`application.converted`), tasks 0, notes 0, branches 1, staff 3 (hello@ SUPER_ADMIN, admin@ ADMIN,
+  careers@ HR_MANAGER, all Lucknow), audit **494**; RLS policies **64**, triggers 32, functions 97,
+  tables 26, roles 10, permissions 72, role_permissions 293; HR_MANAGER `employers.view` all,
+  `employers.manage` all. Organic changes (new applications, audit rows) since the baseline are
+  expected — re-run E2 immediately before E3 and explain every difference. **Any non-zero precondition,
+  or any new object already present, is a stop.**
+
+**E3. Apply, in order** *(production write — "GO" required)*
+
+```bash
+node scripts/db-remote.mjs --target=mumbai-production --yes-i-am-provisioning-production push --dry-run
+#   must list exactly 0021_contact_editing_and_merge.sql, 0022_employers.sql,
+#   0023_branch_scope_hardening.sql and 0024_integrity_hardening.sql
+node scripts/db-remote.mjs --target=mumbai-production --yes-i-am-provisioning-production push
+```
+
+Each migration runs in its own transaction, in filename order. `0022` and `0023` carry guards that
+refuse — changing nothing — if their preconditions fail: stop and investigate, never edit a guard.
+
+**E4. Verify the database** *(read-only)* — expected values measured on a clean database and staging:
+* `schema_migrations` ends at `0024`; RLS policies **66**, triggers **61**, functions **116**, tables **27**;
+  roles 10, permissions 72, role_permissions 293 (one row's scope changes, none added or removed).
+* HR_MANAGER: `employers.view` all, `employers.manage` **branch**. `employers` exists and is empty.
+* **Data written by the migrations: exactly one row** — `role_permissions` (HR_MANAGER
+  `employers.manage` → branch), audited as one `system` `role_permissions.update`. Audit = baseline + 1 +
+  organic activity. No contact, case, application, invoice, payment, identity or timeline row changes.
+* Schema effects on existing rows: every job gains `employer_id` = NULL (there are 0 jobs); every case gains
+  `created_by` = NULL (1 case; creators before `0023` are not recorded). The one timeline entry
+  (`application.converted`) becomes staff-only, as all entries are.
+* `anon` has no privilege on `employers` and no column privilege on `jobs.employer_id`; `authenticated`
+  has no INSERT on `activities` or `contact_merges`, no DELETE on `tasks`, `case_recruitment` or
+  `contact_identities`; `merge_contacts` executable by authenticated, `log_activity` not.
+* Billing is live: `invoices`, `payments`, `payment_events` counts and statuses identical before and after.
+* Prefer these read-only checks to running the SQL suites on production (sequence consumption, §D4).
+
+**E4a. Verify the tests** *(read-only)* — nothing to run on production; the 718 assertions ran on staging
+at `0024` and on a clean database.
+
+**E5. Release the code** *(production write — "GO" required)* — fast-forward `main` to the approved
+release commit (confirm the hash first; it is the staging-verified head, see below):
+`git push origin <release-commit>:refs/heads/main`. Confirm GitHub shows a Vercel status for that commit;
+for production, do not re-trigger without asking.
+
+**E6. Verify production**
+* Build log: "Supabase API: PRODUCTION Mumbai", "Razorpay: live key".
+* `node scripts/verify-production-deployment.mjs` — all PASS.
+* Anonymous: `/admin/employers`, `/admin/employers/new`, `/admin/contacts/<id>/edit`, `/admin/contacts/<id>/merge`
+  redirect to `/admin/login`; the public job pages are unchanged.
+* Manual, as `hello@` (Google): Employers list opens (empty); the existing contact and case open; no data
+  is created on production unless you decide to. As `careers@`: Employers visible; creating one in its own
+  branch would be allowed, another branch refused (do not create one unless intended).
+
+**E7. Stop conditions** — do not run E3 if: E2 finds a non-zero precondition, an object already present,
+or `schema_migrations` other than `…0020`; the dry run lists anything but the four files. Do not run E5 if:
+any migration refused; any E4 value differs (in particular more than one row written by the migrations,
+or a change to billing rows); the staging E2E is not green against the exact release commit. Roll back
+the code (below) if, after E5, applications fail to submit, documents cannot be opened, staff sign-in or
+roles are wrong, conversion fails, or any unauthenticated read of protected data succeeds.
+
+**Pending product decision (not part of this release).** Case and contact **deletion policy**: ADMIN /
+SUPER_ADMIN keep hard delete (cascading tasks, notes, recruitment details and timeline; the audit log keeps
+the deleted row). `0024` only adds that setting or clearing `cases.deleted_at` needs `cases.delete`. Soft
+delete, restore and erasure handling are to be decided before `0025`.
+
 ## Rollback
 
 | Stage | Action |
 | --- | --- |
+| **Phase E code live** | **promote `dpl_5JhjV9eyKXFwFGqXJdiw9K2NK27D` (`04bd8fc`, production since 28 Sep).** It runs unchanged against `0021`–`0024` (see "Why the database goes first") and needs no variable change. The Employers and contact-edit/merge screens disappear until you roll forward; data created with them stays in the database |
+| **Phase E database (`0021`–`0024`)** | **Forward-only; not automatically reversible, and none is needed for the old code to run.** If the database itself had to go back, write and test a compensating migration on staging first. Limits: `0021` — merges performed since cannot be undone automatically (each `contact_merges` snapshot records what moved); `0022` — the rollback SQL in its header applies only while no employer is linked; `0023` — restoring the old policies, grants and `convert_job_application` body **re-opens the branch-scope vulnerabilities**, and `cases.created_by` values would be lost; `0024` — reverting **re-opens** portal-identity takeover, forged merge records and silent deletions. Reverting `0023`/`0024` is therefore a security decision, not a routine rollback |
 | Mumbai migrated only | nothing to undo — it serves no traffic |
-| **Phase D code live (current)** | **promote `dpl_79zRS2gErERRLVD8tn72G88HYrdb` (`c0d5b88`, production since 22 Sep).** It runs unchanged against `0018` + `0019` and needs no variable change. The only visible difference: the old "Air Ticket & Travel" card returns until you roll forward. Do **not** promote the Tokyo build below — it would move traffic back to Tokyo |
+| Phase D code live *(historical — superseded by Phase E above)* | promote `dpl_79zRS2gErERRLVD8tn72G88HYrdb` (`c0d5b88`, production since 22 Sep). It runs unchanged against `0018` + `0019` and needs no variable change. The only visible difference: the old "Air Ticket & Travel" card returns until you roll forward. Do **not** promote the Tokyo build below — it would move traffic back to Tokyo |
 | **Phase D database — `0020`** | Not automatically reversible either: it marks a default branch, replaces the intake trigger and backfills `branch_id`. The old code runs unchanged against it. To undo the backfill, a compensating migration can restore `branch_id = null` for exactly the rows whose `job_application.updated` audit entry records old branch null → Lucknow, and restore the `0013` trigger body |
 | **Phase D database** | **`0019` is not automatically reversible.** It dropped two empty tables, rebuilt `case_type` without three values, deleted two roles and their grants, and relabelled five permissions. No rollback is needed for the code to run; if the database itself had to go back, that is a **new compensating migration** (recreate the enum values, tables, roles and grants — the retired definitions are in `0004`/`0008` and in `0019`'s audit entries), written and tested on staging first. `0018` only added a function |
 | *(historical, 19 Sep)* New build live | promote `dpl_9RaneE2dUCaRfmGifXYfumUjWDL9` (`519cb85`; verified Ready and aliased to `www.gogulf.co` and `gogulf.co` on 19 Sep). It keeps the Tokyo configuration it was built with, so **no Production variable needs restoring for the rollback** (the variables already name Mumbai and only affect new builds; Tokyo's public anon key is not stored on this machine and is only needed if you later want the *variables* back on Tokyo — read it from the Vercel dashboard first). Tokyo still holds every row taken before the switch. Promotion does not rebuild, so the guard does not interfere. Anything submitted to Mumbai after the switch must be reconciled back |
@@ -339,4 +446,4 @@ Stop before switching traffic if: `0012`–`0017` are not all in `schema_migrati
 
 Roll back after switching if: applications fail to submit or documents cannot be retrieved; data reaches the wrong project; any unauthenticated access to `job_applications`, `contacts`, `cases`, `payments`, `invoices` or the bucket succeeds; the customer payment page shows anything beyond number, service, amount and status; staff sign-in or roles are wrong; staging or test content is live, or `noindex` reaches production; unexplained 5xx after the first hour.
 
-**This runbook grants no approval.** The Tokyo → Mumbai cutover was completed on 19 Sep 2026. Phase D (`0018`–`0020`, `main` = `04bd8fc`, the role change) was completed on 28 Sep 2026.
+**This runbook grants no approval.** The Tokyo → Mumbai cutover was completed on 19 Sep 2026. Phase D (`0018`–`0020`, `main` = `04bd8fc`, the role change) was completed on 28 Sep 2026. Phase E (`0021`–`0024` and the code that uses them) is prepared, not executed.
