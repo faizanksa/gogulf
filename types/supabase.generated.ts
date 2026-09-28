@@ -351,7 +351,10 @@ export type Database = {
           branch_id: string | null
           case_number: string
           case_type: Database["public"]["Enums"]["case_type"]
+          close_note: string | null
+          close_reason: string | null
           closed_at: string | null
+          closed_by: string | null
           contact_id: string
           created_at: string
           created_by: string | null
@@ -362,6 +365,7 @@ export type Database = {
           owner_id: string | null
           pipeline_id: string
           priority: number
+          reopen_stage_id: string | null
           source_id: string | null
           stage_entered_at: string
           stage_id: string
@@ -374,7 +378,10 @@ export type Database = {
           branch_id?: string | null
           case_number: string
           case_type: Database["public"]["Enums"]["case_type"]
+          close_note?: string | null
+          close_reason?: string | null
           closed_at?: string | null
+          closed_by?: string | null
           contact_id: string
           created_at?: string
           created_by?: string | null
@@ -385,6 +392,7 @@ export type Database = {
           owner_id?: string | null
           pipeline_id: string
           priority?: number
+          reopen_stage_id?: string | null
           source_id?: string | null
           stage_entered_at?: string
           stage_id: string
@@ -397,7 +405,10 @@ export type Database = {
           branch_id?: string | null
           case_number?: string
           case_type?: Database["public"]["Enums"]["case_type"]
+          close_note?: string | null
+          close_reason?: string | null
           closed_at?: string | null
+          closed_by?: string | null
           contact_id?: string
           created_at?: string
           created_by?: string | null
@@ -408,6 +419,7 @@ export type Database = {
           owner_id?: string | null
           pipeline_id?: string
           priority?: number
+          reopen_stage_id?: string | null
           source_id?: string | null
           stage_entered_at?: string
           stage_id?: string
@@ -422,6 +434,13 @@ export type Database = {
             columns: ["branch_id"]
             isOneToOne: false
             referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cases_closed_by_fkey"
+            columns: ["closed_by"]
+            isOneToOne: false
+            referencedRelation: "staff_users"
             referencedColumns: ["id"]
           },
           {
@@ -450,6 +469,13 @@ export type Database = {
             columns: ["pipeline_id"]
             isOneToOne: false
             referencedRelation: "pipelines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cases_reopen_stage_id_fkey"
+            columns: ["reopen_stage_id"]
+            isOneToOne: false
+            referencedRelation: "pipeline_stages"
             referencedColumns: ["id"]
           },
           {
@@ -1813,9 +1839,40 @@ export type Database = {
         Args: { p_verb: string }
         Returns: boolean
       }
+      assign_case: { Args: { p_case: string; p_owner: string }; Returns: Json }
       can_view_application_document: {
         Args: { p_name: string }
         Returns: boolean
+      }
+      case_close_reason_label: {
+        Args: { p_outcome: string; p_reason: string }
+        Returns: string
+      }
+      case_owner_problem: {
+        Args: { p_case_branch: string; p_owner: string }
+        Returns: string
+      }
+      case_owner_problem_for: {
+        Args: {
+          p_active: boolean
+          p_case_branch: string
+          p_role: string
+          p_staff_branch: string
+        }
+        Returns: string
+      }
+      case_stage_gate: {
+        Args: { p_case: string; p_from_stage: string; p_to_stage: string }
+        Returns: string
+      }
+      close_case: {
+        Args: {
+          p_case: string
+          p_note?: string
+          p_outcome: string
+          p_reason: string
+        }
+        Returns: Json
       }
       convert_job_application: {
         Args: { p_application_id: string }
@@ -1864,6 +1921,15 @@ export type Database = {
       merge_contacts: {
         Args: { p_merged: string; p_reason?: string; p_survivor: string }
         Returns: string
+      }
+      move_case_stage: {
+        Args: {
+          p_case: string
+          p_exceptional?: boolean
+          p_reason?: string
+          p_stage_key: string
+        }
+        Returns: Json
       }
       next_case_number: {
         Args: { p_type: Database["public"]["Enums"]["case_type"] }
@@ -1918,9 +1984,14 @@ export type Database = {
         Returns: string
       }
       redact_audit_payload: { Args: { payload: Json }; Returns: Json }
+      reopen_case: { Args: { p_case: string; p_reason: string }; Returns: Json }
       resolve_contact: {
         Args: { p_email?: string; p_phone?: string; p_wa_id?: string }
         Returns: string
+      }
+      role_has_perm: {
+        Args: { p_role: string; perm: string; required_scope?: string }
+        Returns: boolean
       }
       scope_allows: {
         Args: { perm: string; row_branch: string; row_owner: string }

@@ -8,6 +8,7 @@ import "server-only";
 
 import { PAGE_SIZE, rangeOf } from "@/lib/admin/params";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { CASE_OWNER_ROLES } from "./case-lifecycle";
 import type { ApplicationStatus, CaseStatus, EmployerStatus, LifecycleStage, TableRow } from "@/types/database";
 
 // ---------------------------------------------------------------------------
@@ -96,7 +97,7 @@ export async function getContact(id: string) {
   const [contact, identities, cases, applications, activities] = await Promise.all([
     supabase.from("contacts").select("*, owner:staff_users!contacts_owner_id_fkey(full_name), branch:branches(name)").eq("id", id).maybeSingle(),
     supabase.from("contact_identities").select("id,type,value_normalized,is_primary,verified_at,source,created_at").eq("contact_id", id).order("created_at"),
-    supabase.from("cases").select("id,case_number,title,status,opened_at,stage:pipeline_stages(name)").eq("contact_id", id).order("opened_at", { ascending: false }),
+    supabase.from("cases").select("id,case_number,title,status,opened_at,stage:pipeline_stages!cases_stage_id_fkey(name)").eq("contact_id", id).order("opened_at", { ascending: false }),
     supabase.from("job_applications").select("id,job_title,status,created_at").eq("contact_id", id).order("created_at", { ascending: false }),
     supabase.from("activities").select("id,verb,summary,actor_type,occurred_at").eq("contact_id", id).order("occurred_at", { ascending: false }).limit(50),
   ]);
@@ -203,7 +204,7 @@ export interface StaffCase {
 }
 
 const CASE_SELECT =
-  "id,case_number,title,case_type,status,opened_at,stage_entered_at,updated_at, contact:contacts(id,full_name), stage:pipeline_stages(name,key), owner:staff_users!cases_owner_id_fkey(full_name), branch:branches(name)";
+  "id,case_number,title,case_type,status,opened_at,stage_entered_at,updated_at, contact:contacts(id,full_name), stage:pipeline_stages!cases_stage_id_fkey(name,key), owner:staff_users!cases_owner_id_fkey(full_name), branch:branches(name)";
 
 export const CASE_STATUSES: readonly CaseStatus[] = ["open", "won", "lost", "cancelled"];
 
@@ -244,6 +245,49 @@ export async function getCase(id: string) {
     } | null,
     applications: (applications.data ?? []) as { id: string; job_title: string; status: ApplicationStatus; created_at: string }[],
     activities: (activities.data ?? []) as { id: string; verb: string; summary: string; actor_type: string; occurred_at: string }[],
+  };
+}
+
+/**
+ * What the case page needs to offer the lifecycle actions (0025): the closure details, the
+ * pipeline's stages in order, and the colleagues who could own the case — active, in its
+ * branch, of an owner role. The database re-checks all of it when an action runs.
+ */
+export async function getCaseLifecycle(id: string) {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
+  const supabase = await createServerSupabase();
+  const { data } = await supabase
+    .from("cases")
+    .select("pipeline_id, branch_id, owner_id, closed_at, close_reason, close_note, closer:staff_users!cases_closed_by_fkey(full_name), reopen_stage:pipeline_stages!cases_reopen_stage_id_fkey(name)")
+    .eq("id", id)
+    .maybeSingle();
+  if (!data) return null;
+  const row = data as unknown as {
+    pipeline_id: string;
+    branch_id: string | null;
+    owner_id: string | null;
+    closed_at: string | null;
+    close_reason: string | null;
+    close_note: string | null;
+    closer: { full_name: string } | null;
+    reopen_stage: { name: string } | null;
+  };
+  const [stages, owners] = await Promise.all([
+    supabase.from("pipeline_stages").select("key,name,position,is_won").eq("pipeline_id", row.pipeline_id).order("position"),
+    row.branch_id
+      ? supabase
+          .from("staff_users")
+          .select("id, full_name, role_key")
+          .eq("is_active", true)
+          .eq("branch_id", row.branch_id)
+          .in("role_key", [...CASE_OWNER_ROLES])
+          .order("full_name")
+      : Promise.resolve({ data: [] }),
+  ]);
+  return {
+    ...row,
+    stages: (stages.data ?? []) as { key: string; name: string; position: number; is_won: boolean }[],
+    owners: (owners.data ?? []) as { id: string; full_name: string; role_key: string }[],
   };
 }
 

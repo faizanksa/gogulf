@@ -30,7 +30,7 @@ function actionsOf(source: string): { name: string; body: string }[] {
 describe("staff server actions", () => {
   it("covers every feature that mutates data", () => {
     const folders = ACTION_FILES.map((f) => f.replace(/\\/g, "/").split("/(protected)/")[1]);
-    for (const expected of ["applications/actions.ts", "contacts/actions.ts", "employers/actions.ts", "invoices/actions.ts", "jobs/actions.ts", "jobs/categories/actions.ts", "roles/actions.ts", "staff/actions.ts"]) {
+    for (const expected of ["applications/actions.ts", "cases/actions.ts", "contacts/actions.ts", "employers/actions.ts", "invoices/actions.ts", "jobs/actions.ts", "jobs/categories/actions.ts", "roles/actions.ts", "staff/actions.ts"]) {
       expect(folders, expected).toContain(expected);
     }
   });
@@ -124,6 +124,17 @@ describe("the staff and role screens", () => {
     expect(read("employers/actions.ts")).toContain('authorize("employers.manage")');
     expect(read("employers/actions.ts")).toContain('authorize("cases.update")'); // linking a case is a case edit
     expect(read("cases/[id]/page.tsx")).toContain('can["cases.update"]');
+    // 0025: each lifecycle action is its own permission, on the screen and in the action.
+    expect(read("cases/[id]/page.tsx")).toContain('can["cases.stage.change"]');
+    expect(read("cases/[id]/page.tsx")).toContain('can["cases.close"]');
+    expect(read("cases/[id]/page.tsx")).toContain('can["cases.assign"]');
+    expect(read("cases/actions.ts")).toContain('authorize("cases.stage.change")');
+    expect(read("cases/actions.ts")).toContain('authorize("cases.close")');
+    expect(read("cases/actions.ts")).toContain('authorize("cases.assign")');
+    for (const fn of ["move_case_stage", "close_case", "reopen_case", "assign_case"]) {
+      expect(read("cases/actions.ts")).toContain(`supabase.rpc("${fn}"`); // the lifecycle is the database's, never a column update
+    }
+    expect(read("cases/actions.ts")).not.toMatch(/from\("cases"\)\s*\.update\(/);
     expect(read("staff/new/page.tsx")).toContain('can["users.manage"]');
     expect(read("staff/new/page.tsx")).toContain('!r.is_super || staff.can["roles.manage"]'); // only a SUPER_ADMIN may add one
     expect(read("staff/actions.ts")).toContain('authorize("users.manage")');

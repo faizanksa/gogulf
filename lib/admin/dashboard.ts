@@ -119,7 +119,7 @@ export async function loadDashboard(can: DashboardAccess): Promise<DashboardData
       count(c().eq("status", "won")),
       count(c().eq("status", "lost")),
       count(c().eq("status", "cancelled")),
-      supabase.from("cases").select("stage:pipeline_stages(name,position)").eq("status", "open").is("deleted_at", null).limit(2000),
+      supabase.from("cases").select("stage:pipeline_stages!cases_stage_id_fkey(name,position)").eq("status", "open").is("deleted_at", null).limit(2000),
     ]);
     const stages = new Map<string, { count: number; position: number }>();
     for (const row of (ok(openRows) ?? []) as unknown as { stage: { name: string; position: number } | null }[]) {

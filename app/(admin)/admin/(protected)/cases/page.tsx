@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CASE_STATUS_LABELS, FilterField, FilterForm, NotAllowed, PageTitle, Pagination, Time } from "@/components/admin/ui";
+import { CASE_STATUS_LABELS, CaseStatusBadge, FilterField, FilterForm, NotAllowed, PageTitle, Pagination, Time } from "@/components/admin/ui";
 import styles from "@/components/admin/admin.module.css";
 import { Input, Select } from "@/components/form/Controls";
 import { AlertView } from "@/components/ui/AlertView";
@@ -75,7 +75,7 @@ export default async function CasesPage({ searchParams }: { searchParams: Promis
                   <td data-label="Contact">{k.contact ? <Link href={`/admin/contacts/${k.contact.id}`}>{k.contact.full_name}</Link> : "—"}</td>
                   <td data-label="Type">{k.case_type.replace(/_/g, " ")}</td>
                   <td data-label="Stage">{k.stage?.name ?? "—"}</td>
-                  <td data-label="Status">{CASE_STATUS_LABELS[k.status]}</td>
+                  <td data-label="Status"><CaseStatusBadge status={k.status} /></td>
                   <td data-label="Owner">{k.owner?.full_name ?? "—"}</td>
                   <td data-label="Opened" className={styles.nowrap}>
                     <Time iso={k.opened_at} />

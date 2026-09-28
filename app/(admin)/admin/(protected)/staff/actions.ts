@@ -7,6 +7,7 @@ import { wouldLeaveNoSuperAdmin } from "@/lib/admin/rbac-model";
 import { ensureStaffLogin } from "@/lib/admin/staff-login";
 import { onboardStaff } from "@/lib/admin/staff-onboarding";
 import { AuthorizationError, currentStaffId, hasPermission, requirePermission, type Permission } from "@/lib/auth/permissions";
+import { ownsOpenCasesRefusal } from "@/lib/crm/case-lifecycle";
 import { logger } from "@/lib/logger";
 import { createServerSupabase } from "@/lib/supabase/server";
 
@@ -70,7 +71,7 @@ export async function setStaffRole(_state: ActionState, formData: FormData): Pro
   const { data, error } = await supabase.from("staff_users").update({ role_key: role }).eq("id", id).select("id").maybeSingle();
   if (error || !data) {
     logger.warn("staff role change refused", { reason: error?.code ?? "no-row" });
-    return { ok: false, message: "The change was refused. You may not have permission." };
+    return { ok: false, message: ownsOpenCasesRefusal(error) ?? "The change was refused. You may not have permission." };
   }
   revalidatePath("/admin/staff");
   return { ok: true, message: "Role changed. It takes effect on their next request." };
@@ -98,7 +99,7 @@ export async function setStaffActive(_state: ActionState, formData: FormData): P
   const { data, error } = await supabase.from("staff_users").update({ is_active: active }).eq("id", id).select("id").maybeSingle();
   if (error || !data) {
     logger.warn("staff activation refused", { reason: error?.code ?? "no-row" });
-    return { ok: false, message: "The change was refused. You may not have permission." };
+    return { ok: false, message: ownsOpenCasesRefusal(error) ?? "The change was refused. You may not have permission." };
   }
   revalidatePath("/admin/staff");
   return { ok: true, message: active ? "Reactivated." : "Deactivated. They are signed out on their next request." };

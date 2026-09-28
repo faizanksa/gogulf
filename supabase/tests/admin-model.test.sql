@@ -238,8 +238,8 @@ select am_test.check(
   am_test.visible($$select 1 from public.audit_logs where entity_type = 'role_permissions'$$) >= 364,
   'SUPER_ADMIN reads the audit entries about role grants');
 select am_test.check(
-  am_test.visible($$select 1 from public.audit_logs where entity_type = 'settings'$$) = 7,
-  'SUPER_ADMIN reads the audit entries about system settings: the six seeded, and the Travel pipeline retired by 0019');
+  am_test.visible($$select 1 from public.audit_logs where entity_type = 'settings'$$) = 9,
+  'SUPER_ADMIN reads the audit entries about system settings: the six seeded, the Travel pipeline retired by 0019 and the two stages retired by 0025');
 select am_test.check(
   am_test.visible($$select 1 from public.audit_logs where entity_type = 'staff_users'$$) >= 5,
   'SUPER_ADMIN reads the audit entries about staff records');

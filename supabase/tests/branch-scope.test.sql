@@ -149,7 +149,8 @@ set local role authenticated;
 -- 1. Every succeeded row of BRANCH-SCOPE-AUDIT.md is now refused
 -- ===========================================================================
 select bs_test.act_as('s_hr');
-select bs_test.check(bs_test.affected(format($$update public.cases set owner_id = %L where id = %L$$, bs_test.id('s_hr'), bs_test.id('k_hr'))) = 1,
+-- Since 0025 ownership changes only through assign_case() (cases.assign).
+select bs_test.check(bs_test.error_of(format($$select public.assign_case(%L, %L)$$, bs_test.id('k_hr'), bs_test.id('s_hr'))) is null,
   'HR_MANAGER may still take ownership of a case in its own branch');
 select bs_test.check(bs_test.error_of(format($$update public.cases set branch_id = %L where id = %L$$, bs_test.id('b_oth'), bs_test.id('k_hr'))) like '42501:%branch_change_requires_all_scope%',
   'audit row 1 — HR_MANAGER cannot then move that case to another branch');
@@ -213,7 +214,11 @@ select bs_test.check(bs_test.error_of($$update public.jobs set branch_id = (sele
 -- 2. All-scope positive controls
 -- ===========================================================================
 select bs_test.act_as('s_admin');
-select bs_test.check(bs_test.new_case('BS admin case elsewhere', 'c_oth', 'b_oth', 's_admin') is null,
+-- Since 0025 an open case's owner works in the case's branch, so ADMIN (Lucknow) opens the
+-- other branch's case unassigned; owning it from Lucknow is refused.
+select bs_test.check(bs_test.new_case('BS admin case owned', 'c_oth', 'b_oth', 's_admin') like '23514:%owner_other_branch%',
+  'ADMIN cannot own a case of another branch (0025)');
+select bs_test.check(bs_test.new_case('BS admin case elsewhere', 'c_oth', 'b_oth', 'nobody') is null,
   'ADMIN creates a case in another branch');
 select bs_test.check(bs_test.affected(format($$update public.cases set branch_id = %L where id = %L$$, bs_test.id('b_oth'), bs_test.id('k_move'))) = 1,
   'ADMIN moves a case to another branch');
@@ -384,18 +389,30 @@ select bs_test.check(not public.activity_is_customer_visible('case.employer_link
 -- ===========================================================================
 -- 8. Trusted functions: conversion and merge keep working, and vouch only for themselves
 -- ===========================================================================
+-- Since 0025 the case's owner (the application's assignee, else the converter) must work in
+-- the case's branch: the Lucknow recruiter cannot convert the other branch's application
+-- into a case it would own. That branch's HR manager, once assigned, converts it.
 select bs_test.act_as('s_rec');
-select bs_test.check(bs_test.error_of(format($$select public.convert_job_application(%L)$$, bs_test.id('app_far'))) is null,
-  'RECRUITER converts the other branch''s application assigned to it: the records land in the application''s branch');
+select bs_test.check(bs_test.error_of(format($$select public.convert_job_application(%L)$$, bs_test.id('app_far'))) like '23514:%owner_other_branch%',
+  'RECRUITER cannot convert the other branch''s application into a case it would own from Lucknow (0025)');
+select bs_test.check(coalesce(current_setting('app.trusted_write', true), '') = '',
+  'the refused conversion leaves nothing trusted behind in the transaction');
 reset role;
-select bs_test.check((select k.branch_id = bs_test.id('b_oth') and c.branch_id = bs_test.id('b_oth') and k.created_by = bs_test.id('s_rec')
+update public.job_applications set assignee_id = bs_test.id('s_hroth') where id = bs_test.id('app_far');
+set local role authenticated;
+select bs_test.act_as('s_hroth');
+select bs_test.check(bs_test.error_of(format($$select public.convert_job_application(%L)$$, bs_test.id('app_far'))) is null,
+  'the other branch''s HR manager converts it: the records land in the application''s branch');
+reset role;
+select bs_test.check((select k.branch_id = bs_test.id('b_oth') and c.branch_id = bs_test.id('b_oth') and k.created_by = bs_test.id('s_hroth')
+                            and k.owner_id = bs_test.id('s_hroth')
                         from public.job_applications a join public.cases k on k.id = a.case_id join public.contacts c on c.id = a.contact_id
                        where a.id = bs_test.id('app_far')),
-  'the converted contact and case are in the application''s branch, the case records its creator');
+  'the converted contact and case are in the application''s branch, the case records its creator and owner');
 select bs_test.check(exists (select 1 from public.activities v join public.job_applications a on a.id = v.entity_id
-                              where a.id = bs_test.id('app_far') and v.verb = 'application.converted' and v.actor_id = bs_test.id('s_rec')
+                              where a.id = bs_test.id('app_far') and v.verb = 'application.converted' and v.actor_id = bs_test.id('s_hroth')
                                 and v.case_id = a.case_id and (v.metadata ->> 'contact_created')::boolean),
-  'the conversion''s timeline entry is written by the database, attributed to the recruiter');
+  'the conversion''s timeline entry is written by the database, attributed to the converter');
 select bs_test.check(coalesce(current_setting('app.trusted_write', true), '') = '',
   'conversion leaves nothing trusted behind in the transaction');
 set local role authenticated;

@@ -113,6 +113,12 @@ export const STAGE_LABELS: Record<string, string> = {
 
 export const CASE_STATUS_LABELS: Record<string, string> = { open: "Open", won: "Won", lost: "Lost", cancelled: "Cancelled" };
 
+const CASE_TONES: Record<string, "neutral" | "green" | "blue" | "warning" | "error"> = { open: "blue", won: "green", lost: "error", cancelled: "neutral" };
+
+export function CaseStatusBadge({ status }: { status: string }) {
+  return <Badge tone={CASE_TONES[status] ?? "neutral"}>{CASE_STATUS_LABELS[status] ?? status}</Badge>;
+}
+
 const IST: Intl.DateTimeFormatOptions = { timeZone: "Asia/Kolkata" };
 
 /** "17 Sep 2026" — a timestamp as its date in India. */

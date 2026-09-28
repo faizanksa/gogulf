@@ -148,9 +148,9 @@ select rs_test.check(
   (select array_agg(s.key order by s.position)
      from public.pipeline_stages s join public.pipelines p on p.id = s.pipeline_id
     where p.case_type = 'recruitment' and p.is_default)
-  = array['legacy_imported', 'new', 'contacted', 'documents', 'screening', 'interview',
-          'selected', 'processing', 'visa', 'travel', 'completed', 'lost'],
-  'the recruitment pipeline keeps all twelve stages, Visa Processing and Travel Preparation included');
+  = array['new', 'contacted', 'documents', 'screening', 'interview',
+          'selected', 'processing', 'visa', 'travel', 'completed'],
+  'the recruitment pipeline keeps its ten active stages (0025), Visa Processing and Travel Preparation included');
 select rs_test.check(
   (select string_agg(s.name, ' / ' order by s.position)
      from public.pipeline_stages s join public.pipelines p on p.id = s.pipeline_id
@@ -173,27 +173,33 @@ select rs_test.check(
   'the recreated next_case_number keeps its 0009 grants: not anon; authenticated and service_role');
 
 -- A selected candidate's case walks through visa processing to travel preparation and joining.
+-- Since 0025 a case opens at New Lead and moves only through move_case_stage(); ADMIN takes
+-- it to Selected in one explicit exceptional move, then it walks the deployment stages.
 do $$
 declare
   contact uuid;
   pipe    uuid;
   kase    uuid;
 begin
-  insert into public.contacts (full_name) values ('RS Test Candidate') returning id into contact;
+  insert into public.contacts (full_name, branch_id) select 'RS Test Candidate', id from public.branches where code = 'LKO' returning id into contact;
   select id into pipe from public.pipelines where case_type = 'recruitment' and is_default;
-  insert into public.cases (case_number, contact_id, case_type, pipeline_id, stage_id, title)
+  insert into public.cases (case_number, contact_id, case_type, pipeline_id, stage_id, title, branch_id)
   values (public.next_case_number('recruitment'), contact, 'recruitment', pipe,
-          (select id from public.pipeline_stages where pipeline_id = pipe and key = 'selected'), 'RS deployment')
+          (select id from public.pipeline_stages where pipeline_id = pipe and key = 'new'), 'RS deployment',
+          (select id from public.branches where code = 'LKO'))
   returning id into kase;
-  update public.cases set stage_id = (select id from public.pipeline_stages where pipeline_id = pipe and key = 'visa') where id = kase;
-  update public.cases set stage_id = (select id from public.pipeline_stages where pipeline_id = pipe and key = 'travel') where id = kase;
+  perform rs_test.act_as_staff('admin');
+  perform public.move_case_stage(kase, 'selected', 'RS test: selected', true);
+  perform public.move_case_stage(kase, 'processing');
+  perform public.move_case_stage(kase, 'visa');
+  perform public.move_case_stage(kase, 'travel');
   perform rs_test.check(
     (select s.key from public.cases c join public.pipeline_stages s on s.id = c.stage_id where c.id = kase) = 'travel',
     'a selected candidate''s recruitment case moves through Visa Processing to Travel Preparation');
-  update public.cases set stage_id = (select id from public.pipeline_stages where pipeline_id = pipe and key = 'completed') where id = kase;
+  perform public.move_case_stage(kase, 'completed');
   perform rs_test.check(
-    (select s.is_won from public.cases c join public.pipeline_stages s on s.id = c.stage_id where c.id = kase),
-    'and on to Joined, the won stage');
+    (select s.is_won and c.status = 'won' from public.cases c join public.pipeline_stages s on s.id = c.stage_id where c.id = kase),
+    'and on to Joined, the won stage, which closes the case as won');
 end $$;
 
 -- ===========================================================================

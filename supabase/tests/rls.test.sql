@@ -364,8 +364,15 @@ begin
      -- merge_contacts (0021) is staff-facing by design: it re-checks contacts.merge scope on both
      -- contacts itself (cross-branch only at all scope) and runs as one audited transaction —
      -- asserted in contact-merge.test.sql.
+     -- move_case_stage, close_case, reopen_case and assign_case (0025) are staff-facing by
+     -- design: each re-checks the caller's session, the case's visibility and its own
+     -- permission (cases.stage.change / cases.close / cases.assign) at the case's scope —
+     -- asserted in case-lifecycle.test.sql. case_owner_problem (0025) is read-only: it is
+     -- called by the case guard under the caller's privileges and returns only whether a
+     -- colleague may own a case in a branch (the staff directory is already staff-readable).
      and p.proname not in ('has_perm', 'scope_allows', 'is_staff', 'current_contact_id', 'record_document_access',
-                           'public_invoice_view', 'staff_sign_in_status', 'merge_contacts');
+                           'public_invoice_view', 'staff_sign_in_status', 'merge_contacts',
+                           'move_case_stage', 'close_case', 'reopen_case', 'assign_case', 'case_owner_problem');
   perform test_assert(bad is null,
     coalesce('authenticated can execute no system-only SECURITY DEFINER function (found: ' || bad || ')',
              'authenticated can execute no system-only SECURITY DEFINER function'));

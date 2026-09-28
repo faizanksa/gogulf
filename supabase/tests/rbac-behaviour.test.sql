@@ -406,6 +406,11 @@ select rls_test.check(
 -- 8. Deactivation takes effect on the next query, not at token expiry
 -- ===========================================================================
 reset role;
+-- Since 0025 an owner of open cases cannot be deactivated until they are reassigned: the
+-- recruiter's case is left unassigned for this section and given back afterwards.
+create temp table rls_rec1_cases on commit drop as
+  select id from public.cases where owner_id = rls_test.id('s_rec1') and status = 'open';
+update public.cases set owner_id = null where id in (select id from rls_rec1_cases);
 update public.staff_users set is_active = false where id = rls_test.id('s_rec1');
 set local role authenticated;
 select rls_test.act_as_staff('s_rec1');   -- same, still-valid token
@@ -413,6 +418,7 @@ select rls_test.check(rls_test.visible('select 1 from rls_test.fixture_contacts'
   'a deactivated recruiter holding a valid token sees nothing');
 reset role;
 update public.staff_users set is_active = true where id = rls_test.id('s_rec1');
+update public.cases set owner_id = rls_test.id('s_rec1') where id in (select id from rls_rec1_cases);
 
 -- ===========================================================================
 -- 9. Audit trail
