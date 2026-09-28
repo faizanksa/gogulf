@@ -132,6 +132,7 @@
       "phoneInvalid": "Enter a valid phone number, including country code if outside India.",
       "messageRequired": "Message is required.",
       "serviceRequired": "Service type is required.",
+      "serviceUnknown": "Choose one of the services in the list. The page may be out of date — reload it and choose again.",
       "roleRequired": "Role is required.",
       "tooLong": "This answer is too long."
     },

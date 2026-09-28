@@ -3,6 +3,7 @@ import type { ServiceInquiryCopy } from "@/components/forms/ServiceInquiryForm";
 import { WHATSAPP } from "@/content/channels";
 import { COMPANY } from "@/content/company";
 import { SERVICES, type Service } from "@/content/services";
+import { OTHER_SERVICE } from "@/lib/forms/service-options";
 import { COUNTRIES } from "@/lib/jobs/model";
 import { countryName } from "./format";
 import { hrefIn, serviceText } from "./pages";
@@ -155,7 +156,7 @@ export async function serviceInquiryCopy(): Promise<ServiceInquiryCopy> {
     servicePlaceholder: t("forms.inquiry.servicePlaceholder"),
     groups: { seekers: t("forms.inquiry.seekers"), employers: t("forms.inquiry.employers") },
     // "Other / Not Sure" is the value staff already know from the pre-redesign form.
-    services: { seekers: forAudience("job-seekers"), employers: forAudience("employers"), other: { value: "Other / Not Sure", label: t("forms.inquiry.other") } },
+    services: { seekers: forAudience("job-seekers"), employers: forAudience("employers"), other: { value: OTHER_SERVICE, label: t("forms.inquiry.other") } },
     // The value stays the English name staff read in the notification email.
     countries: COUNTRIES.map((c) => ({ value: c.name, label: countryName(c.code, t.locale) })),
     anyCountry: t("forms.inquiry.anyCountry"),

@@ -35,5 +35,22 @@ export const CANDIDATE_SERVICES = [
   "Immigration Support",
   "Flight & Joining Support (Selected Candidates)",
   "Pre-Departure Orientation",
-  "Post-Joining Support",
 ] as const;
+// 28 Sep 2026: "Post-Joining Support" removed — a leftover of the pre-redesign form that no
+// form has offered since; the server now accepts only what a form can actually send.
+
+/** The general option, offered by the Services page form. */
+export const OTHER_SERVICE = "Other / Not Sure";
+
+/**
+ * Every service name the server accepts from a public form (/api/forms/service-inquiry):
+ * the candidate and employer services, and the general option. Anything else — a retired
+ * name from a stale page, or a value made up by a client — is refused by the server
+ * (lib/forms/schemas.ts), whatever the browser's own validation did. Kept exactly equal to
+ * what the forms offer by lib/forms/service-validation.test.ts.
+ */
+export const INQUIRY_SERVICES: readonly string[] = [...CANDIDATE_SERVICES, ...EMPLOYER_SERVICES, OTHER_SERVICE];
+
+export function isInquiryService(value: string): boolean {
+  return INQUIRY_SERVICES.includes(value);
+}

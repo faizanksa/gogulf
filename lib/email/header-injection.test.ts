@@ -38,9 +38,15 @@ describe("header injection is neutralised at validation", () => {
     expect(hasCrLf(mail.subject)).toBe(false);
   });
 
-  it("strips CR/LF from the service inquiry subject", () => {
+  it("keeps CR/LF out of the service inquiry subject", () => {
+    // The subject carries the service name. Since 28 Sep 2026 the server accepts only a
+    // listed service, so an injected one never reaches an email at all…
+    expect(
+      serviceInquirySchema.safeParse({ service_type: ATTACK, from_name: "Ravi", reply_to: "a@b.co", phone: "9936309015" }).success,
+    ).toBe(false);
+    // …and with a real service, injected text elsewhere still cannot reach the subject.
     const parsed = serviceInquirySchema.parse({
-      service_type: ATTACK,
+      service_type: "Job Matching",
       from_name: ATTACK,
       reply_to: "a@b.co",
       phone: "9936309015",

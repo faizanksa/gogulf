@@ -60,6 +60,24 @@ test.describe("service catalogue", () => {
     }
   });
 
+  // Server-side, whatever a client sends: a retired or made-up service is refused before any
+  // email is sent. Only refusals are posted here, so nothing is delivered.
+  // Once, not per viewport: the endpoint allows 5 enquiries per address per 10 minutes, and
+  // each refusal still counts. The full list of retired and unknown names is covered by
+  // lib/forms/service-validation.test.ts against the route handler itself.
+  test("the enquiry endpoint itself refuses a retired or unknown service", async ({ page, isMobile }) => {
+    test.skip(isMobile, "server behaviour, independent of viewport; keeps under the rate limit");
+    for (const service_type of ["Air Ticket & Travel Assistance", "Tour Package"]) {
+      const res = await page.request.post("/api/forms/service-inquiry", {
+        data: { service_type, from_name: "E2E Check", reply_to: "e2e@example.com", phone: "+919000000000", website: "" },
+      });
+      expect(res.status(), service_type).toBe(400);
+      const body = await res.json();
+      expect(body.ok).toBe(false);
+      expect(body.fieldErrors.service_type[0]).toMatch(/Choose one of the services in the list/);
+    }
+  });
+
   test("the flight card's enquiry link preselects the selected-candidate option", async ({ page }) => {
     await page.goto("/services");
     await page.locator("#service-flight-joining-support").getByRole("link").click();

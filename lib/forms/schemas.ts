@@ -17,6 +17,7 @@ import { z } from "zod";
 import { DEFAULT } from "@/lib/i18n/locales";
 import { createTranslator, type MessageKey, type Translator } from "@/lib/i18n/translator";
 import { isNormalizablePhone } from "@/lib/phone";
+import { isInquiryService } from "./service-options";
 
 /** A validation message, as a checked catalogue key. */
 const m = (key: MessageKey) => key;
@@ -109,7 +110,10 @@ export type ContactInput = z.infer<typeof contactSchema>;
 export { CANDIDATE_SERVICES, EMPLOYER_SERVICES } from "./service-options";
 
 export const serviceInquirySchema = z.object({
-  service_type: requiredText(120, "forms.validation.serviceRequired"),
+  // Only a service a form actually offers (lib/forms/service-options.ts), matched exactly
+  // after the usual whitespace clean-up. Retired names and made-up values are refused here,
+  // on the server, whatever the client sent.
+  service_type: requiredText(120, "forms.validation.serviceRequired").refine(isInquiryService, m("forms.validation.serviceUnknown")),
   from_name: requiredText(120, "forms.validation.nameRequired"),
   reply_to: emailField,
   phone: phoneField,
