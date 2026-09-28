@@ -6,8 +6,9 @@
 > 1–15 below are the **19 Sep release record, kept as written**; where they say "`main` push pending"
 > or "traffic has not been switched", that was true *then* and is superseded by §0.
 >
-> **Now (28 Sep):** Mumbai production is at migrations `0001`–`0020` (**applied 28 Sep**, §0.9); the code
-> release to `main` follows. Before it, production served `c0d5b88` (`dpl_79zRS2gErERRLVD8tn72G88HYrdb`). The next release — staff onboarding (`0018`) and the travel-scope
+> **Now — release CLOSED 28 Sep 2026 (§0.10):** production serves `04bd8fc` (`dpl_5JhjV9eyKXFwFGqXJdiw9K2NK27D`)
+> on Mumbai production at `0001`–`0020`; staff roles hello@ Super Admin, admin@ Admin, careers@ HR Manager, all
+> Lucknow. Before this release production served `c0d5b88` (`dpl_79zRS2gErERRLVD8tn72G88HYrdb`), the rollback target. The next release — staff onboarding (`0018`) and the travel-scope
 > retirement (`0019`) — is on **staging only**, awaiting approval (§0.3). `0018` and `0019` have
 > **not** been applied to production.
 
@@ -163,6 +164,67 @@ switch are legitimate and are treated exactly like the other job-less applicatio
 
 Statements elsewhere in this record that billing is "built, not in use", that "no real invoice has been
 issued" or that the live webhook is "not configured" are superseded by this section.
+
+### 0.10 Release closed — 28 Sep 2026 (accepted by the owner)
+
+**Code release.** `main` = **`04bd8fc`** (fast-forward from `c0d5b88`), deployed as
+**`dpl_5JhjV9eyKXFwFGqXJdiw9K2NK27D`** on `www.gogulf.co` and `gogulf.co`. Build guard: `Environment:
+production`, `Supabase API: PRODUCTION Mumbai, ap-south-1 (exsnksrmkycloxiajwmx)`, `Razorpay: live key`,
+PASS. `verify-production-deployment.mjs` **41/41**. Public checks: `/services` shows "Flight & Joining Support
+for Selected Candidates" and no "Air Ticket"; `/travel` 404; sitemap 14 URLs, no travel or admin entry; no
+Travel navigation link and no `TravelAgency` structured data; `/admin/staff` and `/admin/staff/new` redirect a
+visitor to sign-in; sign-in offers Google and no password field. Code rollback target:
+`dpl_79zRS2gErERRLVD8tn72G88HYrdb` (`c0d5b88`), compatible with the migrated schema.
+
+**Production staff roles** — changed on 27 Sep 2026 at 20:26 UTC by **`hello@` on the Staff page**, and
+recorded on the audit trail as two `staff_users.update` entries attributed to `hello@` (role only; branch
+and active status unchanged):
+
+| Account | Role | Branch | Google | Staff pages | Applications |
+| --- | --- | --- | --- | --- | --- |
+| `hello@gogulf.co` | **Super Admin** (`SUPER_ADMIN`) — unchanged | Lucknow | linked | allowed — **the only staff manager** | all scope |
+| `admin@gogulf.co` | **Admin** (`ADMIN`) — was Super Admin | Lucknow | linked | refused | all scope |
+| `careers@gogulf.co` | **HR Manager** (`HR_MANAGER`) — was Admin | Lucknow | linked (first sign-in 27 Sep) | refused | **Lucknow branch scope** |
+
+Verified read-only as each person (`has_perm()` and RLS): only `hello@` holds `users.manage`/`roles.manage`;
+`careers@` holds the HR Manager recruitment set (applications, jobs, contacts, cases, interviews, document
+verification, identity documents) at Lucknow and sees every application. The owner confirmed in the browser
+that `careers@`'s session shows "HR Manager · Lucknow" and its dashboard lists the applications to review.
+
+**Final production state** (read-only, 28 Sep): migrations **`0001`–`0020`**; **24 applications, all 24 in
+Lucknow, 0 without a branch**; **63 documents**; **3 active staff**; 10 roles, 72 permissions, 293 grants, 64
+RLS policies; 1 contact, 1 case, 0 jobs; invoices and payments unchanged (`GG-INV-2026-00001` issued, not
+paid; `GG-INV-2026-00002` paid); audit 494 = 491 after the migrations + one `document.accessed` by `careers@`
++ the two role changes. Nothing else changed.
+
+**First live confirmation of `0020`.** A genuine applicant submitted on 27 Sep 2026 at 19:16 UTC from the Jobs
+page, with no job and 3 documents — after the migrations, a minute before the new code went live. The
+database's intake step assigned it **Lucknow** automatically, and it is visible to `careers@` within the HR
+Manager's branch scope. This is the 24th application and the reason the documents went from 60 to 63.
+
+**Synthetic production application — skipped, by decision.** The runbook's D6 check (submit one synthetic
+application, then delete it) was **not run**: the genuine post-release application above already exercised
+the new intake path end to end, and another artificial production write, with its email, is not needed.
+
+**Tokyo reconciliation — accepted limitation** (§0.8). The last successful check (19 Sep 2026, 10:33 UTC)
+found no late applications; Tokyo's Supabase endpoint no longer exists; the 19 Tokyo-imported applications are
+in Mumbai; the period after the last check cannot be verified; no Tokyo restoration or import was part of this
+release.
+
+**GST / D8 — outstanding compliance follow-up.** Production billing is genuinely active: invoices have been
+issued and one paid through Razorpay, confirmed by the live webhook (§0.8). GST treatment, the GSTIN and the
+invoice number format must now be settled for invoices already issued.
+
+**Next release — Recruitment Operations.** Its first item is **hardening the enquiry form's service names**: the
+server accepts any service name as free text, so a stale page or a crafted request can still send a retired
+option (e.g. "Air Ticket & Travel Assistance"); restrict it to the current list with tests, covering the
+employer form's translated values. Then, in scope: contact editing and merging, recruitment case stages, tasks,
+interviews, employers, document verification, passport expiry, candidate deployment tracking, flight bookings,
+suppliers, and the billing gaps. No standalone travel service; candidate travel stays part of recruitment
+deployment.
+
+**Where the records live.** This record and the runbook are on `staging`. They reach `main` with the next
+planned release, not on their own.
 
 ### 0.9 Production database migrations — EXECUTED 28 Sep 2026
 

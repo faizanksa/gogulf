@@ -220,8 +220,11 @@ Billing is deployed and inert until these are done, in this order:
 
 ## Phase D — this release: staff onboarding (`0018`), travel-scope retirement (`0019`), application branch routing (`0020`)
 
-**D1–D4 executed on 28 Sep 2026** (owner-approved; preflight 24/24, dry run exactly the three, `0020`
-backfilled 22, verification 32/32 — readiness record §0.9). **D5 onwards** each needs its own go-ahead. Staging evidence:
+**Phase D COMPLETE — 28 Sep 2026** (readiness record §0.9–§0.10). D1–D4: preflight 24/24, dry run exactly the
+three, `0020` backfilled 22, verification 32/32. D5: `main` = `04bd8fc`, `dpl_5JhjV9eyKXFwFGqXJdiw9K2NK27D`. D6:
+build guard PASS (Mumbai production, live Razorpay), verifier 41/41, public checks passed; the synthetic
+application was **skipped by decision** — a genuine post-release application already exercised the new intake
+path. D6a: roles changed by `hello@` on the Staff page, audited; verified read-only. Staging evidence:
 `docs/MAIN-RELEASE-READINESS.md` §0.3.
 
 **Why the database goes first.** `0018` adds one read-only function; `0019` retires structures no code
@@ -295,7 +298,8 @@ re-trigger without asking.
 * `/services` shows "Flight & Joining Support for Selected Candidates" and no "Air Ticket & Travel";
   `/travel` 404; sitemap and navigation have no travel entry; `/admin/staff/new` redirects a visitor
   without a session to `/admin/login`.
-* One synthetic application submitted and deleted, as on 19 Sep.
+* One synthetic application submitted and deleted, as on 19 Sep. *(Skipped on 28 Sep by decision: a genuine
+  application at 19:16 UTC exercised the new intake path — it received Lucknow automatically.)*
 * The three staff sign in with Google once each; the Staff page shows "Signed in with Google" and
   read-only SQL confirms one Google identity per staff record, the right role, nothing merged.
 
@@ -335,4 +339,4 @@ Stop before switching traffic if: `0012`–`0017` are not all in `schema_migrati
 
 Roll back after switching if: applications fail to submit or documents cannot be retrieved; data reaches the wrong project; any unauthenticated access to `job_applications`, `contacts`, `cases`, `payments`, `invoices` or the bucket succeeds; the customer payment page shows anything beyond number, service, amount and status; staff sign-in or roles are wrong; staging or test content is live, or `noindex` reaches production; unexplained 5xx after the first hour.
 
-**This runbook grants no approval.** The Tokyo → Mumbai cutover was completed on 19 Sep 2026. Phase D (`0018`, `0019`, `main`) has **not** been run on production.
+**This runbook grants no approval.** The Tokyo → Mumbai cutover was completed on 19 Sep 2026. Phase D (`0018`–`0020`, `main` = `04bd8fc`, the role change) was completed on 28 Sep 2026.
