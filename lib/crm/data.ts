@@ -8,7 +8,7 @@ import "server-only";
 
 import { PAGE_SIZE, rangeOf } from "@/lib/admin/params";
 import { createServerSupabase } from "@/lib/supabase/server";
-import type { ApplicationStatus, CaseStatus, LifecycleStage, TableRow } from "@/types/database";
+import type { ApplicationStatus, CaseStatus, EmployerStatus, LifecycleStage, TableRow } from "@/types/database";
 
 // ---------------------------------------------------------------------------
 // Applications
@@ -222,7 +222,11 @@ export async function getCase(id: string) {
   const supabase = await createServerSupabase();
   const [kase, recruitment, applications, activities] = await Promise.all([
     supabase.from("cases").select(CASE_SELECT).eq("id", id).maybeSingle(),
-    supabase.from("case_recruitment").select("job_id, legacy_job_title, legacy_job_country, job:jobs(id,reference,title,status)").eq("case_id", id).maybeSingle(),
+    supabase
+      .from("case_recruitment")
+      .select("job_id, employer_id, legacy_job_title, legacy_job_country, job:jobs(id,reference,title,status), employer:employers(id,name,status)")
+      .eq("case_id", id)
+      .maybeSingle(),
     supabase.from("job_applications").select("id,job_title,status,created_at").eq("case_id", id).order("created_at", { ascending: false }),
     supabase.from("activities").select("id,verb,summary,actor_type,occurred_at").eq("case_id", id).order("occurred_at", { ascending: false }).limit(50),
   ]);
@@ -231,9 +235,12 @@ export async function getCase(id: string) {
     kase: kase.data as unknown as StaffCase,
     recruitment: recruitment.data as unknown as {
       job_id: string | null;
+      employer_id: string | null;
       legacy_job_title: string | null;
       legacy_job_country: string | null;
       job: { id: string; reference: string; title: string; status: string } | null;
+      /** Null when there is no link, or when the linked employer is outside your employers scope. */
+      employer: { id: string; name: string; status: EmployerStatus } | null;
     } | null,
     applications: (applications.data ?? []) as { id: string; job_title: string; status: ApplicationStatus; created_at: string }[],
     activities: (activities.data ?? []) as { id: string; verb: string; summary: string; actor_type: string; occurred_at: string }[],

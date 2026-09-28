@@ -9,6 +9,7 @@ import "server-only";
 import { PAGE_SIZE, rangeOf } from "@/lib/admin/params";
 import { createServerSupabase } from "@/lib/supabase/server";
 import type {
+  EmployerStatus,
   JobApplicationAccess,
   JobAvailability,
   JobClassification,
@@ -24,10 +25,12 @@ export interface StaffJob extends JobRow {
   creator: { full_name: string; email: string } | null;
   updater: { full_name: string; email: string } | null;
   applications: { count: number }[];
+  /** The linked employer record (0022); null when unlinked or outside your employers scope. */
+  employer: { id: string; name: string; status: EmployerStatus } | null;
 }
 
 const STAFF_JOB_SELECT =
-  "*, category:job_categories(id,slug,name,classification,is_active), creator:staff_users!jobs_created_by_fkey(full_name,email), updater:staff_users!jobs_updated_by_fkey(full_name,email), applications:job_applications(count)";
+  "*, category:job_categories(id,slug,name,classification,is_active), creator:staff_users!jobs_created_by_fkey(full_name,email), updater:staff_users!jobs_updated_by_fkey(full_name,email), applications:job_applications(count), employer:employers(id,name,status)";
 
 export const PROMOTION_FILTERS = ["featured", "lapsed", "standard"] as const;
 export type PromotionFilter = (typeof PROMOTION_FILTERS)[number];

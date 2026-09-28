@@ -37,6 +37,7 @@ const CONSTRAINTS: Record<string, string> = {
   jobs_reference_key: "That reference is already used by another job.",
   job_categories_slug_key: "A category with that name already exists.",
   job_categories_slug_format: "A category name must contain letters or digits.",
+  jobs_employer_fk: "That employer no longer exists. Choose another from the list.",
 };
 
 export function explainDbError(error: DbError | null | undefined): Explained {
@@ -76,6 +77,11 @@ export function explainDbError(error: DbError | null | undefined): Explained {
       return { message: "This applicant already exists as a contact you cannot see. Ask an administrator to convert the application." };
     case "recruitment_pipeline_missing":
       return { message: "No active recruitment pipeline is configured. Ask an administrator." };
+  }
+
+  // 0022: the raise message carries a sentence after the code, so it is matched by prefix.
+  if (message.startsWith("employer_not_available")) {
+    return { message: "That employer is not one you can link. Choose an employer from the list." };
   }
 
   for (const [name, text] of Object.entries(CONSTRAINTS)) {

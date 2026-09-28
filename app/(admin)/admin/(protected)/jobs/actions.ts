@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { ActionState } from "@/lib/admin/action-state";
 import { AuthorizationError, requirePermission } from "@/lib/auth/permissions";
+import { parseEmployerLink } from "@/lib/crm/employers";
 import { explainDbError } from "@/lib/jobs/errors";
 import { canTransition, JOB_STATUSES, transitionAction } from "@/lib/jobs/model";
 import { revalidateJobPages } from "@/lib/jobs/revalidate";
@@ -56,15 +57,23 @@ export async function saveJob(_state: ActionState, formData: FormData): Promise<
   if (denied) return denied;
 
   const id = String(formData.get("id") ?? "");
-  const parsed = parseJobForm(formInput(formData));
+  const input = formInput(formData);
+  const parsed = parseJobForm(input);
   if (!parsed.ok) {
     return { ok: false, message: "Some fields need attention.", fieldErrors: parsed.fieldErrors as Record<string, string>, warnings: parsed.warnings };
   }
+  // The employer record (0022) is written only when the form carried the picker, so a
+  // save by someone who cannot see employers never clears a link. The database checks
+  // that the employer is one this person can see (employer_link_guard).
+  const employer = parseEmployerLink(input);
+  if (!employer.ok) return { ok: false, message: "Some fields need attention.", fieldErrors: { employer_id: "Choose an employer from the list." } };
+  const values: Partial<JobWrite> & { employer_id?: string | null } =
+    employer.value === undefined ? { ...parsed.values } : { ...parsed.values, employer_id: employer.value };
 
   const supabase = await createServerSupabase();
 
   if (!id) {
-    const { data, error } = await supabase.from("jobs").insert(parsed.values).select("id, slug").single();
+    const { data, error } = await supabase.from("jobs").insert(values as JobWrite).select("id, slug").single();
     if (error) return refused("job create", error);
     revalidatePath("/admin/jobs");
     const notice = parsed.warnings.length ? "&notice=normalised" : "";
@@ -74,7 +83,6 @@ export async function saveJob(_state: ActionState, formData: FormData): Promise<
   if (!UUID.test(id)) return { ok: false, message: "The job was not found." };
   // A published reference is frozen by the database; sending it unchanged is harmless,
   // but leaving it out when empty keeps an edit from clearing a generated reference.
-  const values: Partial<JobWrite> = { ...parsed.values };
   if (!values.reference) delete values.reference;
 
   const { data, error } = await supabase.from("jobs").update(values).eq("id", id).select("id, slug, status").maybeSingle();
@@ -161,6 +169,7 @@ export async function duplicateJob(_state: ActionState, formData: FormData): Pro
     city: source.city,
     employer_disclosure: source.employer_disclosure,
     employer_name: source.employer_name,
+    employer_id: source.employer_id,
     employment_type: source.employment_type,
     vacancies: source.vacancies,
     salary_currency: source.salary_currency,

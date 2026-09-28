@@ -331,6 +331,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "case_recruitment_employer_fk"
+            columns: ["employer_id"]
+            isOneToOne: false
+            referencedRelation: "employers"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "case_recruitment_job_fk"
             columns: ["job_id"]
             isOneToOne: false
@@ -658,6 +665,82 @@ export type Database = {
           },
         ]
       }
+      employers: {
+        Row: {
+          branch_id: string
+          contact_person: string | null
+          country_code: string
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          registration_number: string | null
+          status: Database["public"]["Enums"]["employer_status"]
+          updated_at: string
+          updated_by: string | null
+          website: string | null
+        }
+        Insert: {
+          branch_id: string
+          contact_person?: string | null
+          country_code: string
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          registration_number?: string | null
+          status?: Database["public"]["Enums"]["employer_status"]
+          updated_at?: string
+          updated_by?: string | null
+          website?: string | null
+        }
+        Update: {
+          branch_id?: string
+          contact_person?: string | null
+          country_code?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          registration_number?: string | null
+          status?: Database["public"]["Enums"]["employer_status"]
+          updated_at?: string
+          updated_by?: string | null
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employers_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employers_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "staff_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employers_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "staff_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           billing_address: Json
@@ -967,6 +1050,7 @@ export type Database = {
           employer_disclosure:
             | Database["public"]["Enums"]["job_employer_disclosure"]
             | null
+          employer_id: string | null
           employer_name: string | null
           employment_type:
             | Database["public"]["Enums"]["job_employment_type"]
@@ -1015,6 +1099,7 @@ export type Database = {
           employer_disclosure?:
             | Database["public"]["Enums"]["job_employer_disclosure"]
             | null
+          employer_id?: string | null
           employer_name?: string | null
           employment_type?:
             | Database["public"]["Enums"]["job_employment_type"]
@@ -1065,6 +1150,7 @@ export type Database = {
           employer_disclosure?:
             | Database["public"]["Enums"]["job_employer_disclosure"]
             | null
+          employer_id?: string | null
           employer_name?: string | null
           employment_type?:
             | Database["public"]["Enums"]["job_employment_type"]
@@ -1121,6 +1207,13 @@ export type Database = {
             columns: ["duplicated_from"]
             isOneToOne: false
             referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_employer_fk"
+            columns: ["employer_id"]
+            isOneToOne: false
+            referencedRelation: "employers"
             referencedColumns: ["id"]
           },
           {
@@ -1854,6 +1947,7 @@ export type Database = {
         | "withdrawn"
       case_status: "open" | "won" | "lost" | "cancelled"
       case_type: "recruitment" | "support"
+      employer_status: "prospect" | "active" | "inactive"
       identity_type:
         | "phone"
         | "email"
@@ -2025,6 +2119,7 @@ export const Constants = {
       ],
       case_status: ["open", "won", "lost", "cancelled"],
       case_type: ["recruitment", "support"],
+      employer_status: ["prospect", "active", "inactive"],
       identity_type: [
         "phone",
         "email",

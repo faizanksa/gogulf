@@ -19,6 +19,7 @@ import {
 import type { JobClassification, JobStatus } from "@/types/database";
 import { ActionMessages } from "./ActionForm";
 import styles from "./admin.module.css";
+import { EmployerOptions, type EmployerOption } from "./EmployerPicker";
 
 export interface JobFormCategory {
   id: string;
@@ -39,6 +40,7 @@ export interface JobFormValues {
   city?: string | null;
   employer_disclosure?: string | null;
   employer_name?: string | null;
+  employer_id?: string | null;
   employment_type?: string | null;
   vacancies?: number | null;
   salary_currency?: string | null;
@@ -78,10 +80,13 @@ export function JobForm({
   action,
   categories,
   values = {},
+  employers = null,
 }: {
   action: (state: ActionState, formData: FormData) => Promise<ActionState>;
   categories: JobFormCategory[];
   values?: JobFormValues;
+  /** The employer picker; null leaves it off the form, and the job's link untouched on save. */
+  employers?: EmployerOption[] | null;
 }) {
   const [state, formAction, pending] = useActionState(action, null);
   const [availability, setAvailability] = useState(values.availability ?? "ongoing");
@@ -198,6 +203,12 @@ export function JobForm({
             ? f("employer_name", "Employer name", <Input name="employer_name" defaultValue={str(values.employer_name)} maxLength={120} />)
             : null}
           {errors.employer_disclosure ? <p className={styles.muted}>{errors.employer_disclosure}</p> : null}
+          {employers
+            ? f("employer_id", "Employer record", <EmployerOptions id="job-employer_id" options={employers} current={values.employer_id ?? null} />, {
+                optional: true,
+                hint: "Staff only — never shown on the listing, which uses the disclosure and name above.",
+              })
+            : null}
         </fieldset>
       </fieldset>
 

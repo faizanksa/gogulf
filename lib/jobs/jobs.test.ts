@@ -13,7 +13,7 @@ import {
   todayInIndia,
   TRANSITIONS,
 } from "./model";
-import { jobHasClosed, jobIsFeatured, jobIsOpen, orderForListing, toPublicJob, type JobRowForPublic, type PublicJob } from "./public-job";
+import { jobHasClosed, jobIsFeatured, jobIsOpen, orderForListing, PUBLIC_JOB_SELECT, toPublicJob, type JobRowForPublic, type PublicJob } from "./public-job";
 import { linesOf, parseJobForm, PROBLEM_MESSAGES, PUBLISH_PROBLEMS, publishProblems, type PublishCheckInput } from "./validation";
 
 const NOW = new Date("2026-09-17T08:00:00Z"); // 13:30 in India
@@ -310,6 +310,21 @@ describe("database refusals in words", () => {
       .toBe("You do not have permission to do this.");
     const unknown = explainDbError({ code: "XX000", message: "relation secret_table does not exist" });
     expect(unknown.message).not.toMatch(/secret_table/);
+  });
+
+  it("explains a refused employer link (0022)", () => {
+    expect(explainDbError({ code: "42501", message: "employer_not_available: link only an employer you can see" }).message).toMatch(/not one you can link/);
+    expect(explainDbError({ code: "23503", message: 'insert or update on table "jobs" violates foreign key constraint "jobs_employer_fk"' }).message).toMatch(/no longer exists/);
+  });
+});
+
+describe("the employer record stays off the public site (0022)", () => {
+  it("the public job query selects the free-text employer wording, never the employer link", () => {
+    const columns = PUBLIC_JOB_SELECT.split(",").map((c) => c.trim());
+    expect(columns).toContain("employer_name");
+    expect(columns).toContain("employer_disclosure");
+    expect(columns).not.toContain("employer_id");
+    expect(PUBLIC_JOB_SELECT).not.toMatch(/employers\(/);
   });
 });
 

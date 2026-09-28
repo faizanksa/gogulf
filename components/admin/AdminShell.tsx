@@ -23,6 +23,7 @@ export function AdminShell({ staff, children }: { staff: StaffContext; children:
     { href: "/admin", label: "Dashboard" },
     ...(staff.can["jobs.view"] ? [{ href: "/admin/jobs", label: "Jobs" }] : []),
     ...(staff.can["jobs.manage"] ? [{ href: "/admin/jobs/categories", label: "Categories", sub: true }] : []),
+    ...(staff.can["employers.view"] ? [{ href: "/admin/employers", label: "Employers" }] : []),
     ...(staff.can["applications.screen"] ? [{ href: "/admin/applications", label: "Applications" }] : []),
     ...(staff.can["contacts.view"] ? [{ href: "/admin/contacts", label: "Contacts" }] : []),
     ...(staff.can["cases.view"] ? [{ href: "/admin/cases", label: "Cases" }] : []),

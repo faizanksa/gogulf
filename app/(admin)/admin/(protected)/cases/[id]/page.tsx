@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ApplicationStatusBadge, CASE_STATUS_LABELS, JobStatusBadge, NotAllowed, PageTitle, Panel, Time } from "@/components/admin/ui";
+import { CaseEmployerForm } from "@/components/admin/EmployerPicker";
+import { ApplicationStatusBadge, CASE_STATUS_LABELS, EmployerStatusBadge, JobStatusBadge, NotAllowed, PageTitle, Panel, Time } from "@/components/admin/ui";
 import styles from "@/components/admin/admin.module.css";
 import { FactList } from "@/components/ui/FactList";
 import { getStaffContext } from "@/lib/auth/staff";
 import { getCase } from "@/lib/crm/data";
+import { listEmployerOptions } from "@/lib/crm/employer-data";
+import { setCaseEmployer } from "../../employers/actions";
 import type { JobStatus } from "@/types/database";
 
 export const metadata: Metadata = { title: "Case" };
@@ -18,6 +21,12 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
   const result = await getCase(id);
   if (!result) notFound();
   const { kase, recruitment, applications, activities } = result;
+  // The picker: only on a recruitment case, for staff who may edit cases and see employers.
+  // Whether THIS case may be edited is still the database's decision. Not offered when the case
+  // points at an employer outside your scope: you could not see what you would be replacing.
+  const hiddenLink = Boolean(recruitment?.employer_id && !recruitment.employer);
+  const employerOptions =
+    recruitment && !hiddenLink && staff.can["cases.update"] && staff.can["employers.view"] ? await listEmployerOptions() : null;
 
   return (
     <>
@@ -79,6 +88,19 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
                     recruitment?.legacy_job_title ?? "—"
                   ),
                 },
+                {
+                  key: "employer",
+                  label: "Employer",
+                  value: recruitment?.employer ? (
+                    <>
+                      <Link href={`/admin/employers/${recruitment.employer.id}`}>{recruitment.employer.name}</Link> <EmployerStatusBadge status={recruitment.employer.status} />
+                    </>
+                  ) : recruitment?.employer_id ? (
+                    "Linked — not visible to your role"
+                  ) : (
+                    "—"
+                  ),
+                },
                 { key: "stage", label: "Stage", value: kase.stage?.name ?? "—" },
                 { key: "stage-since", label: "In this stage since", value: <Time iso={kase.stage_entered_at} withTime /> },
                 { key: "owner", label: "Owner", value: kase.owner?.full_name ?? "—" },
@@ -88,6 +110,11 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
             />
             <p className={styles.muted}>Stage changes, tasks and documents on cases arrive in a later phase.</p>
           </Panel>
+          {employerOptions ? (
+            <Panel id="case-employer-panel" title="Employer">
+              <CaseEmployerForm action={setCaseEmployer} caseId={kase.id} options={employerOptions} current={recruitment?.employer?.id ?? null} />
+            </Panel>
+          ) : null}
         </div>
       </div>
     </>

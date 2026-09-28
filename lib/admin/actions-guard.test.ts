@@ -30,7 +30,7 @@ function actionsOf(source: string): { name: string; body: string }[] {
 describe("staff server actions", () => {
   it("covers every feature that mutates data", () => {
     const folders = ACTION_FILES.map((f) => f.replace(/\\/g, "/").split("/(protected)/")[1]);
-    for (const expected of ["applications/actions.ts", "contacts/actions.ts", "invoices/actions.ts", "jobs/actions.ts", "jobs/categories/actions.ts", "roles/actions.ts", "staff/actions.ts"]) {
+    for (const expected of ["applications/actions.ts", "contacts/actions.ts", "employers/actions.ts", "invoices/actions.ts", "jobs/actions.ts", "jobs/categories/actions.ts", "roles/actions.ts", "staff/actions.ts"]) {
       expect(folders, expected).toContain(expected);
     }
   });
@@ -106,6 +106,13 @@ describe("the staff and role screens", () => {
     expect(read("contacts/actions.ts")).toContain('authorize("contacts.update")');
     expect(read("contacts/actions.ts")).toContain('authorize("contacts.merge")');
     expect(read("contacts/actions.ts")).toContain('supabase.rpc("merge_contacts"'); // the merge is the database's, never re-implemented here
+    expect(read("employers/page.tsx")).toContain('can["employers.view"]');
+    expect(read("employers/[id]/page.tsx")).toContain('can["employers.view"]');
+    expect(read("employers/new/page.tsx")).toContain('can["employers.manage"]');
+    expect(read("employers/[id]/edit/page.tsx")).toContain('can["employers.manage"]');
+    expect(read("employers/actions.ts")).toContain('authorize("employers.manage")');
+    expect(read("employers/actions.ts")).toContain('authorize("cases.update")'); // linking a case is a case edit
+    expect(read("cases/[id]/page.tsx")).toContain('can["cases.update"]');
     expect(read("staff/new/page.tsx")).toContain('can["users.manage"]');
     expect(read("staff/new/page.tsx")).toContain('!r.is_super || staff.can["roles.manage"]'); // only a SUPER_ADMIN may add one
     expect(read("staff/actions.ts")).toContain('authorize("users.manage")');

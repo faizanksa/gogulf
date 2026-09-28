@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { FactList } from "@/components/ui/FactList";
 import { getStaffContext } from "@/lib/auth/staff";
+import { listEmployerOptions } from "@/lib/crm/employer-data";
 import { applicationCount, auditTrail, getStaffJob, listCategories, type AuditEntry } from "@/lib/jobs/admin-data";
 import {
   ACCESS_LABELS,
@@ -84,6 +85,10 @@ export default async function JobPage({
   if (!job) notFound();
 
   const canManage = staff.can["jobs.manage"];
+  // The employer picker (0022), unless the job points at an employer this person cannot see —
+  // they could not tell what they would be replacing, so the link is left alone.
+  const employers =
+    canManage && staff.can["employers.view"] && !(job.employer_id && !job.employer) ? await listEmployerOptions() : null;
   const next = job.status === "draft" ? "review" : job.status === "review" || job.status === "closed" ? "published" : null;
   const check = {
     classification: job.classification,
@@ -150,6 +155,7 @@ export default async function JobPage({
             <JobForm
               action={saveJob}
               categories={categories}
+              employers={employers}
               values={{
                 ...job,
                 published: job.published_at !== null,
@@ -228,6 +234,17 @@ export default async function JobPage({
             <FactList
               items={[
                 { key: "reference", label: "Reference", value: job.reference, mono: true },
+                {
+                  key: "employer",
+                  label: "Employer record",
+                  value: job.employer ? (
+                    <Link href={`/admin/employers/${job.employer.id}`}>{job.employer.name}</Link>
+                  ) : job.employer_id ? (
+                    "Linked — not visible to your role"
+                  ) : (
+                    "None"
+                  ),
+                },
                 { key: "access", label: "Application", value: `${ACCESS_LABELS[job.application_access]} · ${METHOD_LABELS[job.application_method]}` },
                 {
                   key: "applications",
