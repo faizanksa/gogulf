@@ -12,13 +12,12 @@ import styles from "./SiteFooter.module.css";
  * Server-rendered footer, on a daylight surface.
  *
  * Three parts: where to go (navigation groups beside the brand and the official
- * channels), the company record (legal name, CIN, GSTIN, registered office — laid out
- * like a document so it reads as something to check), and the closing line.
+ * channels), company verification (brand ownership, CIN and GSTIN), and the closing
+ * line. The full registered address remains on /verify and the legal/contact pages.
  *
  * Social profiles are omitted until the business confirms they are its own
- * (content/channels.ts). Identifiers are never translated: the legal name, CIN, GSTIN
- * and registered address appear exactly as registered, in every language (marked as
- * English). The GSTIN stays on the page and out of structured data (decision D8).
+ * (content/channels.ts). The legal name and identifiers are never translated. The
+ * GSTIN stays on the page and out of structured data (decision D8).
  */
 export async function SiteFooter() {
   const t = await getTranslator();
@@ -74,39 +73,29 @@ export async function SiteFooter() {
               {t.rich("footer.record.lead", { verify: (chunks) => <Link href={href("/verify")}>{chunks}</Link> })}
             </p>
           </div>
-          <dl className={styles.recordList}>
-            <div>
-              <dt>{t("footer.record.legalName")}</dt>
-              <dd lang={englishText}>{COMPANY.legalName}</dd>
-            </div>
-            <div>
-              <dt>{t("footer.record.cin")}</dt>
-              <dd className={styles.mono}>
-                <LtrText>{COMPANY.cin}</LtrText>
-              </dd>
-            </div>
-            <div>
-              <dt>{t("footer.record.gstin")}</dt>
-              <dd className={styles.mono}>
-                <LtrText>{COMPANY.gstin}</LtrText>
-              </dd>
-            </div>
-            <div>
-              <dt>{t("footer.record.office")}</dt>
-              <dd>
-                <address lang={englishText}>{COMPANY.addressLines.join(", ")}</address>
-              </dd>
-            </div>
-          </dl>
-          <p className={styles.brandOf}>
-            {t.rich("footer.brandOf", {
-              b: (chunks) => <strong>{chunks}</strong>,
-              brand: COMPANY.brand,
-              legalName: COMPANY.legalName,
-              companyType: COMPANY.companyType.toLowerCase(),
-              cin: <LtrText>{COMPANY.cin}</LtrText>,
-            })}
-          </p>
+          <div className={styles.recordDetails}>
+            <p className={styles.brandOf}>
+              {t.rich("footer.brandOf", {
+                b: (chunks) => <strong lang={englishText}>{chunks}</strong>,
+                brand: COMPANY.brand,
+                legalName: COMPANY.legalName,
+              })}
+            </p>
+            <dl className={styles.recordList}>
+              <div>
+                <dt>{t("footer.record.cin")}</dt>
+                <dd className={styles.mono}>
+                  <LtrText>{COMPANY.cin}</LtrText>
+                </dd>
+              </div>
+              <div>
+                <dt>{t("footer.record.gstin")}</dt>
+                <dd className={styles.mono}>
+                  <LtrText>{COMPANY.gstin}</LtrText>
+                </dd>
+              </div>
+            </dl>
+          </div>
         </section>
 
         <div className={styles.bottom}>

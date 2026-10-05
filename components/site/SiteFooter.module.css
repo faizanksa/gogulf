@@ -132,6 +132,12 @@
   line-height: var(--leading-snug);
 }
 
+.recordDetails {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
 .recordList {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
@@ -154,9 +160,6 @@
   font-weight: var(--weight-semibold);
   line-height: var(--leading-snug);
 }
-.recordList address {
-  font-style: normal;
-}
 
 .mono {
   font-family: var(--font-mono);
@@ -169,11 +172,6 @@
   margin: 0;
   font-size: var(--text-small);
   line-height: var(--leading-snug);
-}
-@media (min-width: 1024px) {
-  .brandOf {
-    grid-column: 2;
-  }
 }
 
 .bottom {

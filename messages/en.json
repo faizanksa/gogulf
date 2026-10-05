@@ -66,17 +66,15 @@
       "refunds": "Cancellation & Refunds",
       "shipping": "Shipping & Delivery Policy"
     },
-    "brandOf": "<b>{brand}</b> is a brand of <b>{legalName}</b>, a {companyType} registered in India (CIN {cin}).",
+    "brandOf": "<b>{brand}</b> is a brand of <b>{legalName}</b>.",
     "gstin": "GSTIN: {gstin}",
     "rights": "© {year} {legalName}. All rights reserved.",
     "staffWebmail": "Staff webmail",
     "record": {
-      "heading": "Company record",
-      "lead": "Check any of these before you share documents or pay. <verify>How to verify Go Gulf</verify>",
-      "legalName": "Legal name",
+      "heading": "Company verification",
+      "lead": "Verify Go Gulf before sharing documents or making a payment. <verify>View company verification details</verify>",
       "cin": "CIN",
-      "gstin": "GSTIN",
-      "office": "Registered office"
+      "gstin": "GSTIN"
     }
   },
   "companyFacts": {
