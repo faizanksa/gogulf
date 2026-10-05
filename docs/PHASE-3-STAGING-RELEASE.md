@@ -1,5 +1,8 @@
 # Phase 3 — staging release: Admin/CRM and job management
 
+Later presentation update: [Company details staging review — 5 October 2026](COMPANY-DETAILS-STAGING.md).
+The Phase 3 release evidence below remains the historical 17 September report.
+
 **17 Sep 2026.** Deployed to `https://staging.gogulf.co`, running against **Mumbai staging
 `noxireidrbeqcvsirjec`**. Nothing was changed in production. Design and rules:
 [`docs/JOBS.md`](JOBS.md). Staging setup and rollback: [`docs/STAGING.md`](STAGING.md) §1a.
