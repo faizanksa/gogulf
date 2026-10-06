@@ -29,7 +29,8 @@ export const COMPANY = {
   address: REGISTERED_ADDRESS,
   addressLines: ADDRESS_LINES,
   website: "www.gogulf.co",
-  tagline: "Go Gulf. Get Hired.",
+  /** Replaced "Go Gulf. Get Hired." (6 Oct 2026): Go Gulf does not hire or place anyone. Pending client approval. */
+  tagline: "Go Gulf. Go prepared.",
 } as const;
 
 /**
@@ -47,6 +48,8 @@ export const CLAIMS = validate(
   z.object({
     feesQuotedInWriting: claim,
     recruitingAgentRegistration: claim,
+    raReferralModel: claim,
+    directPlacement: claim,
     heritage2008: claim,
     placementNumbers: claim,
     officesOutsideLucknow: claim,
@@ -61,6 +64,8 @@ export const CLAIMS = validate(
   {
     feesQuotedInWriting: { status: "verified", note: "The rule stated in the Pricing & Fees policy: no fee is payable unless quoted in writing first." },
     recruitingAgentRegistration: { status: "refuted", decision: "D1", note: "The company is not registered or licensed as a recruiting agent (confirmed by the business, 12 Sep 2026). Company registration (CIN) is not recruitment-agency licensing; no page, schema or translation may claim or imply otherwise." },
+    raReferralModel: { status: "verified", decision: "D13", note: "Go Gulf counsels job seekers, helps prepare their profile and documents, and refers them to recruiting agents registered under the Emigration Act, 1983 (several, in Mumbai and Delhi), who run interviews, offers, visa processing and statutory fee collection (confirmed by the client, 6 Oct 2026). The partner list is NOT final: partners are published only from content/partners.ts." },
+    directPlacement: { status: "refuted", decision: "D13", note: "Go Gulf does not place candidates, select them, issue offers, arrange visas or collect the recruiting agent's service charge (confirmed by the client, 6 Oct 2026). No page may say or imply that it does." },
     heritage2008: { status: "unresolved", decision: "D3", note: "Whose experience dates to 2008, and under what name. Never the company's founding (incorporated 22 Feb 2024)." },
     placementNumbers: { status: "unresolved", decision: "D3", note: "No evidence for any placement figure." },
     officesOutsideLucknow: { status: "unresolved", decision: "D3", note: "Sharjah and Jeddah appeared only in the old share image." },
@@ -68,7 +73,7 @@ export const CLAIMS = validate(
     sectors: { status: "unresolved", decision: "D3", note: "Which sectors the business actually places into." },
     employerVerification: { status: "unresolved", decision: "D3", note: "No described employer-verification process." },
     responseTimeSla: { status: "unresolved", decision: "D3", note: "No committed response time." },
-    travelServices: { status: "refuted", decision: "D2", note: "Go Gulf is not a travel agency: no flights, tours, bookings or visa services for the public (decided 27 Sep 2026; 0019). For candidates SELECTED through Go Gulf, visa processing and flight and joining arrangements are part of recruitment, and may be described only in that way. The registered activity on the MCA record is reported as a fact on /verify, not as a service." },
+    travelServices: { status: "refuted", decision: "D2", note: "Go Gulf is not a travel agency: no flights, tours, bookings or visa services for the public (decided 27 Sep 2026; 0019). Since 6 Oct 2026 (D13) visa processing and travel for selected candidates are the registered recruiting agent's, not Go Gulf's, and may be described only as the agent's. The registered activity on the MCA record is reported as a fact on /verify, not as a service." },
     socialProfiles: { status: "unresolved", decision: "D3", note: "Ownership of the social profiles is not confirmed; see content/channels.ts." },
     gstCertificate: { status: "unresolved", decision: "D8", note: "GST certificate not supplied; GSTIN stays off structured data." },
   },

@@ -36,26 +36,23 @@ test.describe("job-seeker hub", () => {
 });
 
 test.describe("service catalogue", () => {
-  // Go Gulf is not a travel agency (0019). Flights and joining are arranged only for
-  // candidates it has placed — part of recruitment — and the page says so.
-  test("offers flight and joining support only to selected candidates, never as a travel service", async ({ page }) => {
+  // Go Gulf counsels, prepares and refers to registered recruiting agents (D13). It is not
+  // a travel agency (0019) and does not place candidates: visas, flights, interviews and
+  // sourcing are the recruiting agent's work, never a service offered here.
+  test("offers no service that is the recruiting agent's work, and ends in a referral", async ({ page }) => {
     await page.goto("/services");
-    await expect(page.locator("#service-air-ticket-travel")).toHaveCount(0);
-    await expect(page.getByRole("main")).not.toContainText(/air ticket/i);
-
-    const flight = page.locator("#service-flight-joining-support");
-    await expect(flight).toContainText("Flight & Joining Support for Selected Candidates");
-    await expect(flight).toContainText("Only for candidates selected by an employer through Go Gulf");
-    await expect(flight).toContainText("We do not book flights or travel for anyone else.");
+    for (const id of ["air-ticket-travel", "flight-joining-support", "visa-documentation", "bulk-sourcing", "interview-coordination"]) {
+      await expect(page.locator(`#service-${id}`)).toHaveCount(0);
+    }
+    await expect(page.getByRole("main")).not.toContainText(/air ticket|bulk candidate sourcing/i);
+    await expect(page.locator("#service-ra-referral")).toContainText("Referral to a registered recruiting agent");
 
     // Labels are the translated service names; values are the names the server routes on.
     const select = page.getByLabel("What do you need?");
     const labels = await select.locator("option").allTextContents();
     const values = await select.locator("option").evaluateAll((els) => els.map((e) => (e as HTMLOptionElement).value));
-    for (const text of [...labels, ...values]) if (/flight|travel|ticket/i.test(text)) expect(text).toMatch(/selected candidates/i);
-    expect(values).not.toContain("Air Ticket & Travel Assistance");
-    // Recruitment deployment services are all still offered.
-    for (const value of ["Visa & Documentation Assistance", "Flight & Joining Support (Selected Candidates)", "Pre-Departure Orientation"]) {
+    for (const text of [...labels, ...values]) expect(text).not.toMatch(/visa|flight|travel|ticket|sourcing|screening|interview|medical/i);
+    for (const value of ["Career Counselling", "Document Preparation", "Referral to a Registered Recruiting Agent", "Introduce a Hiring Requirement"]) {
       expect(values).toContain(value);
     }
   });
@@ -78,11 +75,11 @@ test.describe("service catalogue", () => {
     }
   });
 
-  test("the flight card's enquiry link preselects the selected-candidate option", async ({ page }) => {
+  test("the referral card's enquiry link preselects the referral option", async ({ page }) => {
     await page.goto("/services");
-    await page.locator("#service-flight-joining-support").getByRole("link").click();
-    await expect(page).toHaveURL(/\?service=flight-joining-support#inquiry$/);
-    await expect(page.getByLabel("What do you need?")).toHaveValue("Flight & Joining Support (Selected Candidates)");
+    await page.locator("#service-ra-referral").getByRole("link").click();
+    await expect(page).toHaveURL(/\?service=ra-referral#inquiry$/);
+    await expect(page.getByLabel("What do you need?")).toHaveValue("Referral to a Registered Recruiting Agent");
   });
 
   test("an old air-ticket link preselects nothing", async ({ page }) => {
@@ -92,9 +89,9 @@ test.describe("service catalogue", () => {
 
   test("a service card preselects its service in the enquiry form", async ({ page }) => {
     await page.goto("/services");
-    await page.locator("#service-bulk-sourcing").getByRole("link").click();
-    await expect(page).toHaveURL(/\?service=bulk-sourcing#inquiry$/);
-    await expect(page.getByLabel("What do you need?")).toHaveValue("Bulk Candidate Sourcing");
+    await page.locator("#service-employer-introduction").getByRole("link").click();
+    await expect(page).toHaveURL(/\?service=employer-introduction#inquiry$/);
+    await expect(page.getByLabel("What do you need?")).toHaveValue("Introduce a Hiring Requirement");
   });
 
   test("an empty submit lists every missing field in order, and sends nothing", async ({ page }) => {
@@ -107,7 +104,7 @@ test.describe("service catalogue", () => {
     await page.getByRole("button", { name: "Send enquiry" }).click();
     const summary = page.getByRole("alert").filter({ hasText: "There is a problem" });
     await expect(summary).toBeFocused();
-    await expect(summary.getByRole("link")).toHaveText(["Choose the service you need.", "Enter your full name.", "Enter your email address.", "Enter your phone or WhatsApp number."]);
+    await expect(summary.getByRole("link")).toHaveText(["Choose the service you need.", "Enter your full name.", "Enter your email address.", "Enter your phone or WhatsApp number.", "Tick the box to agree before you send."]);
     expect(sent).toBe(false);
     expect(await seriousViolations(page, "#inquiry-form")).toEqual([]);
   });
@@ -121,15 +118,16 @@ test.describe("service catalogue", () => {
       return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, acknowledgementSent: true }) });
     });
     await page.goto("/services");
-    await page.getByLabel("What do you need?").selectOption({ label: "Medical Coordination" });
+    await page.getByLabel("What do you need?").selectOption({ label: "Document preparation" });
     await page.getByLabel("Full name").fill("Test Person");
     await page.getByLabel("Email address").fill("test@example.com");
     await page.getByLabel(/Phone or WhatsApp number/).fill("+91 98765 43210");
     await page.getByLabel("Preferred country").selectOption({ label: "Qatar" });
+    await page.getByRole("checkbox", { name: /I agree that Go Gulf/ }).check();
     await page.getByRole("button", { name: "Send enquiry" }).click();
 
     await expect(page.getByRole("status").filter({ hasText: "Enquiry received" })).toBeVisible();
-    expect(body).toMatchObject({ service_type: "Medical Coordination", country: "Qatar", page_source: "Services Page", website: "" });
+    expect(body).toMatchObject({ service_type: "Document Preparation", country: "Qatar", page_source: "Services Page", website: "", consent: true });
     expect(locale).toBe("en");
   });
 });
@@ -152,6 +150,7 @@ test.describe("employer requirement", () => {
       "Enter your name.",
       "Enter your email address.",
       "Enter your phone or WhatsApp number.",
+      "Tick the box to agree before you send.",
     ]);
     expect(sent).toBe(false);
     expect(await seriousViolations(page, "#employer-form")).toEqual([]);
@@ -174,6 +173,7 @@ test.describe("employer requirement", () => {
     await page.getByLabel("Your name").fill("Test Person");
     await page.getByLabel("Work email").fill("test@example.com");
     await page.getByLabel(/Phone or WhatsApp number/).fill("+974 5555 0000");
+    await page.getByRole("checkbox", { name: /I agree that Go Gulf/ }).check();
     await page.getByRole("button", { name: "Send requirement" }).click();
 
     await expect(page.getByRole("status").filter({ hasText: "Requirement received" })).toBeVisible();

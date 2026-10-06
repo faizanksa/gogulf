@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { ConsentField } from "@/components/form/ConsentField";
 import { FileInput, Input, Textarea } from "@/components/form/Controls";
 import { ErrorSummary } from "@/components/form/ErrorSummary";
 import { Field } from "@/components/form/Field";
@@ -45,6 +46,7 @@ const IDS: Record<string, string> = {
   cv: "a_cv",
   passport: "a_passport",
   other: "a_other",
+  consent: "a_consent",
 };
 
 /** The job being applied for. Null for a general application. */
@@ -90,6 +92,7 @@ export function ApplyForm({ copy, target: initial }: { copy: ApplyFormCopy; targ
     phone: () => copy.errors.phoneMissing,
     cv: () => copy.errors.cvMissing,
     passport: () => copy.errors.passportMissing,
+    consent: () => copy.consent.missing,
   };
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -166,6 +169,8 @@ export function ApplyForm({ copy, target: initial }: { copy: ApplyFormCopy; targ
         submission_id: saved.submissionId,
         page_source: "Jobs Page",
         website: field("website").value,
+        // Required before anything is uploaded (the native check above), so always true here.
+        consent: field("consent").checked,
       },
       { locale: copy.locale, messages: copy.outcome },
     );
@@ -286,6 +291,8 @@ export function ApplyForm({ copy, target: initial }: { copy: ApplyFormCopy; targ
       <Field id={IDS.message!} label={copy.labels.message} optional text={copy.field} error={errorFor("message")}>
         <Textarea name="message" rows={4} />
       </Field>
+
+      <ConsentField id={IDS.consent!} text={copy.consent} field={copy.field} error={errorFor("consent")} />
 
       <div>
         <Button type="submit" loading={sending}>

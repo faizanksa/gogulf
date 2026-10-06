@@ -199,3 +199,9 @@
 .faq p {
   margin: 0;
 }
+
+/* The registered recruiting-agent partners, under the steps they take over from step 6. */
+.partners {
+  margin-top: var(--space-8);
+  scroll-margin-top: var(--space-8);
+}

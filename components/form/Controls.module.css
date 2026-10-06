@@ -104,3 +104,10 @@
     border-color: ButtonText;
   }
 }
+
+/* The policy link under a consent checkbox, aligned with the label text. */
+.consentPolicy {
+  margin: 0;
+  padding-inline-start: calc(1.5rem + var(--space-3));
+  font-size: var(--text-small);
+}

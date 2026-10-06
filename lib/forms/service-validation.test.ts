@@ -20,7 +20,7 @@ import { __resetRateLimits } from "@/lib/rate-limit";
 import { serviceInquirySchema } from "./schemas";
 import { CANDIDATE_SERVICES, EMPLOYER_SERVICES, INQUIRY_SERVICES, OTHER_SERVICE, isInquiryService } from "./service-options";
 
-const base = { from_name: "Ravi Kumar", reply_to: "ravi@example.com", phone: "+919936309015" };
+const base = { from_name: "Ravi Kumar", reply_to: "ravi@example.com", phone: "+919936309015", consent: true };
 
 // Names the server used to accept and must now refuse.
 const RETIRED = [
@@ -32,6 +32,16 @@ const RETIRED = [
   "Recruitment Process Outsourcing",
   "HR & Recruitment Support",
   "MOFA & Embassy Processing",
+  // retired 6 Oct 2026 (D13): the recruiting agent's work, not a Go Gulf service
+  "Flight & Joining Support (Selected Candidates)",
+  "Visa & Documentation Assistance",
+  "Interview Coordination",
+  "Medical Coordination",
+  "Job Matching",
+  "Bulk Candidate Sourcing",
+  "Candidate Screening",
+  "Employer Hiring Solutions",
+  "HR Support",
 ];
 
 const UNKNOWN = [
@@ -87,8 +97,8 @@ describe("serviceInquirySchema — service_type", () => {
   });
 
   it("accepts a valid name with stray whitespace, stored cleaned", () => {
-    const parsed = serviceInquirySchema.safeParse({ ...base, service_type: "  Medical   Coordination " });
-    expect(parsed.success && parsed.data.service_type).toBe("Medical Coordination");
+    const parsed = serviceInquirySchema.safeParse({ ...base, service_type: "  Profile  &   CV Preparation " });
+    expect(parsed.success && parsed.data.service_type).toBe("Profile & CV Preparation");
   });
 
   it.each([...RETIRED, ...UNKNOWN])("refuses %s", (service) => {
@@ -109,7 +119,7 @@ describe("serviceInquirySchema — service_type", () => {
 
 describe("POST /api/forms/service-inquiry — enforced on the server", () => {
   it("delivers an enquiry for a current candidate service", async () => {
-    const { status, body } = await post({ ...base, service_type: "Flight & Joining Support (Selected Candidates)", page_source: "Services Page" });
+    const { status, body } = await post({ ...base, service_type: "Referral to a Registered Recruiting Agent", page_source: "Services Page" });
     expect(status).toBe(200);
     expect(body.ok).toBe(true);
     expect(send).toHaveBeenCalledTimes(1);
@@ -123,7 +133,7 @@ describe("POST /api/forms/service-inquiry — enforced on the server", () => {
 
   it("delivers the employer requirement form's submission, as that form sends it", async () => {
     const { status } = await post({
-      service_type: "Bulk Candidate Sourcing",
+      service_type: "Introduce a Hiring Requirement",
       from_name: "Priya Shah",
       reply_to: "hr@example.com",
       phone: "+971501234567",
@@ -131,10 +141,11 @@ describe("POST /api/forms/service-inquiry — enforced on the server", () => {
       message: "Company: Example LLC\nWork location: Dubai, United Arab Emirates\nRoles and trades: Masons\nTotal headcount: 40",
       page_source: "Employers Page",
       website: "",
+      consent: true,
     });
     expect(status).toBe(200);
-    expect(send).toHaveBeenCalledWith(expect.objectContaining({ service_type: "Bulk Candidate Sourcing", page_source: "Employers Page" }));
-    expect(recipientForService("Bulk Candidate Sourcing")).toBe(recipientForService("Candidate Screening"));
+    expect(send).toHaveBeenCalledWith(expect.objectContaining({ service_type: "Introduce a Hiring Requirement", page_source: "Employers Page" }));
+    expect(recipientForService("Introduce a Hiring Requirement")).toBe(recipientForService("Hiring Process Guidance"));
   });
 
   it.each([...RETIRED, ...UNKNOWN])("refuses %s with 400 and sends nothing", async (service) => {

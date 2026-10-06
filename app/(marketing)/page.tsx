@@ -37,6 +37,7 @@ export async function generateMetadata() {
 const RULES: { title: MessageKey; body: MessageKey }[] = [
   { title: "home.money.rule1Title", body: "home.money.rule1" },
   { title: "home.money.rule2Title", body: "home.money.rule2" },
+  { title: "home.money.rule4Title", body: "home.money.rule4" },
 ];
 
 const DOOR_POINTS = {
@@ -51,7 +52,8 @@ const DOOR_POINTS = {
  *      CIN, with a copy button and the MCA lookup);
  *   2. the open jobs as a board — destination first, pay in the data face, a way in on
  *      every line (or an honest empty state);
- *   3. where each audience starts; the ten steps as one route; the services;
+ *   3. where each audience starts; the ten steps as one route, split between what Go Gulf
+ *      does and what the registered recruiting agent does (D13); the services;
  *   4. the money rules, on the page's one brand band; a close with every way in.
  * No photography: until real, consented photographs exist the page is typographic. Its
  * one drawn motif — the dotted India → Gulf route — marks the jobs and the process.
@@ -82,7 +84,7 @@ export default async function HomePage() {
               <Button href={href("/jobs")} icon="arrow-right" iconPosition="end">
                 {t("home.findJob")}
               </Button>
-              <Button href={href("/employers")} variant="secondary">
+              <Button href={`${href("/employers")}#requirement`} variant="secondary">
                 {t("home.hire")}
               </Button>
             </div>

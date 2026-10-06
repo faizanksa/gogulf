@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { ConsentField, type ConsentText } from "@/components/form/ConsentField";
 import { Input, Select, Textarea } from "@/components/form/Controls";
 import { ErrorSummary } from "@/components/form/ErrorSummary";
 import { Field, type FieldText } from "@/components/form/Field";
@@ -35,11 +36,13 @@ export interface ServiceInquiryCopy {
   anyCountry: string;
   submit: string;
   sending: string;
+  consent: ConsentText;
   errors: { serviceMissing: string; nameMissing: string; emailMissing: string; emailInvalid: string; phoneMissing: string };
   outcome: { sent: string; sentNoCopy: string; failed: string; offline: string; unexpected: string };
 }
 
 const IDS: Record<string, string> = {
+  consent: "s_consent",
   service_type: "s_service",
   from_name: "s_name",
   reply_to: "s_email",
@@ -69,6 +72,7 @@ export function ServiceInquiryForm({ copy }: { copy: ServiceInquiryCopy }) {
     from_name: () => copy.errors.nameMissing,
     reply_to: (el: { validity: ValidityState }) => (el.validity.valueMissing ? copy.errors.emailMissing : copy.errors.emailInvalid),
     phone: () => copy.errors.phoneMissing,
+    consent: () => copy.consent.missing,
   };
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -98,6 +102,7 @@ export function ServiceInquiryForm({ copy }: { copy: ServiceInquiryCopy }) {
         message: value("message"),
         page_source: "Services Page",
         website: value("website"),
+        consent: (form.elements.namedItem("consent") as HTMLInputElement).checked,
       },
       { locale: copy.locale, messages: { offline: copy.outcome.offline, unexpected: copy.outcome.unexpected } },
     );
@@ -174,6 +179,7 @@ export function ServiceInquiryForm({ copy }: { copy: ServiceInquiryCopy }) {
         <Textarea name="message" rows={4} maxLength={5000} />
       </Field>
 
+      <ConsentField id={IDS.consent!} text={copy.consent} field={copy.field} error={errorFor("consent")} />
       <div>
         <Button type="submit" loading={sending}>
           {sending ? copy.sending : copy.submit}

@@ -3,6 +3,7 @@ import { CtaBand } from "@/components/site/CtaBand";
 import { OfficialChannels } from "@/components/site/OfficialChannels";
 import { PageHeader } from "@/components/site/PageHeader";
 import { ProcessSteps } from "@/components/site/ProcessSteps";
+import { RaPartners } from "@/components/site/RaPartners";
 import { MCA_URL } from "@/components/site/CompanyFacts";
 import { Button } from "@/components/ui/Button";
 import { Disclosure } from "@/components/ui/Disclosure";
@@ -25,6 +26,7 @@ export async function generateMetadata() {
 
 const SECTIONS: { id: string; label: MessageKey }[] = [
   { id: "steps", label: "candidatesPage.nav.steps" },
+  { id: "partners", label: "candidatesPage.nav.partners" },
   { id: "documents", label: "candidatesPage.nav.documents" },
   { id: "fees", label: "candidatesPage.nav.fees" },
   { id: "safety", label: "candidatesPage.nav.safety" },
@@ -56,6 +58,7 @@ export default async function CandidatesPage() {
     terms: (chunks: React.ReactNode[]) => <Link href={href("/terms-and-conditions")}>{chunks}</Link>,
     pricing: (chunks: React.ReactNode[]) => <Link href={href("/pricing")}>{chunks}</Link>,
     verify: (chunks: React.ReactNode[]) => <Link href={href("/verify")}>{chunks}</Link>,
+    partners: (chunks: React.ReactNode[]) => <Link href={`${href("/verify")}#partners`}>{chunks}</Link>,
   };
 
   return (
@@ -90,6 +93,16 @@ export default async function CandidatesPage() {
         <Container>
           <SectionHeading id="steps-heading" kicker={t("candidatesPage.steps.kicker")} title={t("candidatesPage.steps.title")} lead={t("candidatesPage.steps.lead")} />
           <ProcessSteps tone="on-white" />
+          <div id="partners" className={styles.partners}>
+            <SectionHeading
+              id="partners-heading"
+              level={3}
+              kicker={t("candidatesPage.partners.kicker")}
+              title={t("candidatesPage.partners.title")}
+              lead={t("candidatesPage.partners.lead")}
+            />
+            <RaPartners />
+          </div>
         </Container>
       </Section>
 
@@ -133,7 +146,7 @@ export default async function CandidatesPage() {
             <SectionHeading id="fees-heading" kicker={t("candidatesPage.fees.kicker")} title={t("candidatesPage.fees.title")} lead={t("candidatesPage.fees.lead")} />
             <div>
               <ol className={styles.rules}>
-                {(["candidatesPage.fees.rule1", "candidatesPage.fees.rule2", "candidatesPage.fees.rule3", "candidatesPage.fees.rule4"] as const).map((key) => (
+                {(["candidatesPage.fees.rule1", "candidatesPage.fees.rule2", "candidatesPage.fees.rule5", "candidatesPage.fees.rule3", "candidatesPage.fees.rule4"] as const).map((key) => (
                   <li key={key}>{t(key)}</li>
                 ))}
               </ol>
@@ -181,6 +194,9 @@ export default async function CandidatesPage() {
         <Container width="prose">
           <SectionHeading id="questions-heading" kicker={t("candidatesPage.faq.kicker")} title={t("candidatesPage.faq.title")} />
           <div className={styles.faq}>
+            <Disclosure summary={t("candidatesPage.faq.q7")}>
+              <p>{t.rich("candidatesPage.faq.a7", { verify: links.partners })}</p>
+            </Disclosure>
             <Disclosure summary={t("candidatesPage.faq.q1")}>
               <p>{t.rich("candidatesPage.faq.a1", { terms: links.terms })}</p>
             </Disclosure>

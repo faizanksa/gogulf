@@ -8,7 +8,22 @@ import { COUNTRIES } from "@/lib/jobs/model";
 import { countryName } from "./format";
 import { hrefIn, serviceText } from "./pages";
 import { getTranslator } from "./server";
+import type { Translator } from "./translator";
 
+/**
+ * The required consent checkbox's words (components/form/ConsentField.tsx). An application
+ * shares documents with registered recruiting agents and employers; an enquiry may be
+ * passed to an agent. Both say so before anything is sent (D13).
+ */
+function consentCopy(t: Translator, kind: "application" | "enquiry") {
+  return {
+    label: t(kind === "application" ? "forms.consent.application" : "forms.consent.enquiry"),
+    policy: t("forms.consent.policy"),
+    policyHref: hrefIn("/privacy-policy", t.locale),
+    missing: t("forms.consent.missing"),
+    opensInNewTab: t("common.opensInNewTab"),
+  };
+}
 
 /**
  * Every word the contact form shows, in the page's language, built on the server and
@@ -33,6 +48,7 @@ export async function contactFormCopy() {
       message: t("forms.contact.message"),
     },
     submit: t("forms.contact.submit"),
+    consent: consentCopy(t, "enquiry"),
     sending: t("forms.sending"),
     errors: {
       nameMissing: t("forms.contact.nameMissing"),
@@ -90,6 +106,7 @@ export async function applyFormCopy() {
       otherHint: t("apply.fields.otherHint"),
     },
     submit: t("apply.submit"),
+    consent: consentCopy(t, "application"),
     sending: t("apply.sending"),
     errors: {
       nameMissing: t("forms.contact.nameMissing"),
@@ -161,6 +178,7 @@ export async function serviceInquiryCopy(): Promise<ServiceInquiryCopy> {
     countries: COUNTRIES.map((c) => ({ value: c.name, label: countryName(c.code, t.locale) })),
     anyCountry: t("forms.inquiry.anyCountry"),
     submit: t("forms.inquiry.submit"),
+    consent: consentCopy(t, "enquiry"),
     sending: t("forms.sending"),
     errors: {
       serviceMissing: t("forms.inquiry.serviceMissing"),
@@ -224,6 +242,7 @@ export async function employerFormCopy(): Promise<EmployerFormCopy> {
       { value: "Not decided yet", label: t("forms.employer.undecided") },
     ],
     submit: t("forms.employer.submit"),
+    consent: consentCopy(t, "enquiry"),
     sending: t("forms.sending"),
     errors: {
       companyMissing: t("forms.employer.companyMissing"),

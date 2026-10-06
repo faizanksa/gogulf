@@ -13,11 +13,11 @@ const WCAG = ["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"];
 test.describe("home", () => {
   test("says what Go Gulf does, with the primary action, the company facts and the process", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Work in the Gulf, with a company you can check.");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Prepare for a Gulf job, with a company you can check.");
     const main = page.getByRole("main");
-    await expect(main.getByRole("link", { name: "Find a job" }).first()).toBeVisible();
+    await expect(main.getByRole("link", { name: "Explore Gulf jobs" }).first()).toBeVisible();
     await expect(main.getByText("U52291UP2024PTC198095")).toBeVisible();
-    // The business's ten steps, as real nested ordered lists (four phases).
+    // The ten steps, as real nested ordered lists: five with Go Gulf, five with the recruiting agent.
     await expect(main.locator("ol ol > li")).toHaveCount(10);
   });
 });
@@ -150,6 +150,7 @@ test.describe("application form", () => {
       "Enter your email address.",
       "Attach your CV.",
       "Attach a copy of your passport.",
+      "Tick the box to agree before you send.",
     ]);
     await expect(page.getByLabel("CV or resume")).toHaveAttribute("aria-invalid", "true");
 

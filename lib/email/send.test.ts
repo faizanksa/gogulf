@@ -37,6 +37,7 @@ const contact = {
   phone: "+919936309015",
   message: "Do you have openings for electricians in Qatar?",
   page_source: "Contact Page",
+  consent: true as const,
 };
 
 beforeEach(() => {
@@ -104,12 +105,13 @@ describe("service inquiry routing", () => {
     reply_to: "ravi@example.com",
     phone: "+919936309015",
     page_source: "Services Page",
+    consent: true as const,
   };
 
   it("routes employer services to the business desk", async () => {
     const { provider, sent } = makeProvider();
     await sendServiceInquiryEmails(
-      { ...base, service_type: "Bulk Candidate Sourcing" },
+      { ...base, service_type: "Introduce a Hiring Requirement" },
       provider,
     );
     expect(sent[0]?.to).toBe("business@gogulf.co");
@@ -118,7 +120,7 @@ describe("service inquiry routing", () => {
   it("routes candidate services to the careers desk", async () => {
     const { provider, sent } = makeProvider();
     await sendServiceInquiryEmails(
-      { ...base, service_type: "Job Matching" },
+      { ...base, service_type: "Career Counselling" },
       provider,
     );
     expect(sent[0]?.to).toBe("careers@gogulf.co");
@@ -140,7 +142,7 @@ describe("service inquiry routing", () => {
     await sendServiceInquiryEmails(
       {
         ...base,
-        service_type: "Candidate Screening",
+        service_type: "Hiring Process Guidance",
         ...({ to_email: "attacker@evil.example" } as Record<string, unknown>),
       },
       provider,
@@ -161,6 +163,7 @@ describe("job application flow", () => {
     documents: "CV, Passport, +1 more document",
     submission_id: "3f6e1556-c66a-49ba-8005-22b0699793cb",
     page_source: "Jobs Page",
+    consent: true as const,
   };
 
   it("names the documents but never attaches them", async () => {
