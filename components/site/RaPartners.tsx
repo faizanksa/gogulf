@@ -1,5 +1,5 @@
 import { VisuallyHidden } from "@/components/ui/VisuallyHidden";
-import { EMIGRATE_URL, publishedPartners, RA_LIST_URL, type RaPartner } from "@/content/partners";
+import { EMIGRATE_URL, PARTNER_DISPLAY, publicPartners, RA_LIST_URL, type RaPartner } from "@/content/partners";
 import { formatDate } from "@/lib/i18n/format";
 import type { AnyLocale } from "@/lib/i18n/locales";
 import { getTranslator } from "@/lib/i18n/server";
@@ -18,9 +18,10 @@ export function partnerRows(partners: RaPartner[], locale: AnyLocale): RaPartner
 }
 
 /**
- * The registered recruiting-agent partners, in the reader's language, from
- * content/partners.ts. Works the same with no partners (the honest empty state) and
- * with several. The caller provides the section and its heading.
+ * How Go Gulf works with registered recruiting agents, in the reader's language. While
+ * partners are hidden (content/partners.ts PARTNER_DISPLAY, the client's decision) it shows
+ * only the written-disclosure promise and the official list; partner data is not even
+ * read, because publicPartners() returns none. The caller provides the section and heading.
  */
 export async function RaPartners() {
   const t = await getTranslator();
@@ -39,8 +40,10 @@ export async function RaPartners() {
   );
   return (
     <RaPartnerList
-      partners={partnerRows(publishedPartners(), t.locale)}
+      display={PARTNER_DISPLAY}
+      partners={partnerRows(publicPartners(), t.locale)}
       text={{
+        disclosure: t("partners.disclosure"),
         empty: t("partners.empty"),
         city: t("partners.city"),
         raNumber: t("partners.raNumber"),

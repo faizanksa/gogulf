@@ -1,7 +1,7 @@
 import { BUSINESS_EMAIL, CAREERS_EMAIL, PHONE, WHATSAPP } from "@/content/channels";
 import { COMPANY } from "@/content/company";
 import { PAGES } from "@/content/pages";
-import { publishedPartners } from "@/content/partners";
+import { publicPartners } from "@/content/partners";
 import { DEFAULT_DESCRIPTION, SITE_URL } from "@/lib/seo";
 
 /**
@@ -20,7 +20,8 @@ export function GET() {
     .map((p) => `- [${p.title}](${SITE_URL}${p.path}): ${p.description}`)
     .join("\n");
 
-  const partners = publishedPartners()
+  // Hidden by the client's decision: publicPartners() returns none, so no name or number.
+  const partners = publicPartners()
     .map((p) => `${p.name} (${p.city}), RA registration ${p.raRegistrationNumber}`)
     .join("; ");
 
@@ -53,7 +54,7 @@ ${pages}
 - Any fee for a Go Gulf service is quoted in writing before payment. See ${SITE_URL}/pricing.
 - Go Gulf lists Gulf job openings, counsels job seekers from India, helps prepare their profile and documents, and refers them to recruiting agents registered under the Emigration Act, 1983. It introduces employers' hiring requirements to those agents. It is not an employer, it does not select or place candidates, and it does not guarantee selection, employment, visa issuance or joining. See ${SITE_URL}/terms-and-conditions.
 - Go Gulf is not registered as a recruiting agent. Interviews, offers, visa processing, emigration formalities and the statutory service charge are handled by the registered recruiting agent.
-- Registered recruiting-agent partners: ${partners || "the current partner list is being confirmed and will be published at " + SITE_URL + "/verify."}
+- ${partners ? `Registered recruiting-agent partners: ${partners}.` : "Go Gulf does not publish the names of the recruiting agents it works with."} Before a candidate pays anything, Go Gulf gives them in writing the agent's name, registration number, and who is responsible for what.
 - The CIN above is a company registration with the Ministry of Corporate Affairs. It identifies the company; it is not a licence for any particular line of business, and this file makes no claim to any licence or registration beyond it.
 - The operating company was incorporated on ${COMPANY.incorporationDate}. This file makes no claim about business history before that date.
 - To check you are dealing with Go Gulf, see ${SITE_URL}/verify.

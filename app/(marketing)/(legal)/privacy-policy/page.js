@@ -294,8 +294,10 @@ const SECTIONS = [
             passport copy — with the recruiting agent, registered under the Emigration Act, 1983,
             that handles the role. The agent uses them to run the recruitment, shares them with
             employers and authorities as the process requires, and handles them under its own
-            privacy terms and the law. Our current partners are listed on our{" "}
-            <Link href="/verify#partners">Verify page</Link>.
+            privacy terms and the law. Before you pay anything, we tell you in writing which
+            agent is handling your application, and its registration number. You can check it on
+            the official list of active recruiting agents; our{" "}
+            <Link href="/verify#partners">Verify page</Link> explains how.
           </li>
           <li>
             <strong>Employers and their authorised representatives.</strong> Your profile and

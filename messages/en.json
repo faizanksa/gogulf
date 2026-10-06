@@ -211,10 +211,11 @@
       "failed": "We could not send your requirement. Please try again, or email or call our business desk."
     },
     "consent": {
-      "application": "I agree that Go Gulf may keep my details and documents, including my CV and passport copy, and share them with registered recruiting agents and employers for my job applications.",
-      "enquiry": "I agree that Go Gulf may use these details to answer my enquiry, and share them with registered recruiting agents where my enquiry needs it.",
+      "application": "I agree that Go Gulf may keep my details and documents, including my CV and passport copy, and share them with a registered recruiting agent for my job applications. Go Gulf will give me the agent's name and registration number in writing before I pay anything.",
+      "enquiry": "I agree that Go Gulf may use these details to answer my enquiry, and share them with a registered recruiting agent where my enquiry needs it. Go Gulf will give me the agent's name and registration number in writing before I pay anything.",
       "policy": "Read our Privacy policy",
-      "missing": "Tick the box to agree before you send."
+      "missing": "Tick the box to agree before you send.",
+      "employer": "I agree that Go Gulf may use these details to answer my enquiry and to introduce my requirement to registered recruiting agents."
     }
   },
   "home": {
@@ -261,28 +262,28 @@
     },
     "process": {
       "title": "How it works: ten steps, two roles",
-      "lead": "Go Gulf helps with the first five steps. A registered recruiting agent handles the rest, with the employer and the authorities.",
+      "lead": "Go Gulf helps with the first five steps, and tells you in writing who your recruiting agent is before you pay anything. The agent handles the rest, with the employer and the authorities.",
       "phase1": "With Go Gulf",
       "phase2": "With your recruiting agent",
       "s1": {
-        "title": "Application",
-        "body": "You apply for a listed job, or send a general application."
+        "title": "Application and registration",
+        "body": "You apply for a listed job or send a general application, and your profile and documents are recorded with us."
       },
       "s2": {
-        "title": "Registration",
-        "body": "Your profile and documents are recorded with us."
-      },
-      "s3": {
         "title": "Counselling",
         "body": "We talk through your work, the roles and countries that may suit you, and how the process works."
       },
-      "s4": {
+      "s3": {
         "title": "Document preparation",
         "body": "We help you put your CV, passport copy, certificates and experience letters in order."
       },
-      "s5": {
+      "s4": {
         "title": "Referral",
         "body": "With your agreement, we pass your profile to a registered recruiting agent we work with."
+      },
+      "s5": {
+        "title": "Written disclosure",
+        "body": "Before you pay anything, we give you in writing the agent's name and registration number, who is responsible for what, and any Go Gulf fee."
       },
       "s6": {
         "title": "Shortlisting and interview",
@@ -346,7 +347,7 @@
       "employersTitle": "For employers",
       "employers": "We introduce your requirement to registered recruiting agents we work with. The agent you engage handles sourcing, selection and visa processing, on its own written terms.",
       "employersLink": "For employers",
-      "role": "Go Gulf is not registered as a recruiting agent under the Emigration Act, 1983, and does not itself recruit, select or send anyone abroad. <verify>See our recruiting-agent partners</verify>."
+      "role": "Go Gulf is not registered as a recruiting agent under the Emigration Act, 1983, and does not itself recruit, select or send anyone abroad. <verify>How we work with recruiting agents</verify>."
     },
     "purposeHeading": "Our mission and vision",
     "mission": {
@@ -464,15 +465,16 @@
       "r1": "Any Go Gulf fee is quoted to you in writing before you pay. See <pricing>Pricing & fees</pricing>.",
       "r2": "If you are asked to pay an account or a person that we have not confirmed to you in writing, stop and contact us before paying.",
       "r3": "We do not guarantee selection, employment, a visa or a joining date. See our <terms>Terms & conditions</terms>.",
-      "r4": "A registered recruiting agent collects its statutory service charge itself and gives you a receipt. Do not pay it to anyone who cannot give you the agent's receipt."
+      "r4": "A registered recruiting agent collects its statutory service charge itself and gives you a receipt. Do not pay it to anyone who cannot give you the agent's receipt.",
+      "r5": "Before you pay anything, you get the recruiting agent's name and registration number in writing. You can check them on the official list of active recruiting agents."
     },
     "report": {
       "heading": "If something does not feel right",
       "body": "Tell us before you pay or send documents. Email {email} or call {phone}."
     },
     "partners": {
-      "heading": "Registered recruiting-agent partners",
-      "lead": "Go Gulf is not registered as a recruiting agent. We counsel candidates, help prepare their documents and refer them to recruiting agents registered under the Emigration Act, 1983. Interviews, offers, visa processing and the agent's statutory service charge are handled by the agent."
+      "heading": "Registered recruiting agents",
+      "lead": "Go Gulf is not registered as a recruiting agent. We counsel candidates, help prepare their documents and refer them to recruiting agents registered under the Emigration Act, 1983. The agent is the party that recruits you: it handles interviews, offers, visa processing and its statutory service charge."
     }
   },
   "candidatesPage": {
@@ -489,7 +491,8 @@
       "fees": "Fees",
       "safety": "Staying safe",
       "questions": "Common questions",
-      "partners": "Recruiting agents"
+      "partners": "Recruiting agents",
+      "inWriting": "In writing"
     },
     "steps": {
       "kicker": "How it works",
@@ -555,7 +558,9 @@
       "q6": "How can I check I am really dealing with Go Gulf?",
       "a6": "Use only the contact details on our <verify>Verify page</verify>, and look up the company’s CIN on the Ministry of Corporate Affairs website.",
       "q7": "Is Go Gulf a recruiting agent?",
-      "a7": "No. Go Gulf is not registered as a recruiting agent under the Emigration Act, 1983. We counsel you, help prepare your profile and documents, and refer you to registered recruiting agents, who handle interviews, offers, visa processing and emigration formalities. <verify>See our recruiting-agent partners</verify>."
+      "a7": "No. Go Gulf is not registered as a recruiting agent under the Emigration Act, 1983. We counsel you, help prepare your profile and documents, and refer you to registered recruiting agents, who handle interviews, offers, visa processing and emigration formalities. <verify>How we work with recruiting agents</verify>.",
+      "q8": "Will I know which recruiting agent is handling my application?",
+      "a8": "Yes. Before you pay anything, we give you in writing the agent's name and registration number, and who is responsible for what. We do not list the agents we work with on this website."
     },
     "cta": {
       "title": "Ready to apply?",
@@ -567,6 +572,15 @@
       "kicker": "Recruiting agents",
       "title": "Who handles the hiring",
       "lead": "Go Gulf is not a recruiting agent. Interviews, offers, visa processing and emigration formalities are handled by recruiting agents registered under the Emigration Act, 1983."
+    },
+    "inWriting": {
+      "title": "What you should get in writing",
+      "lead": "Before you pay anything, make sure you have these in writing. If you do not, do not pay.",
+      "i1": "The recruiting agent's name and registration number.",
+      "i2": "Who is responsible for what: what Go Gulf does, and what the agent does.",
+      "i3": "A written quote for any Go Gulf fee, before you pay it.",
+      "i4": "A receipt from the agent for its service charge.",
+      "check": "Check the agent's registration yourself on the Ministry of External Affairs' <list>list of active recruiting agents</list>."
     }
   },
   "employersPage": {
@@ -634,7 +648,8 @@
       "title": "Tell us what you need",
       "lead": "Choose a service and share a few details. Your enquiry reaches the right team.",
       "asideHeading": "Before you send",
-      "free": "Sending an enquiry is free. Where a Go Gulf service carries a fee, it is quoted to you in writing before you pay. A recruiting agent's statutory service charge is paid to the agent, against its receipt — see <pricing>Pricing & fees</pricing>."
+      "free": "Sending an enquiry is free. Where a Go Gulf service carries a fee, it is quoted to you in writing before you pay. A recruiting agent's statutory service charge is paid to the agent, against its receipt — see <pricing>Pricing & fees</pricing>.",
+      "inWriting": "Before you pay anything, we give you in writing the recruiting agent's name and registration number, and who is responsible for what."
     }
   },
   "jobsPage": {
@@ -742,7 +757,7 @@
       "next1": "You get a confirmation email with your reference number.",
       "next2": "If your profile suits the role, we pass it to the registered recruiting agent handling it.",
       "next3": "Any Go Gulf fee is quoted to you in writing before you pay.",
-      "privacy": "Your documents go to private storage, not email. We share them with the registered recruiting agent handling your application, and through it with the employer — see our <privacy>Privacy policy</privacy>."
+      "privacy": "Your documents go to private storage, not email. We share them with the registered recruiting agent handling your application, and through it with the employer. You get the agent's name in writing before you pay anything — see our <privacy>Privacy policy</privacy>."
     },
     "notOpen": {
       "title": "This job is not accepting applications",
@@ -841,6 +856,7 @@
     "raNumber": "RA registration number",
     "validUntil": "Registration valid until",
     "website": "Website",
-    "check": "You can check any recruiting agent yourself on the Ministry of External Affairs' <list>list of active recruiting agents</list>, or on the <emigrate>eMigrate portal</emigrate>."
+    "check": "You can check any recruiting agent yourself on the Ministry of External Affairs' <list>list of active recruiting agents</list>, or on the <emigrate>eMigrate portal</emigrate>.",
+    "disclosure": "We work with registered recruiting agents. Before you pay anything, we give you in writing the agent's name, registration number, and who is responsible for what."
   }
 }
