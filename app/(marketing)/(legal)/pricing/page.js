@@ -24,7 +24,8 @@ const SECTIONS = [
         <p>
           {LEGAL_ENTITY.brand} serves two distinct audiences —{" "}
           <strong>candidates</strong> seeking overseas employment, and{" "}
-          <strong>employers and client companies</strong> that need manpower sourced and hired.
+          <strong>employers and client companies</strong> that want their hiring requirement
+          introduced to registered recruiting agents.
           These are separate engagements, and{" "}
           <strong>candidate-side and employer-side services may have separate pricing arrangements</strong>.
           What applies to one tells you nothing about the other.
@@ -42,9 +43,8 @@ const SECTIONS = [
         <p>
           We do not publish a rate card, because there is no single figure that would be honest.
           What an engagement costs depends on what is actually involved — which services are
-          engaged, the roles and destination countries, the scale of the requirement, which
-          documentation, attestation, medical and visa steps that country requires, and how much of
-          the process is handled for you. A headline number here would not apply to most people who
+          engaged, the roles and destination countries, the scale of the requirement, and how much
+          counselling and preparation is involved. A headline number here would not apply to most people who
           read it. We price each engagement on its facts instead, and put the figure in writing
           before anyone commits to anything.
         </p>
@@ -57,10 +57,11 @@ const SECTIONS = [
     body: (
       <p>
         Browsing this website, viewing job openings, submitting a contact or service inquiry, and
-        submitting a job application are <strong>free</strong>. This website takes no payment from
-        anyone: there is no checkout on it, and no fee arises simply from applying for a role or
-        sending us a requirement. A fee, where one applies at all, arises only from a service you go
-        on to engage us for, on terms given to you in writing first.
+        submitting a job application are <strong>free</strong>. No fee arises simply from applying
+        for a role or sending us a requirement. A fee, where one applies at all, arises only from a
+        service you go on to engage us for, on terms given to you in writing first. The website
+        sells nothing: its only payment page is the secure page that opens from a payment link we
+        send you for an invoice we have already issued in writing.
       </p>
     ),
   },
@@ -70,17 +71,18 @@ const SECTIONS = [
     body: (
       <>
         <p>
-          These are the services a candidate may engage us for — registration and profile
-          preparation, job-application and job-matching support, documentation and attestation guidance, MOFA and
-          embassy processing, medical coordination, immigration support, travel and ticketing
-          coordination, and pre-departure orientation.
+          These are the services a candidate may engage us for — counselling, registration and
+          profile preparation, help with job applications, document preparation, and referral to a
+          registered recruiting agent. Interviews, offers, visa processing and emigration
+          formalities are the recruiting agent&apos;s work, not ours — see{" "}
+          <a href="#agent-charges">A recruiting agent&apos;s charges</a>.
         </p>
         <p>
           Where a candidate-side service carries a fee, that fee, what it covers and when it is
           payable is set out to you in writing before you are asked to pay, and it is subject to the
           limits described under <a href="#legal-limits">Limits imposed by law</a> below.
           Third-party costs such as government, embassy, medical, insurance and travel charges are
-          separate from any service fee — see{" "}
+          separate from any Go Gulf fee — see{" "}
           <a href="#third-party-costs">Third-party costs</a>.
         </p>
       </>
@@ -92,16 +94,18 @@ const SECTIONS = [
     body: (
       <>
         <p>
-          Employer hiring solutions, bulk candidate sourcing, recruitment support, candidate
-          screening, interview coordination and HR support are business-to-business engagements. They are quoted commercially and separately from
-          anything on the candidate side.
+          Introducing a hiring requirement to registered recruiting agents, and hiring-process
+          guidance, are business-to-business services, quoted separately from anything on the
+          candidate side. The recruitment itself — sourcing, selection and visa processing — is
+          agreed between you and the recruiting agent you engage, on that agent&apos;s own terms.
         </p>
         <p>
-          Pricing for an employer engagement is agreed against the specific requirement, and depends
+          Where we charge for an employer-side service, the price is agreed against the specific
+          requirement, and depends
           on factors such as the roles and volumes involved, the destination countries, the scope of
           work handed to us, the duration of the engagement and the service levels agreed. The
           commercial terms — fee basis, payment schedule, taxes, what is and is not included, and
-          any replacement or refund arrangement — are set out in the written proposal, service
+          any refund arrangement — are set out in the written proposal, service
           agreement or purchase order between us, and those terms govern the engagement.
         </p>
         <p>
@@ -153,12 +157,10 @@ const SECTIONS = [
         <p>
           A service fee, where one applies, covers the professional work our team performs under
           that engagement — the work described on our <Link href="/services">Services</Link> page.
-          On the candidate side that is registration and profile preparation, matching against live
-          vacancies, interview coordination, documentation and attestation support, MOFA and embassy
-          processing, medical and visa coordination, travel coordination, pre-departure orientation
-          and post-joining support. On the employer side it is sourcing, screening and verification,
-          shortlisting, interview coordination, sourcing at volume, recruitment support and HR
-          support, to the scope agreed in your commercial terms.
+          On the candidate side that is counselling, registration and profile preparation, help
+          with job applications, document preparation and referral to a registered recruiting
+          agent. On the employer side it is introducing your requirement to registered recruiting
+          agents and hiring-process guidance, to the scope agreed in writing.
         </p>
         <p>
           It is a fee for that service and that effort. It is{" "}
@@ -170,13 +172,31 @@ const SECTIONS = [
     ),
   },
   {
+    id: "agent-charges",
+    heading: "A recruiting agent's charges, which are not our fee",
+    body: (
+      <>
+        <p>
+          A recruiting agent registered under the Emigration Act, 1983 may charge you a service
+          charge for recruitment, as that Act and its rules allow. That charge belongs to the
+          agent: <strong>the agent collects it and gives you a receipt for it</strong>. It is not
+          paid to us, it is not part of any {LEGAL_ENTITY.brand} fee, and we do not set it.
+        </p>
+        <p>
+          If anyone asks you to pay a recruiting agent&apos;s charge without the agent&apos;s
+          receipt, or asks you to pay it to {LEGAL_ENTITY.brand}, do not pay — tell us first.
+        </p>
+      </>
+    ),
+  },
+  {
     id: "third-party-costs",
     heading: "Third-party costs, which are not our fee",
     body: (
       <>
         <p>
           Overseas employment involves payments to organisations that are not us. These are separate
-          from our service fee, even where we arrange or coordinate the payment on your behalf:
+          from any Go Gulf fee:
         </p>
         <ul>
           <li>government and statutory fees, including emigration-related charges where applicable;</li>
@@ -189,10 +209,8 @@ const SECTIONS = [
         </ul>
         <p>
           These amounts are set by those third parties, not by us, and they can change without
-          notice. Where you ask us to pay one on your behalf, it is passed on to you at actual cost
-          and identified separately on your quotation or invoice. Because that money leaves us for
-          the third party, its recoverability is limited — see our{" "}
-          <Link href="/cancellation-and-refunds">Cancellation &amp; Refunds Policy</Link>.
+          notice. They are paid to the provider concerned, or through your recruiting agent — not
+          to us.
         </p>
       </>
     ),
@@ -234,9 +252,10 @@ const SECTIONS = [
           you make, and keep it — you will need the reference if you ever raise a refund request.
         </p>
         <p>
-          Where a payment is taken online, it is processed by a regulated third-party payment
-          gateway. You enter your card, UPI or bank details on the gateway&apos;s own secure page;
-          we do not see or store them.
+          Where you pay one of our invoices online, you reach the payment page only through the
+          link we send you for that invoice, and the payment is processed by a regulated
+          third-party payment gateway. You enter your card, UPI or bank details on the
+          gateway&apos;s own secure page; we do not see or store them.
         </p>
         <div className="legal-callout">
           <p>
@@ -259,8 +278,8 @@ const SECTIONS = [
       <p>
         You can cancel a service request at any time by telling us in writing. What you get back
         depends on how much of the service had been performed and how much had already been paid
-        onward to third parties. Where an employer engagement has its own written cancellation,
-        replacement or refund terms, those terms govern that engagement. The general position — when
+        onward to third parties. Where an employer engagement has its own written cancellation
+        or refund terms, those terms govern that engagement. The general position — when
         a refund is available, when it is not, how to request one and how an approved refund reaches
         you — is in our{" "}
         <Link href="/cancellation-and-refunds">Cancellation &amp; Refunds Policy</Link>.
@@ -288,7 +307,7 @@ export default function PricingPage() {
       title="Pricing & Fees"
       eyebrow="Legal"
       path="/pricing"
-      intro="Who pays, what a service fee covers, what is a third-party cost, and why every fee is put in writing before you are asked to pay anything."
+      intro="What a Go Gulf fee covers, what a registered recruiting agent charges, what is a third-party cost, and why every fee of ours is put in writing before you are asked to pay anything."
       sections={SECTIONS}
     />
   );

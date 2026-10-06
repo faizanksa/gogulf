@@ -71,9 +71,15 @@ const SECTIONS = [
         <p>
           We provide support services to job seekers and employers. We are <strong>not</strong> the employer for any
           role advertised on this website, we are not a party to the employment contract you may
-          eventually sign, and we are not a government or immigration authority. The employer named
-          in a placement is your employer; we introduce, screen, coordinate and support the process
-          around that relationship.
+          eventually sign, and we are not a government or immigration authority.
+        </p>
+        <p>
+          We are <strong>not registered as a recruiting agent</strong> under the Emigration Act,
+          1983. We counsel candidates, help them prepare their profile and documents, and refer
+          them to recruiting agents registered under that Act; we introduce employers&apos;
+          requirements to those agents. The registered recruiting agent runs the recruitment —
+          shortlisting, interviews, offers, visa processing and emigration formalities — and the
+          employer named in your employment contract is your employer.
         </p>
       </>
     ),
@@ -114,14 +120,16 @@ const SECTIONS = [
         <ul>
           <li>you may submit an application only for yourself, and only with your own documents;</li>
           <li>
-            you authorise us to review your profile, assess your suitability, and share your profile
-            and supporting documents with employers, and partners working with us on the requirement, for the
-            purpose of a hiring process, as described in our{" "}
+            you authorise us to review your profile and to share it, with your supporting documents
+            (including your CV and passport copy), with the registered recruiting agent handling a
+            role and, through that agent, with the employer, for the purpose of a hiring process, as
+            described in our{" "}
             <Link href="/privacy-policy">Privacy Policy</Link>;
           </li>
           <li>
             you are responsible for responding to interview invitations, document requests and
-            medical or travel schedules within the timelines communicated to you;
+            medical or travel schedules within the timelines communicated to you by us or by the
+            recruiting agent;
           </li>
           <li>
             you understand that submitting an application does not create any employment
@@ -151,9 +159,10 @@ const SECTIONS = [
           written consent and the candidate&apos;s.
         </p>
         <p>
-          The commercial terms of an employer engagement — scope, fees, timelines and any
-          replacement or refund arrangement — are set out in the written agreement, proposal or
-          purchase order between us, not on this website. Our{" "}
+          We introduce your requirement to registered recruiting agents. The terms of the
+          recruitment itself — scope, fees, timelines and any replacement or refund arrangement —
+          are agreed between you and the recruiting agent you engage. The terms of any service of
+          ours are set out in writing between us, not on this website. Our{" "}
           <Link href="/pricing">Pricing &amp; Fees</Link> page explains how employer-side
           engagements are quoted.
         </p>
@@ -167,8 +176,8 @@ const SECTIONS = [
       <>
         <p>
           Job openings published on this website are based on requirements shared with us by
-          employers and their authorised representatives. We take reasonable care in presenting
-          them, and we screen employers before listing roles.
+          employers, registered recruiting agents and their authorised representatives. We take
+          reasonable care in presenting them.
         </p>
         <p>However, please understand that:</p>
         <ul>
@@ -204,10 +213,12 @@ const SECTIONS = [
     body: (
       <>
         <p>
-          A typical process runs: registration and profile submission, screening and verification,
-          shortlisting against the employer&apos;s requirement, employer interview, selection
-          decision, offer and contract, documentation and attestation, medical examination, visa
-          processing, travel arrangements, pre-departure briefing, and post-joining support.
+          A typical process has two parts. With us: application, registration and profile
+          submission, counselling, document preparation and, with your agreement, referral to a
+          registered recruiting agent. With the recruiting agent, the employer and the
+          authorities: shortlisting against the employer&apos;s requirement, employer interview,
+          selection decision, offer and contract, medical examination, documentation and
+          attestation, visa processing, emigration clearance, travel and joining.
         </p>
         <p>
           Not every stage applies to every role, and stages can be reordered, repeated or dropped by
@@ -248,14 +259,14 @@ const SECTIONS = [
     body: (
       <>
         <p>
-          We screen and verify candidate profiles against the employer&apos;s stated requirements,
-          and we coordinate interviews between candidates and employers. Interview format, schedule,
+          We review candidate profiles before referring them. Shortlisting and interviews are
+          arranged by the recruiting agent with the employer. Interview format, schedule,
           assessment criteria and outcome are decided by the employer.
         </p>
         <p>
           Shortlisting, selection, rejection and any offer are the employer&apos;s decisions alone.
           We do not control them, we cannot commit an employer to a decision, and we are not
-          obliged to give reasons on an employer&apos;s behalf. We may decline to represent a
+          obliged to give reasons on an employer&apos;s behalf. We may decline to refer a
           candidate or accept a requirement, at our discretion, where we consider it unsuitable,
           non-compliant or inconsistent with these terms.
         </p>
@@ -276,9 +287,9 @@ const SECTIONS = [
         <p>
           We are not your employer and are not responsible for the employer&apos;s performance of
           the employment contract, for payment of your wages, or for the working or living
-          conditions provided to you. If a problem arises after you join, tell us — we provide
-          post-joining support and will assist and escalate where we reasonably can — but the legal
-          responsibility rests with the employer.
+          conditions provided to you. If a problem arises after you join, tell the recruiting agent
+          and tell us — we will help you reach the right party where we reasonably can — but the
+          legal responsibility rests with the employer.
         </p>
       </>
     ),
@@ -289,10 +300,9 @@ const SECTIONS = [
     body: (
       <>
         <p>
-          Where you engage us for it, we assist with attestation, MOFA and embassy formalities, visa
-          processing, medical examination coordination, immigration formalities and travel
-          arrangements. Our role is to guide, prepare, coordinate and submit — accurately and on
-          time.
+          We help you prepare your documents. Visa processing, emigration formalities and the
+          arrangements that follow selection are handled by the registered recruiting agent, under
+          its own terms. We do not process visas, obtain emigration clearance or arrange travel.
         </p>
         <p>
           The decisions belong to others. Visa approval or rejection, medical fitness or unfitness,
@@ -323,13 +333,12 @@ const SECTIONS = [
         </div>
         <p>
           What we commit to is the service itself: describing the opportunities we list accurately,
-          handling your profile professionally, coordinating each stage properly, and being
-          transparent with you about where your application stands.
+          handling your profile professionally, referring it only to registered recruiting agents,
+          and being transparent with you about where your application stands.
         </p>
         <p>
-          Where we have expressly agreed something specific with you in writing — a defined scope, a
-          defined deliverable or a replacement arrangement with an employer client — that written
-          commitment stands. Nothing else does.
+          Where we have expressly agreed something specific with you in writing — a defined scope or
+          a defined deliverable — that written commitment stands. Nothing else does.
         </p>
       </>
     ),
@@ -340,15 +349,17 @@ const SECTIONS = [
     body: (
       <>
         <p>
-          Delivering these services involves parties we do not control: employers and their
-          representatives, sourcing partners, embassies, consulates, ministries and
+          Delivering these services involves parties we do not control: registered recruiting
+          agents, employers and their representatives, embassies, consulates, ministries and
           attestation bodies, immigration and emigration authorities, approved medical centres,
           airlines and travel providers, banks and payment providers, and the technology providers
           listed in our <Link href="/privacy-policy">Privacy Policy</Link>.
         </p>
         <p>
-          We select and coordinate with these parties in good faith, but we are not responsible for
-          their acts, omissions, decisions, delays, fees or policies. This website may also link to
+          We choose the recruiting agents we refer you to in good faith, from those registered
+          under the Emigration Act, 1983, but each agent acts under its own registration and is
+          responsible for its own services and charges. We are not responsible for the acts,
+          omissions, decisions, delays, fees or policies of any of these parties. This website may also link to
           external sites and platforms; those links are provided for convenience, and we do not
           endorse or take responsibility for their content.
         </p>
@@ -402,8 +413,10 @@ const SECTIONS = [
         <p>
           Charges levied by third parties — such as statutory and government fees, embassy and
           attestation charges, medical examination fees, insurance and air fares — are payable to or
-          through the relevant provider and are not our service fee, even where we coordinate the
-          payment for you. Taxes, including GST, apply as required by law.
+          through the relevant provider and are not our service fee. A registered recruiting
+          agent&apos;s statutory service charge is collected by that agent, which gives you a
+          receipt for it; it is not paid to us and is not our fee. Taxes, including GST, apply as
+          required by law.
         </p>
         <p>
           Any fee we charge for a service is subject
@@ -490,7 +503,7 @@ const SECTIONS = [
     body: (
       <>
         <p>
-          The {LEGAL_ENTITY.brand} name and logo, the “{"Go Gulf. Get Hired."}” tagline, and the
+          The {LEGAL_ENTITY.brand} name and logo, the “{"Go Gulf. Go prepared."}” tagline, and the
           text, design, layout, graphics, images and code of this website belong to us or to our
           licensors and are protected by intellectual property law.
         </p>
