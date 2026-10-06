@@ -199,6 +199,7 @@ is documented in `content/company.ts` and enforced by
     sharing needs a later agreement. The lawyer should confirm how that second agreement
     is recorded (written, email or WhatsApp reply) so it can be proved later. See
     `docs/DISPUTE_CONTROLS.md` §1 and §7.
+22. **Header button on phones.** "Explore Gulf jobs" wraps onto two lines in the 390 px header. A shorter phone label (for example "Gulf jobs") would fit on one line. Copy choice for the client.
 21. **Operational fit.** Staff must now get the candidate's agreement after the
     disclosure and before referral, for every referral. Confirm the business can do this
     every time. The site now promises it.
@@ -957,3 +958,31 @@ Round 2:
 The Playwright suite, including a new check that /verify and /candidates show the
 disclosure and name no agent, has to run against staging after deployment. It needs
 staging's data.
+
+Round 3 (on staging `1659c3c`):
+- lint, typecheck and the server build pass; 530 unit tests pass;
+- the built HTML shows the legal name and street exactly once on home, /jobs,
+  /candidates, /employers, /services and /contact (the footer). /about, /verify and the
+  policy pages carry them in full, as allowed;
+- the staging verifier passes (14 checks).
+- Full Playwright and axe suite against staging: 242 passed, 26 failed on the first run:
+  - 12 were the new identity spec looking for the CIN inside the header landmark, while
+    the top bar sits outside it. Test fixed; now passes.
+  - 1 was seo.spec, whose Organization check still forbade "recruiting agen…". That has
+    failed since round 1, because the description says "refers them to registered
+    recruiting agents". Aligned with the unit guard: "recruitment agency" and licence words
+    stay forbidden. Now passes.
+  - 11 were guard and pay tests that read staging credentials from an env file that exists
+    only in the main folder. Re-run from there (identical spec files): 40 passed.
+  - 2 are the known expired 14-day "featured" test job (jobs.spec "groups open jobs…", on
+    desktop and mobile). These are the same two as before; staging was not re-seeded.
+- Phone width (390 px): home, /verify, /candidates and a job page have no horizontal
+  overflow.
+  - The hero card shows the CIN, office city, fee rule and the licence notice, with no
+    legal name.
+  - The process lists 04 Written disclosure before 05 Referral.
+  - The footer shows the legal name once, plus CIN, GSTIN and the registered office.
+  - The CIN top bar is desktop-only by design (since 12 Sep); on phones the CIN is in the
+    hero card and the footer.
+  - The header button "Explore Gulf jobs" wraps onto two lines, still above the 44 px
+    target size (see open question 22).

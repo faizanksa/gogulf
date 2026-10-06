@@ -25,9 +25,11 @@ test.describe("legal name and registered office: shown once, not everywhere", ()
       const footer = page.getByRole("contentinfo");
       await expect(footer).toContainText(LEGAL_NAME);
       await expect(footer).toContainText(STREET);
-      const banner = page.getByRole("banner");
-      await expect(banner).toContainText(CIN);
-      await expect(banner).not.toContainText("Faizan");
+      // The utility bar above the header (outside the banner landmark) carries the CIN only.
+      const topBar = page.locator("[class*='SiteHeader-module'][class*='__record']").first();
+      await expect(topBar).toContainText(CIN);
+      await expect(topBar).not.toContainText("Faizan");
+      await expect(page.getByRole("banner")).not.toContainText("Faizan");
       for (const contact of ["+91 99363 09015", "careers@gogulf.co", "business@gogulf.co"]) await expect(footer, contact).toContainText(contact);
       await expect(footer.getByRole("link", { name: /\+91 99363 09015.*opens WhatsApp/ })).toHaveAttribute("href", /wa\.me/);
     });
