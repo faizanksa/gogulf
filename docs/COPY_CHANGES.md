@@ -14,8 +14,14 @@ collection of their statutory service charge. Employers' requirements are introd
 those agents.
 
 The partner list is data-driven ([content/partners.ts](../content/partners.ts)) and ships
-**empty**, with an honest empty state. No partner, RA number, testimonial, statistic or
-employer name was invented.
+**empty**. No partner, RA number, testimonial, statistic or employer name was invented.
+
+**Round 2 (same day):** the client does not want RA names, numbers or logos on the public
+site. Partners are now **hidden** by default (`PARTNER_DISPLAY = "hidden"`; `"named"` still
+works and is tested). The site promises instead that each candidate gets the agent's name,
+registration number and the split of responsibilities **in writing before paying
+anything**. Section 0 is the latest state. Sections 1–2 record round 1; where round 2
+changed a string again, section 0 shows the current wording.
 
 Only English changed. The other catalogues (hi, ml, ta, bn, ar) have not been started and
 were left alone. CIN and GSTIN data, fee amounts, the database schema and migrations, the
@@ -23,7 +29,81 @@ CRM pipeline, payments code and auth were not touched.
 
 ---
 
-## 1. Before and after, page by page
+## 0. Round 2 (latest): partners hidden, identity disclosed in writing
+
+**Client decision:** recruiting-agent (RA) names, registration numbers and logos do
+**not** appear on the public site. Instead, every candidate is given the agent's name,
+registration number and the split of responsibilities **in writing before any payment**.
+Hiding the agent from the public is acceptable; hiding it from the candidate is not.
+
+### What changed
+
+| Area | Round 1 | Round 2 (now) |
+|---|---|---|
+| `content/partners.ts` | Partners published when `active` and unexpired | Same internal record, plus an optional `capacity` field and a display setting `PARTNER_DISPLAY = "hidden"` (or `"named"`). Public output reads partners only through `publicPartners()` / `publicPartnerForJob()`, which return nothing while hidden. |
+| /verify, partners section | "Registered recruiting-agent partners": the list, or "Our current partner list is being confirmed and will be published here." | "Registered recruiting agents": "Go Gulf is not registered as a recruiting agent… The agent is the party that recruits you", then the disclosure statement and the link to the MEA list of active recruiting agents. No partner list. |
+| /verify, payment rules | 4 rules | Adds: "Before you pay anything, you get the recruiting agent's name and registration number in writing. You can check them on the official list of active recruiting agents." |
+| /candidates | Partner list under the steps | Disclosure statement under the steps; a new **"What you should get in writing"** panel (contents entry "In writing"); a new FAQ: "Will I know which recruiting agent is handling my application?" |
+| /services | — | Enquiry aside adds the short version: "Before you pay anything, we give you in writing the recruiting agent's name and registration number, and who is responsible for what." It links to the full panel on /candidates. |
+| Job pages | "Recruiting agent: *name*, RA registration *number*" when a partner listed the job | No agent label while hidden. "Applications are passed to the registered recruiting agent handling the job" stays. |
+| Process (home, /candidates) | Go Gulf: Application · Registration · Counselling · Document preparation · Referral | Go Gulf: **Application and registration** · Counselling · Document preparation · Referral · **Written disclosure** ("Before you pay anything, we give you in writing the agent's name and registration number, who is responsible for what, and any Go Gulf fee."). The agent's five steps are unchanged, so the split is still 5/5. |
+| Consent checkbox | "…share them with registered recruiting agents and employers…" | Application and enquiry: "…share them with a registered recruiting agent… Go Gulf will give me the agent's name and registration number in writing before I pay anything." The employer form has its own wording, with no payment clause because employers aren't paying a recruiting agent here. Server validation is unchanged (`consent` must be `true`). |
+| `llms.txt` | Listed partners, or "being confirmed" | "Go Gulf does not publish the names of the recruiting agents it works with. Before a candidate pays anything, Go Gulf gives them in writing the agent's name, registration number, and who is responsible for what." |
+| Application staff email | Consent: "may be shared with registered recruiting agents and employers" | Consent: "may be shared with a registered recruiting agent; agent to be named to the applicant in writing before any payment" |
+| /verify meta description | "…payment rules and our registered recruiting-agent partners." | "…payment rules and how we work with registered recruiting agents." |
+
+### The "What you should get in writing" panel (/candidates)
+
+It lists only what the client has committed to:
+
+1. The recruiting agent's name and registration number.
+2. Who is responsible for what: what Go Gulf does, and what the agent does.
+3. A written quote for any Go Gulf fee, before you pay it.
+4. A receipt from the agent for its service charge.
+
+Lead: "Before you pay anything, make sure you have these in writing. If you do not, do not
+pay." It ends with a link to the MEA list of active recruiting agents.
+
+**Left out of live copy and listed as open questions (see section 4, items 11–13):** a
+written agreement naming Go Gulf, the agent and the candidate; stage-by-stage expected
+timelines; a receipt from Go Gulf itself for every payment.
+
+### Catalogue strings changed in round 2
+
+| Key | Before (first round) | After |
+|---|---|---|
+| `partners.disclosure` | *(new)* | We work with registered recruiting agents. Before you pay anything, we give you in writing the agent's name, registration number, and who is responsible for what. |
+| `home.process.lead` | Go Gulf helps with the first five steps. A registered recruiting agent handles the rest, with the employer and the authorities. | Go Gulf helps with the first five steps, and tells you in writing who your recruiting agent is before you pay anything. The agent handles the rest, with the employer and the authorities. |
+| `home.process.s1` | title: Application / body: You apply for a listed job, or send a general application. | title: Application and registration / body: You apply for a listed job or send a general application, and your profile and documents are recorded with us. |
+| `home.process.s2` | title: Registration / body: Your profile and documents are recorded with us. | title: Counselling / body: We talk through your work, the roles and countries that may suit you, and how the process works. |
+| `home.process.s3` | title: Counselling / body: We talk through your work, the roles and countries that may suit you, and how the process works. | title: Document preparation / body: We help you put your CV, passport copy, certificates and experience letters in order. |
+| `home.process.s4` | title: Document preparation / body: We help you put your CV, passport copy, certificates and experience letters in order. | title: Referral / body: With your agreement, we pass your profile to a registered recruiting agent we work with. |
+| `home.process.s5` | title: Referral / body: With your agreement, we pass your profile to a registered recruiting agent we work with. | title: Written disclosure / body: Before you pay anything, we give you in writing the agent's name and registration number, who is responsible for what, and any Go Gulf fee. |
+| `verifyPage.partners.heading` | Registered recruiting-agent partners | Registered recruiting agents |
+| `verifyPage.partners.lead` | Go Gulf is not registered as a recruiting agent. We counsel candidates, help prepare their documents and refer them to recruiting agents registered under the Emigration Act, 1983. Interviews, offers, visa processing and the agent's statutory service charge are handled by the agent. | Go Gulf is not registered as a recruiting agent. We counsel candidates, help prepare their documents and refer them to recruiting agents registered under the Emigration Act, 1983. The agent is the party that recruits you: it handles interviews, offers, visa processing and its statutory service charge. |
+| `verifyPage.payments.r5` | *(new)* | Before you pay anything, you get the recruiting agent's name and registration number in writing. You can check them on the official list of active recruiting agents. |
+| `candidatesPage.nav.inWriting` | *(new)* | In writing |
+| `candidatesPage.inWriting.title` | *(new)* | What you should get in writing |
+| `candidatesPage.inWriting.lead` | *(new)* | Before you pay anything, make sure you have these in writing. If you do not, do not pay. |
+| `candidatesPage.inWriting.i1` | *(new)* | The recruiting agent's name and registration number. |
+| `candidatesPage.inWriting.i2` | *(new)* | Who is responsible for what: what Go Gulf does, and what the agent does. |
+| `candidatesPage.inWriting.i3` | *(new)* | A written quote for any Go Gulf fee, before you pay it. |
+| `candidatesPage.inWriting.i4` | *(new)* | A receipt from the agent for its service charge. |
+| `candidatesPage.inWriting.check` | *(new)* | Check the agent's registration yourself on the Ministry of External Affairs' <list>list of active recruiting agents</list>. |
+| `candidatesPage.faq.a7` | No. Go Gulf is not registered as a recruiting agent under the Emigration Act, 1983. We counsel you, help prepare your profile and documents, and refer you to registered recruiting agents, who handle interviews, offers, visa processing and emigration formalities. <verify>See our recruiting-agent partners</verify>. | No. Go Gulf is not registered as a recruiting agent under the Emigration Act, 1983. We counsel you, help prepare your profile and documents, and refer you to registered recruiting agents, who handle interviews, offers, visa processing and emigration formalities. <verify>How we work with recruiting agents</verify>. |
+| `candidatesPage.faq.q8` | *(new)* | Will I know which recruiting agent is handling my application? |
+| `candidatesPage.faq.a8` | *(new)* | Yes. Before you pay anything, we give you in writing the agent's name and registration number, and who is responsible for what. We do not list the agents we work with on this website. |
+| `aboutPage.what.role` | Go Gulf is not registered as a recruiting agent under the Emigration Act, 1983, and does not itself recruit, select or send anyone abroad. <verify>See our recruiting-agent partners</verify>. | Go Gulf is not registered as a recruiting agent under the Emigration Act, 1983, and does not itself recruit, select or send anyone abroad. <verify>How we work with recruiting agents</verify>. |
+| `servicesPage.inquiry.inWriting` | *(new)* | Before you pay anything, we give you in writing the recruiting agent's name and registration number, and who is responsible for what. |
+| `apply.aside.privacy` | Your documents go to private storage, not email. We share them with the registered recruiting agent handling your application, and through it with the employer — see our <privacy>Privacy policy</privacy>. | Your documents go to private storage, not email. We share them with the registered recruiting agent handling your application, and through it with the employer. You get the agent's name in writing before you pay anything — see our <privacy>Privacy policy</privacy>. |
+| `forms.consent.application` | I agree that Go Gulf may keep my details and documents, including my CV and passport copy, and share them with registered recruiting agents and employers for my job applications. | I agree that Go Gulf may keep my details and documents, including my CV and passport copy, and share them with a registered recruiting agent for my job applications. Go Gulf will give me the agent's name and registration number in writing before I pay anything. |
+| `forms.consent.enquiry` | I agree that Go Gulf may use these details to answer my enquiry, and share them with registered recruiting agents where my enquiry needs it. | I agree that Go Gulf may use these details to answer my enquiry, and share them with a registered recruiting agent where my enquiry needs it. Go Gulf will give me the agent's name and registration number in writing before I pay anything. |
+| `forms.consent.employer` | *(new)* | I agree that Go Gulf may use these details to answer my enquiry and to introduce my requirement to registered recruiting agents. |
+
+---
+
+
+## 1. Before and after, page by page (round 1)
 
 ### Interface copy (`messages/en.json`)
 
@@ -306,6 +386,27 @@ have not been reviewed by a lawyer and should not reach production until they ar
 `POLICY_EFFECTIVE_DATE` was moved to 6 October 2026 and marked as a draft in
 [lib/legal.js](../lib/legal.js).
 
+### Round 2 additions (disclosure model)
+
+1. **Terms, what this website is for:** "The registered recruiting agent, not us, is the
+   party that recruits you". Whether you are selected, issued a visa or able to join
+   depends on the employer and the authorities concerned. New paragraph: "Before you pay
+   anything in connection with a role, we tell you in writing the name and registration
+   number of the recruiting agent handling it, and who is responsible for what. Do not pay
+   anyone until you have that in writing."
+2. **Terms, fees:** "We tell you the agent's name and registration number in writing
+   before you pay it."
+3. **Privacy, who we share with (registered recruiting agents):** replaced "Our current
+   partners are listed on our Verify page" with "Before you pay anything, we tell you in
+   writing which agent is handling your application, and its registration number. You can
+   check it on the official list of active recruiting agents; our Verify page explains
+   how."
+4. **Pricing, a recruiting agent's charges:** "Before you pay it, we give you in writing
+   the agent's name and registration number." This page wasn't in the round-2 brief; it
+   was added so all the policies make the same promise.
+
+All of these are still DRAFT, for lawyer review.
+
 ### Terms & Conditions
 
 1. **What this website is for:** removed "we introduce, screen, coordinate and support the
@@ -484,6 +585,34 @@ and ticketing, so it was aligned too.
 8. **"Talk to a counsellor"** replaced "Ask on WhatsApp" on the main WhatsApp buttons, as
    the plan suggested. The button still opens WhatsApp and says so to screen readers.
 
+### Round 2 deviations
+
+9. **"Fees and expected timelines" in the Written disclosure step.** The brief's step
+   text included "fees and expected timelines". "Fees" became "any Go Gulf fee", which is
+   already a confirmed rule. **Expected timelines were left out of live copy:** no
+   commitment to give timelines exists, and the brief also says to omit anything
+   unconfirmed. It is open question 12; add it back with one catalogue string
+   (`home.process.s5.body`) once confirmed.
+10. **To keep the 5/5 split, two steps were merged:** "Application" and "Registration"
+    became "Application and registration". **"Written disclosure" comes after "Referral"**,
+    because it has to name the agent the profile was referred to, and the consent text says
+    the identity is given before any payment, not before referral.
+11. **The disclosure statement shows in both modes.** In "named" mode, the list (or its
+    empty state) appears above the same promise, so switching modes never drops the
+    written-disclosure commitment.
+12. **The employer consent wording has no payment clause.** Employers don't pay a
+    recruiting agent through this site, so "before I pay anything" would be wrong for
+    them.
+13. **The /verify anchor stays `#partners`** even though no partners are listed, so links
+    from Privacy, About and the FAQ keep working in either mode.
+14. **Leak check by canary.** With the list empty, "no partner leaks in hidden mode" proves
+    nothing. A made-up canary partner (mapped to a real job reference) was added
+    temporarily, the site was built in hidden mode, and all 193 rendered pages (including
+    `llms.txt`) and every browser bundle were searched. No match. The canary only appeared
+    in server code, where the config itself is compiled. The file was then restored. Unit
+    tests repeat the check with partners on record, and a guard test fails if any public
+    file reads partners other than through the public accessors.
+
 ---
 
 ## 4. Open questions for the client
@@ -499,8 +628,8 @@ Nothing below was guessed. Each one either keeps the current safe wording or was
    document preparation, and on what terms, is a question for the lawyer. The answer may
    change the Pricing page substantially.
 3. **The partners themselves.** Names, registered RA numbers, cities, expiry dates,
-   websites, and which jobs each handles. Send them in writing. The steps to publish them
-   are in section 5.
+   capacity, websites, and which jobs each handles. Send them in writing. They are recorded
+   internally and stay hidden from the public (section 5).
 4. **JobPosting `hiringOrganization`.** When an employer is confidential, the job's
    structured data names *Go Gulf* as the hiring organisation (`lib/job-posting.ts`, not
    changed). Under the new model that is inaccurate. Options: name the partner agent when
@@ -524,6 +653,27 @@ Nothing below was guessed. Each one either keeps the current safe wording or was
 10. **Translations.** When hi, ml, ta, bn and ar are translated, translators should start
     from this version, not the old one.
 
+Round 2:
+
+11. **A written agreement naming Go Gulf, the agent and the candidate.** Recommended,
+    but not confirmed. Not on the site until the client and the lawyer agree its form. See
+    `docs/DISPUTE_CONTROLS.md` §1.
+12. **Stage-by-stage expected timelines in writing.** Not promised on the site. Confirm
+    whether Go Gulf or the agent will give them, and in what form.
+13. **A receipt from Go Gulf for every payment.** The site promises a written quote for
+    any Go Gulf fee and the agent's receipt for its charge. Confirm that Go Gulf issues its
+    own receipt too (the /pay page confirms payment on screen; a receipt document is not
+    confirmed).
+14. **Who sends the written disclosure, and when exactly.** The copy says "before you pay
+    anything". Confirm who sends it (Go Gulf or the agent), in what form (email, WhatsApp,
+    a signed document), and that no payment is ever taken before it is sent.
+15. **Disclosure to employers.** Employers are told their requirement goes to registered
+    recruiting agents, but not that they'll be told which one. Confirm whether employers
+    should get the same written disclosure.
+16. **Grievance contact.** The internal checklist calls for one named contact. Nothing new
+    was published, and the existing Privacy Policy grievance section is unchanged until the
+    client names a person.
+
 ---
 
 ## 5. How to add real partners
@@ -533,7 +683,9 @@ Only from details the client has confirmed in writing.
 1. Check the agent on the Ministry of External Affairs list of active recruiting agents
    (linked from [mea.gov.in/overseas-employment.htm](https://www.mea.gov.in/overseas-employment.htm)),
    or on eMigrate. Copy the **registration number exactly** as it appears there.
-2. Open [content/partners.ts](../content/partners.ts) and add an entry to `PARTNER_DATA`:
+2. Open [content/partners.ts](../content/partners.ts) and add an entry to `PARTNER_DATA`.
+   It stays INTERNAL: while `PARTNER_DISPLAY` is `"hidden"` (the client's decision), none of
+   it reaches a public page.
 
    ```ts
    const PARTNER_DATA: z.input<typeof partnerListSchema> = [
@@ -544,6 +696,7 @@ Only from details the client has confirmed in writing.
        raRegistrationNumber: "…exactly as registered…",
        validUntil: "2030-12-31",           // optional: registration expiry (YYYY-MM-DD)
        website: "https://…",               // optional, https only
+       capacity: "1000+",                  // optional: as on the official record
        active: true,                       // false hides it without deleting it
        jobReferences: ["GG-JOB-2026-0001"], // optional: jobs this agent handles
      },
@@ -552,23 +705,44 @@ Only from details the client has confirmed in writing.
 
 3. Run `npm test`. The schema refuses a missing or empty RA number, a malformed date, a
    non-https website, a duplicate id or RA number, and a job given to two agents.
-4. Commit, push to `staging`, and check `/verify#partners`, `/candidates#partners`, a
-   mapped job's page and `/llms.txt`.
+4. Commit and push to `staging`.
 
-What the site then does, with no other change:
+With `PARTNER_DISPLAY = "hidden"` (now): **nothing public changes.** The record is used
+internally, for example when staff write the disclosure to a candidate. The public pages
+keep showing the written-disclosure promise.
 
-- `/verify` and `/candidates` list every **active**, unexpired partner, each with the RA
-  number directly under its name, plus links to the official lists.
-- A job whose reference is listed shows "Recruiting agent: *name*, RA registration
-  *number*".
+Only if the client later decides to name partners, set `PARTNER_DISPLAY` to `"named"` in
+`content/partners.ts`. Then:
+
+- `/verify` and `/candidates` list every **active**, unexpired partner, each with its RA
+  number directly under its name, above the same promise and the official links;
+- a job whose reference is listed shows "Recruiting agent: *name*, RA registration
+  *number*";
 - `/llms.txt` lists the partners.
 
-A partner whose `validUntil` has passed (by the Indian date) disappears automatically.
+Either way, a partner whose `validUntil` has passed (by the Indian date) stops counting
+as published automatically.
 `active: false` withdraws one at once.
 
 ---
 
 ## 6. What was verified
 
-See the final summary in the session for commands and results. In short: lint, typecheck,
-486 unit tests and the server build were run in the branch's worktree.
+Round 1: lint, typecheck, 486 unit tests and the server build passed in the branch's
+worktree.
+
+Round 2:
+- lint, typecheck and the server build pass;
+- 519 unit tests pass, including:
+  - hidden mode renders no partner name, number, city or website, even when partners are
+    passed in;
+  - named mode renders them, with the number under the name;
+  - `llms.txt` in both modes, with partners on record;
+  - the claims guard still catches 17 placement, licence and outcome phrasings and allows
+    the referral model's own wording;
+  - public files read partners only through the public accessors;
+- the canary build check (round 2 deviation 14) found no leak.
+
+The Playwright suite, including a new check that /verify and /candidates show the
+disclosure and name no agent, has to run against staging after deployment. It needs
+staging's data.
