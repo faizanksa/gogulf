@@ -84,9 +84,11 @@ const SECTIONS = [
           that employer and on the authorities concerned.
         </p>
         <p>
-          <strong>Before you pay anything</strong> in connection with a role, we tell you in
-          writing the name and registration number of the recruiting agent handling it, and who
-          is responsible for what. Do not pay anyone until you have that in writing.
+          <strong>Before we pass your profile to a recruiting agent, and before you pay
+          anything</strong> in connection with a role, we tell you in writing the name and
+          registration number of the recruiting agent handling it, and who is responsible for
+          what. We pass your profile on only after that, and only with your agreement. Do not
+          pay anyone until you have that in writing.
         </p>
       </>
     ),
@@ -127,10 +129,10 @@ const SECTIONS = [
         <ul>
           <li>you may submit an application only for yourself, and only with your own documents;</li>
           <li>
-            you authorise us to review your profile and to share it, with your supporting documents
-            (including your CV and passport copy), with the registered recruiting agent handling a
-            role and, through that agent, with the employer, for the purpose of a hiring process, as
-            described in our{" "}
+            you authorise us to review your profile and, once we have told you in writing which
+            registered recruiting agent handles a role and you have agreed, to share it with your
+            supporting documents (including your CV and passport copy) with that agent and, through
+            it, with the employer, for the purpose of a hiring process, as described in our{" "}
             <Link href="/privacy-policy">Privacy Policy</Link>;
           </li>
           <li>
@@ -221,8 +223,9 @@ const SECTIONS = [
       <>
         <p>
           A typical process has two parts. With us: application, registration and profile
-          submission, counselling, document preparation and, with your agreement, referral to a
-          registered recruiting agent. With the recruiting agent, the employer and the
+          submission, counselling, document preparation, written disclosure of the recruiting
+          agent and, with your agreement, referral to that agent. With the recruiting agent, the
+          employer and the
           authorities: shortlisting against the employer&apos;s requirement, employer interview,
           selection decision, offer and contract, medical examination, documentation and
           attestation, visa processing, emigration clearance, travel and joining.
