@@ -453,3 +453,14 @@
   gap: var(--space-3) var(--space-5);
   margin-top: var(--space-3);
 }
+
+/* "Company registration is not a recruiting licence" — said where the CIN is shown. */
+.recordNote {
+  margin: 0;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-divider);
+  color: var(--color-text);
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+}

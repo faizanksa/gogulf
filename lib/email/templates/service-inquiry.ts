@@ -28,7 +28,7 @@ export function serviceInquiryInternalEmail(input: ServiceInquiryInput) {
     { label: "Country", value: input.country },
     { label: "Source", value: input.page_source ?? "Services Page" },
     // Required by the form and the schema (D13).
-    { label: "Consent", value: "Yes: may be shared with registered recruiting agents where the enquiry needs it" },
+    { label: "Consent", value: "Yes: may be used to answer; share with a registered recruiting agent only after naming the agent in writing and getting agreement" },
   ];
 
   return {

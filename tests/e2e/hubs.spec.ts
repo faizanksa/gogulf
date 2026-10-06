@@ -192,7 +192,7 @@ test.describe("recruiting agents, partners hidden", () => {
     for (const path of ["/verify", "/candidates"]) {
       await page.goto(path);
       const block = page.locator("#partners");
-      await expect(block, path).toContainText("Before you pay anything, we give you in writing the agent's name, registration number, and who is responsible for what.");
+      await expect(block, path).toContainText("Before we pass on your profile, and before you pay anything, we give you in writing the agent's name, registration number, and who is responsible for what.");
       await expect(block, path).not.toContainText("RA registration number");
       await expect(block.getByRole("link", { name: /list of active recruiting agents/ }), path).toHaveAttribute("href", "https://www.mea.gov.in/overseas-employment.htm");
     }

@@ -8,7 +8,6 @@ import { Container, Section } from "@/components/ui/Layout";
 import { LtrText } from "@/components/ui/LtrText";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { PHONE, whatsappLink } from "@/content/channels";
-import { COMPANY } from "@/content/company";
 import { pageEntry } from "@/content/pages";
 import { contactFormCopy } from "@/lib/i18n/forms";
 import { hrefIn, pageText } from "@/lib/i18n/pages";
@@ -146,15 +145,9 @@ export default async function ContactPage() {
               </div>
               <div className={styles.asideBlock}>
                 <h3 className={styles.h3}>{t("contactPage.aside.office")}</h3>
-                <p className={styles.legalName}>{COMPANY.legalName}</p>
-                <address className={styles.address}>
-                  {COMPANY.addressLines.map((line) => (
-                    <span key={line}>{line}</span>
-                  ))}
-                </address>
-                <p className={styles.gstin}>
-                  {t("contactPage.aside.gstin")} <span className={styles.mono}>{COMPANY.gstin}</span>
-                </p>
+                {/* The legal name and registered office are shown once, in the footer and on
+                    /verify (client decision, 6 Oct 2026); this page links there. */}
+                <p>{t.rich("contactPage.aside.officeBody", { verify: (chunks) => <Link href={`${href("/verify")}#company-heading`}>{chunks}</Link> })}</p>
               </div>
             </aside>
           </div>

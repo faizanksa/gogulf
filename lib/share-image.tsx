@@ -13,7 +13,7 @@ import { COMPANY } from "@/content/company";
  */
 
 export const SHARE_IMAGE_SIZE = { width: 1200, height: 630 };
-export const SHARE_IMAGE_ALT = `Go Gulf — a brand of ${COMPANY.legalName}, Lucknow, India`;
+export const SHARE_IMAGE_ALT = "Go Gulf — counselling and referral for Gulf jobs from India, Lucknow";
 
 const INK = "#0e1a13";
 const GREEN = "#157a3c";
@@ -36,7 +36,7 @@ export async function renderShareImage(): Promise<ImageResponse> {
           <div style={{ fontSize: 112, fontWeight: 700, color: INK, lineHeight: 1 }}>Go Gulf</div>
           <div style={{ fontSize: 46, fontWeight: 700, color: GREEN, marginTop: 12 }}>{COMPANY.tagline}</div>
           <div style={{ width: 120, height: 5, background: GREEN, marginTop: 40, marginBottom: 36 }} />
-          <div style={{ fontSize: 30, color: TEXT, lineHeight: 1.3 }}>{COMPANY.legalName}</div>
+          <div style={{ fontSize: 30, color: TEXT, lineHeight: 1.3 }}>{`CIN ${COMPANY.cin}`}</div>
           {/* One text node per div: Satori needs display:flex on any div with several children. */}
           <div style={{ fontSize: 30, color: TEXT, lineHeight: 1.3 }}>
             {`Registered office: ${COMPANY.address.locality}, ${COMPANY.address.region}, India`}

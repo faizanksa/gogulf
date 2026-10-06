@@ -28,7 +28,7 @@ export function contactInternalEmail(input: ContactInput) {
     { label: "Phone", value: input.phone },
     { label: "Source", value: input.page_source ?? "Contact Page" },
     // Required by the form and the schema (D13).
-    { label: "Consent", value: "Yes: may be shared with registered recruiting agents where the enquiry needs it" },
+    { label: "Consent", value: "Yes: may be used to answer; share with a registered recruiting agent only after naming the agent in writing and getting agreement" },
   ];
 
   return {

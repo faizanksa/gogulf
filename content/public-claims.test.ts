@@ -63,7 +63,8 @@ const FORBIDDEN: RegExp[] = [
   /get hired|hire from india|bulk\s+(candidate\s+)?sourcing/i,
   /licen[cs]ed\s+(overseas\s+)?(recruit|manpower|placement|employment)/i,
   /registered\s+(overseas\s+)?(manpower|placement|employment)/i,
-  /recruit(ment|ing)\s+licen[cs]e/i,
+  // Negated uses ("…is not a recruiting licence") are the point of the round-3 notice.
+  /(?<!\bnot\s+an?\s+|\bno\s+)recruit(ment|ing)\s+licen[cs]e/i,
   /\bRA\s+licen[cs]e/i,
   /emigration\s+licen[cs]e/i,
   /MOFA[\s-]+(approv|complian|authori[sz]ed|registered)/i,
@@ -120,11 +121,33 @@ describe("public copy", () => {
     expect(read("app/llms.txt/route.ts")).toMatch(/Go Gulf is not registered as a recruiting agent\./);
   });
 
-  it("promises a candidate the agent's identity in writing before any payment", () => {
+  it("promises a candidate the agent's identity in writing before referral and before any payment", () => {
     const en = read("messages/en.json");
-    expect(en).toContain("Before you pay anything, we give you in writing the agent's name, registration number, and who is responsible for what.");
-    expect(en).toMatch(/"title": "Written disclosure", "body": "Before you pay anything, we give you in writing the agent's name and registration number/);
-    expect(read("app/(marketing)/(legal)/terms-and-conditions/page.js")).toMatch(/Before you pay anything<\/strong> in connection with a role, we tell you in writing the name and registration number/);
+    expect(en).toContain("Before we pass on your profile, and before you pay anything, we give you in writing the agent's name, registration number, and who is responsible for what.");
+    expect(read("app/(marketing)/(legal)/terms-and-conditions/page.js")).toMatch(
+      /Before we pass your profile to a recruiting agent, and before you pay anything<\/strong> in connection with a role, we tell you in writing the name and registration number/,
+    );
+  });
+
+  it("puts the written disclosure BEFORE the referral wherever the steps or the sharing are described (round 3)", () => {
+    const en = JSON.parse(readFileSync("messages/en.json", "utf8"));
+    const p = en.home.process;
+    // Step 4 is the disclosure, step 5 the referral, and ProcessSteps renders them in that order.
+    expect(p.s4.title).toBe("Written disclosure");
+    expect(p.s4.body).toMatch(/^Before we pass on your profile, and before you pay anything, we give you in writing the agent's name and registration number/);
+    expect(p.s5.title).toMatch(/^Referral/);
+    expect(p.s5.body).toBe("We pass your profile on only after you have the agent's details in writing and have agreed.");
+    const steps = readFileSync("components/site/ProcessSteps.tsx", "utf8");
+    expect(steps.indexOf('"home.process.s4.title"')).toBeLessThan(steps.indexOf('"home.process.s5.title"'));
+    // The consent box agrees to keeping documents; sharing waits for the disclosure and a further agreement.
+    for (const kind of ["application", "enquiry"]) {
+      expect(en.forms.consent[kind], kind).toMatch(/Before sharing them with a registered recruiting agent, Go Gulf will give me the agent's name and registration number in writing and ask for my agreement\.$/);
+    }
+    expect(read("app/(marketing)/(legal)/privacy-policy/page.js")).toMatch(/we first tell you in writing which recruiting agent, registered under the Emigration Act, 1983, handles the role, and its registration number\. Only then, and only with your agreement, do we share/);
+    expect(read("app/llms.txt/route.ts")).toMatch(/Before passing a candidate's profile to a recruiting agent, and before the candidate pays anything/);
+    // No copy may describe passing a profile on "with your agreement" without the disclosure first.
+    const hits = PUBLIC_SOURCES.filter((path) => /with your agreement, we pass your profile|we pass your profile to a registered recruiting agent we work with/i.test(read(path)));
+    expect(hits).toEqual([]);
   });
 });
 
@@ -138,6 +161,7 @@ describe("the claims guard itself", () => {
     "Go Gulf is authorised to recruit for Saudi Arabia.",
     "Our RA licence number is on request.",
     "Go Gulf's recruitment licence",
+    "We hold a recruiting licence.",
     "We place candidates with Gulf employers.",
     "Go Gulf selects the best candidates.",
     "We shortlist candidates for the employer.",
@@ -161,6 +185,7 @@ describe("the claims guard itself", () => {
     "The recruiting agent processes the visa and the emigration formalities.",
     "We do not guarantee selection, employment, a visa or a joining date.",
     "Check any agent on the eMigrate portal.",
+    "Company registration is not a recruiting licence.",
     "Before you pay anything, we give you in writing the agent's name, registration number, and who is responsible for what.",
   ])("allows %s", (text) => {
     expect(caught(text)).toBe(false);
@@ -199,3 +224,88 @@ describe("public address", () => {
     expect(postalAddress()).toMatchObject({ streetAddress: "G No-364, Mishrapur, Kursi Road, Jankipuram", addressLocality: "Lucknow", postalCode: "226021", addressCountry: "IN" });
   });
 });
+
+/**
+ * Round 3 (client decision, 6 Oct 2026): the legal name and the registered office are shown
+ * ONCE — the footer (compact), /verify, /about, the policy pages and email footers — plus the
+ * Organization structured data and llms.txt that describe the same company. The brand is
+ * the face of the site; the CIN and the contact routes stay everywhere they were.
+ */
+describe("legal name and registered office: shown once, not everywhere", () => {
+  const ALLOWED = [
+    /components[\\/]site[\\/]SiteFooter\.tsx$/,
+    /app[\\/]\(marketing\)[\\/]verify[\\/]page\.tsx$/,
+    /app[\\/]\(marketing\)[\\/]about[\\/]page\.tsx$/,
+    /app[\\/]\(marketing\)[\\/]\(legal\)[\\/]/,
+    /components[\\/]LegalPage\.tsx$/,
+    /lib[\\/]email[\\/]templates[\\/]layout\.ts$/,
+    /lib[\\/]seo\.ts$/, // the Organization node, consistent with the footer
+    /app[\\/]llms\.txt[\\/]route\.ts$/,
+    /content[\\/]pages\.ts$/, // only /about's description; checked below
+  ];
+  const USES = /COMPANY\.(legalName|shortName|addressLines|address\.lines)|LEGAL_ENTITY\.(name|shortName|tradeName)|ADDRESS_LINES|ADDRESS_ONE_LINE|postalAddress\(|Faizan Chaudhary|Mishrapur|Jankipuram|Kursi Road/;
+
+  it("appears only in the allowed files", () => {
+    const hits = PUBLIC_SOURCES.filter((path) => !ALLOWED.some((re) => re.test(path)) && USES.test(read(path)));
+    expect(hits).toEqual([]);
+  });
+
+  it("is named in one page description only, /about's", () => {
+    const pages = readFileSync("content/pages.ts", "utf8");
+    expect(pages.match(/Faizan Chaudhary/g)).toHaveLength(1);
+    expect(pages).toMatch(/id: "about"[^}]*Faizan Chaudhary/);
+  });
+
+  it("is passed to the catalogue only by the footer's 'brand of' line, /about and /verify", () => {
+    const en = readFileSync("messages/en.json", "utf8");
+    const keys = [...en.matchAll(/"(\w+)": "[^"]*\{legalName\}/g)].map((m) => m[1]);
+    expect(keys.sort()).toEqual(["body", "brandOf", "lead"]);
+    expect(en).toMatch(/"rights": "© \{year\} \{brand\}\. All rights reserved\."/);
+  });
+
+  it("is shown once in the footer, which also carries the registered office", () => {
+    const footer = read("components/site/SiteFooter.tsx");
+    expect(footer.match(/COMPANY\.legalName/g)).toHaveLength(1);
+    expect(footer).toMatch(/footer\.record\.office/);
+    expect(footer).toMatch(/COMPANY\.addressLines\.join/);
+  });
+
+  it("keeps the CIN in the top bar and footer, and every contact route", () => {
+    expect(read("components/site/SiteHeader.tsx")).toMatch(/COMPANY\.cin/);
+    expect(read("components/site/SiteHeader.tsx")).not.toMatch(/COMPANY\.(shortName|legalName)/);
+    const footer = read("components/site/SiteFooter.tsx");
+    expect(footer).toMatch(/COMPANY\.cin/);
+    expect(footer).toMatch(/<OfficialChannels/);
+    const channels = read("components/site/OfficialChannels.tsx");
+    for (const c of ["PHONE", "WHATSAPP", "CAREERS_EMAIL", "BUSINESS_EMAIL"]) expect(channels, c).toMatch(new RegExp(`${c}\\.href`));
+    expect(read("app/(marketing)/contact/page.tsx")).toMatch(/<OfficialChannels/);
+  });
+
+  it("keeps the Organization node accurate: legal name, CIN and registered office, no GSTIN", () => {
+    const org = organizationJsonLd() as Record<string, unknown>;
+    expect(org.legalName).toBe("Faizan Chaudhary Gulf Travels Private Limited");
+    expect(org.identifier).toMatchObject({ propertyID: "CIN", value: "U52291UP2024PTC198095" });
+    expect(org.address).toMatchObject({ addressLocality: "Lucknow", postalCode: "226021" });
+    expect(JSON.stringify(org)).not.toMatch(/GSTIN|09AALCC6656L1ZY|taxID/);
+    expect(String(org.description)).not.toMatch(/Faizan Chaudhary/);
+  });
+});
+
+describe("company registration is not presented as a recruiting licence (round 3)", () => {
+  const NOT_LICENCE = "Company registration is not a recruiting licence. Your recruiting agent's registration number is given to you in writing before you pay.";
+
+  it("says so beside the company facts on home, /verify, /about and the facts band", () => {
+    expect(JSON.parse(readFileSync("messages/en.json", "utf8")).companyFacts.notLicence).toBe(NOT_LICENCE);
+    for (const path of ["app/(marketing)/page.tsx", "app/(marketing)/verify/page.tsx", "components/site/CompanyFacts.tsx"]) {
+      expect(read(path), path).toMatch(/companyFacts\.notLicence/);
+    }
+    // /about and /employers show it through the company-facts band.
+    for (const path of ["app/(marketing)/about/page.tsx", "app/(marketing)/employers/page.tsx"]) expect(read(path), path).toMatch(/<CompanyFacts /);
+  });
+
+  it("never calls the company 'registered' or 'verified' in a way that reads as a licence", () => {
+    const hits = PUBLIC_SOURCES.filter((path) => /registered compan(y|ies)|compan(y|ies) registered in India|verified compan|licensed compan|approved compan|authori[sz]ed compan/i.test(read(path)));
+    expect(hits).toEqual([]);
+  });
+});
+

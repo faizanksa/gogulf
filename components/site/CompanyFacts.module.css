@@ -22,3 +22,10 @@
   min-height: var(--target-min);
   font-weight: var(--weight-semibold);
 }
+
+/* "Company registration is not a recruiting licence", beside the company facts. */
+.note {
+  margin: 0;
+  max-width: 65ch;
+  font-weight: var(--weight-semibold);
+}

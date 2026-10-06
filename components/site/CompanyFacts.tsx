@@ -7,7 +7,6 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { VisuallyHidden } from "@/components/ui/VisuallyHidden";
 import { COMPANY } from "@/content/company";
 import { formatDate } from "@/lib/i18n/format";
-import { DEFAULT, LOCALES } from "@/lib/i18n/locales";
 import { hrefIn } from "@/lib/i18n/pages";
 import { getTranslator } from "@/lib/i18n/server";
 import styles from "./CompanyFacts.module.css";
@@ -22,7 +21,6 @@ export const MCA_URL = "https://www.mca.gov.in/";
  */
 export async function CompanyFacts({ id = "company-facts", tone = "default" }: { id?: string; tone?: "default" | "subtle" }) {
   const t = await getTranslator();
-  const englishText = t.locale === DEFAULT ? undefined : LOCALES[DEFAULT].tag;
 
   return (
     <Section tone={tone} spacing="tight" labelledBy={id} divided={tone === "default"}>
@@ -32,7 +30,6 @@ export async function CompanyFacts({ id = "company-facts", tone = "default" }: {
           <FactList
             layout="grid"
             items={[
-              { key: "company", label: t("companyFacts.company"), value: <span lang={englishText}>{COMPANY.legalName}</span> },
               { key: "cin", label: t("companyFacts.cin"), value: <LtrText>{COMPANY.cin}</LtrText>, mono: true },
               {
                 key: "incorporated",
@@ -43,6 +40,7 @@ export async function CompanyFacts({ id = "company-facts", tone = "default" }: {
               { key: "fees", label: t("companyFacts.fees"), value: t("companyFacts.feesValue") },
             ]}
           />
+          <p className={styles.note}>{t("companyFacts.notLicence")}</p>
           <p className={styles.links}>
             <Link href={hrefIn("/verify", t.locale)} className={styles.link}>
               <Icon name="shield" size={18} />

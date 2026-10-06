@@ -32,7 +32,7 @@ export function jobApplicationInternalEmail(input: JobApplicationInput) {
     { label: "Submission ID", value: input.submission_id },
     { label: "Source", value: input.page_source ?? "Jobs Page" },
     // Required by the form and the schema (D13): the applicant agreed to referral.
-    { label: "Consent", value: "Yes: may be shared with a registered recruiting agent; agent to be named to the applicant in writing before any payment" },
+    { label: "Consent", value: "Yes: details and documents may be kept; share with a registered recruiting agent only after naming the agent in writing and getting the applicant's agreement" },
   ];
 
   const storageNote = input.submission_id
@@ -79,7 +79,7 @@ export function jobApplicationAcknowledgementEmail(input: JobApplicationInput) {
       body:
         paragraph(`Hi ${esc(firstName)},`) +
         paragraph(
-          `Thanks for applying through ${esc(SITE_NAME)}. We have received your application and our team will review it. If your profile suits the role, we will pass it to the registered recruiting agent handling the job, as you agreed. The employer decides who is selected.`,
+          `Thanks for applying through ${esc(SITE_NAME)}. We have received your application and our team will review it. If your profile suits the role, we will tell you in writing which registered recruiting agent handles it, and pass your application on only with your agreement. The employer decides who is selected.`,
         ) +
         detailTable(summary) +
         (input.submission_id
@@ -91,7 +91,8 @@ export function jobApplicationAcknowledgementEmail(input: JobApplicationInput) {
     }),
     text:
       `Hi ${firstName},\n\nThanks for applying through ${SITE_NAME}. We have received your ` +
-      `application and our team will review it. If your profile suits the role, we will pass it to the registered recruiting agent handling the job, as you agreed. The employer decides who is selected.\n\n${detailLines(summary)}\n\n` +
+      `application and our team will review it. If your profile suits the role, we will tell you in writing which registered ` +
+      `recruiting agent handles it, and pass your application on only with your agreement. The employer decides who is selected.\n\n${detailLines(summary)}\n\n` +
       (input.submission_id
         ? "Please keep the reference above — quote it if you contact us about this application.\n"
         : "") +

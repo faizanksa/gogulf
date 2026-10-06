@@ -202,8 +202,9 @@ const SECTIONS = [
             you prepare your profile and documents;
           </li>
           <li>
-            with your agreement, refer your profile and documents to a registered recruiting agent
-            and, through it, to employers, for a specific hiring process (see section 8);
+            after telling you in writing which registered recruiting agent handles a role, and with
+            your agreement, refer your profile and documents to that agent and, through it, to
+            employers, for a specific hiring process (see section 8);
           </li>
           <li>
             keep track of what the recruiting agent and the employer tell us about your
@@ -248,8 +249,9 @@ const SECTIONS = [
           <li>
             <strong>Your consent.</strong> When you submit a form, upload a document, or send us
             your CV, you are asking us to act on it — for example to consider you for a role and to
-            refer your profile to a registered recruiting agent and to employers. Our forms ask you
-            to confirm this with a consent box. You can withdraw that consent at any time (see
+            refer your profile to a registered recruiting agent and to employers — after telling
+            you in writing which agent, and only with your agreement. Our forms ask you to confirm
+            this with a consent box. You can withdraw that consent at any time (see
             section 17).
           </li>
           <li>
@@ -290,12 +292,12 @@ const SECTIONS = [
         <ul>
           <li>
             <strong>Registered recruiting agents.</strong> Where you apply for a role or ask us to
-            refer you, we share your profile and supporting documents — including your CV and
-            passport copy — with the recruiting agent, registered under the Emigration Act, 1983,
-            that handles the role. The agent uses them to run the recruitment, shares them with
-            employers and authorities as the process requires, and handles them under its own
-            privacy terms and the law. Before you pay anything, we tell you in writing which
-            agent is handling your application, and its registration number. You can check it on
+            refer you, we first tell you in writing which recruiting agent, registered under the
+            Emigration Act, 1983, handles the role, and its registration number. Only then, and
+            only with your agreement, do we share your profile and supporting documents —
+            including your CV and passport copy — with that agent. The agent uses them to run the
+            recruitment, shares them with employers and authorities as the process requires, and
+            handles them under its own privacy terms and the law. You can check the agent on
             the official list of active recruiting agents; our{" "}
             <Link href="/verify#partners">Verify page</Link> explains how.
           </li>

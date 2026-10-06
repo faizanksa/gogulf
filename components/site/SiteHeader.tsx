@@ -42,9 +42,9 @@ export async function SiteHeader({ switcher }: { switcher: SwitcherData | null }
     <>
       <div className={styles.utility}>
         <div className={styles.utilityInner}>
+          {/* The brand is the face of the site; the legal name is in the footer and on /verify.
+              The CIN stays here: it is how anyone looks the company up. */}
           <p className={styles.record}>
-            <span lang={englishText}>{COMPANY.shortName}</span>
-            <span className={styles.dot} aria-hidden="true" />
             <span>
               CIN{" "}
               <span className={styles.mono}>

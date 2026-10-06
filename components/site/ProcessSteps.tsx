@@ -5,7 +5,9 @@ import styles from "./ProcessSteps.module.css";
 
 /**
  * The ten-step process, split by WHO handles each step (6 Oct 2026, D13): the first five
- * with Go Gulf (application, registration, counselling, document preparation, referral),
+ * with Go Gulf (application and registration, counselling, document preparation, WRITTEN
+ * DISCLOSURE of the agent, then referral only with the candidate's agreement — in that
+ * order, enforced by content/public-claims.test.ts),
  * the last five with the registered recruiting agent, the employer and the authorities.
  * Go Gulf does not place candidates, so no step after the referral is described as ours.
  * Rendered on the home page and the job-seeker hub from this one source.

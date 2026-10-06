@@ -35,7 +35,7 @@ ${pages}
 
 ## Company
 
-- Website operator: ${COMPANY.legalName}, a ${COMPANY.companyType.toLowerCase()} registered in India, trading as "${COMPANY.brand}".
+- Website operator: ${COMPANY.legalName}, a ${COMPANY.companyType.toLowerCase()} incorporated in India, trading as "${COMPANY.brand}". Company registration is not a recruiting licence.
 - CIN: ${COMPANY.cin}
 - Incorporated: ${COMPANY.incorporationDate} (${COMPANY.roc})
 - Registered office: ${COMPANY.addressLines.join(", ")}
@@ -54,7 +54,7 @@ ${pages}
 - Any fee for a Go Gulf service is quoted in writing before payment. See ${SITE_URL}/pricing.
 - Go Gulf lists Gulf job openings, counsels job seekers from India, helps prepare their profile and documents, and refers them to recruiting agents registered under the Emigration Act, 1983. It introduces employers' hiring requirements to those agents. It is not an employer, it does not select or place candidates, and it does not guarantee selection, employment, visa issuance or joining. See ${SITE_URL}/terms-and-conditions.
 - Go Gulf is not registered as a recruiting agent. Interviews, offers, visa processing, emigration formalities and the statutory service charge are handled by the registered recruiting agent.
-- ${partners ? `Registered recruiting-agent partners: ${partners}.` : "Go Gulf does not publish the names of the recruiting agents it works with."} Before a candidate pays anything, Go Gulf gives them in writing the agent's name, registration number, and who is responsible for what.
+- ${partners ? `Registered recruiting-agent partners: ${partners}.` : "Go Gulf does not publish the names of the recruiting agents it works with."} Before passing a candidate's profile to a recruiting agent, and before the candidate pays anything, Go Gulf gives them in writing the agent's name, registration number, and who is responsible for what; the profile is passed on only with the candidate's agreement.
 - The CIN above is a company registration with the Ministry of Corporate Affairs. It identifies the company; it is not a licence for any particular line of business, and this file makes no claim to any licence or registration beyond it.
 - The operating company was incorporated on ${COMPANY.incorporationDate}. This file makes no claim about business history before that date.
 - To check you are dealing with Go Gulf, see ${SITE_URL}/verify.

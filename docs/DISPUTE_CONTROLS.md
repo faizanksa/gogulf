@@ -21,7 +21,7 @@ kept. Then change `Status` from *to confirm* to *confirmed (date, by whom)*.
 
 ## 1. Written disclosure and a three-party agreement
 
-**What:** before any payment, the candidate receives in writing:
+**What:** before the candidate's profile is passed to an RA, and before any payment (round 3 order), the candidate receives in writing:
 - the RA's name and registration number;
 - who does what (Go Gulf: counselling, preparation, referral; RA: recruitment, visa,
   emigration; employer: selection, employment);
@@ -31,7 +31,7 @@ kept. Then change `Status` from *to confirm* to *confirmed (date, by whom)*.
 candidate), or two documents. What language it is in (the candidate's own?). Who keeps the
 signed copy.
 
-**Evidence:** a signed copy attached to the case in the CRM before any payment is recorded.
+**Evidence:** a signed copy attached to the case in the CRM before any referral or payment is recorded, and the candidate's agreement to the referral, recorded after the disclosure was sent. The consent box on the site only covers keeping the documents.
 
 **Status:** to confirm with client or lawyer. *(The site already promises the written
 disclosure. The "three-party agreement" is NOT promised on the site; it is an open

@@ -20,8 +20,13 @@ The partner list is data-driven ([content/partners.ts](../content/partners.ts)) 
 site. Partners are now **hidden** by default (`PARTNER_DISPLAY = "hidden"`; `"named"` still
 works and is tested). The site promises instead that each candidate gets the agent's name,
 registration number and the split of responsibilities **in writing before paying
-anything**. Section 0 is the latest state. Sections 1–2 record round 1; where round 2
+anything**. Section 0 records round 2. Sections 1–2 record round 1; where round 2
 changed a string again, section 0 shows the current wording.
+
+**Round 3 (same day, after a staging review):** the written disclosure now comes **before**
+the referral, company registration is stated not to be a recruiting licence, and the legal
+name and registered office are shown once (footer, /verify, /about, policies, emails)
+instead of across the site. Section R3 is the latest state.
 
 Only English changed. The other catalogues (hi, ml, ta, bn, ar) have not been started and
 were left alone. CIN and GSTIN data, fee amounts, the database schema and migrations, the
@@ -29,7 +34,213 @@ CRM pipeline, payments code and auth were not touched.
 
 ---
 
-## 0. Round 2 (latest): partners hidden, identity disclosed in writing
+## R3. Round 3 (latest): disclosure before referral, no licence reading, legal name once
+
+These changes came from a review of staging.gogulf.co. Where round 3 changed a string
+again, the table at the end of this section has the current wording.
+
+### Change 1: the agent is named in writing BEFORE the profile is passed on
+
+Before: step 04 was "Referral" (we pass your profile to an agent) and step 05 was "Written
+disclosure". A candidate's documents could reach an agent they had not been told about.
+
+After:
+
+| # | With Go Gulf | # | With your recruiting agent |
+|---|---|---|---|
+| 1 | Application and registration | 6 | Shortlisting and interview |
+| 2 | Counselling | 7 | Selection and offer |
+| 3 | Document preparation | 8 | Medical and attestation |
+| 4 | **Written disclosure**: "Before we pass on your profile, and before you pay anything, we give you in writing the agent's name and registration number, who is responsible for what, and any Go Gulf fee." | 9 | Visa and emigration clearance |
+| 5 | **Referral, with your agreement**: "We pass your profile on only after you have the agent's details in writing and have agreed." | 10 | Departure and joining |
+
+The same order now applies everywhere the sequence is described:
+- **Pages:** the home process lead and job board lead, the disclosure statement (/verify,
+  /candidates), the "What you should get in writing" lead, FAQ answers 4 and 8, the
+  /services aside, the /jobs lead and steps, the job page's "How to apply", the apply page
+  (lead, "After you apply", privacy note, receipt);
+- **Services:** "Gulf job applications" and "Referral to a registered recruiting agent";
+- **Consent box** (application and enquiry), the application acknowledgement email, and
+  all three staff-email consent rows;
+- **`llms.txt`**, and the Terms and Privacy drafts (listed below).
+
+There is no structured data that lists the steps (no HowTo or FAQ schema), so nothing
+changed there.
+
+**The consent box now agrees to less.** Ticking it lets Go Gulf keep the details and
+documents. Sharing them with an agent needs the written disclosure **and** a further
+agreement. Wording: "…Before sharing them with a registered recruiting agent, Go Gulf
+will give me the agent's name and registration number in writing and ask for my
+agreement."
+
+**Enforced by tests:**
+- `content/public-claims.test.ts` checks that step 4 is "Written disclosure", step 5 is
+  referral "only after…", and that ProcessSteps renders 4 before 5.
+- It also checks the consent wording, the Privacy order and `llms.txt`, and fails on
+  phrases such as "with your agreement, we pass your profile" (the old order).
+- `tests/e2e/identity.spec.ts` checks the order on the rendered /candidates page.
+
+### Change 2: company registration is not a recruiting licence
+
+New line, beside the company facts on the home hero card, the company-facts band (on
+/about and /employers) and /verify's company section: **"Company registration is not a
+recruiting licence. Your recruiting agent's registration number is given to you in writing
+before you pay."**
+
+Licence-like wording reviewed across copy, metadata, structured data, `llms.txt` and
+emails. Changed:
+
+| Where | Before | After |
+|---|---|---|
+| Home hero card / facts band heading | A registered company you can look up | A company you can look up |
+| Same, lead | Go Gulf is a brand of a company registered in India… | Go Gulf is a brand of a company incorporated in India… |
+| /candidates, "Check the company" | Go Gulf is a brand of a registered company: look up its CIN… | Go Gulf is a brand of a company incorporated in India: look up its CIN… That is a company record, not a recruiting licence. Check a recruiting agent on the official list… |
+| /about meta description | …a company registered in India with its office in Lucknow… | …a private limited company incorporated in India, with its registered office in Lucknow. |
+| `llms.txt` operator line | …a private company registered in India… | …incorporated in India… Company registration is not a recruiting licence. |
+
+Reviewed and left as they are, because none reads as a licence:
+- "Registered office" (a legal term for an address);
+- "registered under GST";
+- "Registered business activity" (the MCA wording, see open question 17);
+- "approved refunds";
+- the "Verify Go Gulf" page name. It checks identity and contacts, and now carries the
+  notice;
+- every "registered recruiting agent" phrase, which describes the partners, never Go Gulf.
+
+The guard test forbids "registered company", "company registered in India", and
+"verified / licensed / approved / authorised company" in public files.
+
+### Change 3: legal name and registered office shown once, not everywhere
+
+| Where | Before | After |
+|---|---|---|
+| Top bar (every page) | Faizan Chaudhary Gulf Travels Pvt. Ltd. · CIN … | CIN … (the brand stays in the header) |
+| Home hero card | "Operating company: Faizan Chaudhary Gulf Travels Private Limited" row | Row removed. CIN, incorporation date, office city and the fee rule stay; licence notice added |
+| Company-facts band (/employers, /about) | Legal-name row | Row removed; licence notice added |
+| /contact aside | "Registered office": legal name, full address, GSTIN | "Company details": "Our legal name, registered office, CIN and GSTIN are on Verify Go Gulf." (link). Phone, WhatsApp and both emails stay |
+| Footer (every page) | Legal name twice ("brand of…" and "© 2026 Faizan Chaudhary…"); no address | Legal name **once** ("Go Gulf is a brand of…"), plus a compact **Registered office** row next to the CIN and GSTIN. Copyright line: "© 2026 Go Gulf. All rights reserved." |
+| Share image (OG/Twitter) | Legal name line; alt text "Go Gulf — a brand of Faizan Chaudhary Gulf Travels Private Limited, Lucknow, India" | CIN line instead of the name; alt text "Go Gulf — counselling and referral for Gulf jobs from India, Lucknow" |
+| Default site description (Organization `description`, `llms.txt` summary) | "Go Gulf, a brand of Faizan Chaudhary Gulf Travels Private Limited in Lucknow, …" | "Go Gulf, based in Lucknow, …" |
+| /contact meta description | "…and the registered office of Faizan Chaudhary Gulf Travels Private Limited in Lucknow." | "Phone, WhatsApp and email for Go Gulf: one route for job seekers and one for employers, with a contact form that reaches the right team." |
+
+**Still shown in full** (the allowed places):
+- the footer (once, compact);
+- /verify;
+- /about (its lead already carried them);
+- the policy pages that identify the contracting party, through the LegalPage header and
+  each policy's "who we are";
+- email footers;
+- the Organization structured data and `llms.txt`, which describe the same company.
+
+**Structured data:** the Organization node keeps `legalName`, the CIN identifier and the
+registered-office `address`, consistent with the footer, which now shows both on every
+page. `description` no longer names the legal entity. No GSTIN (D8). A test pins this.
+
+**Configuration:** the registered office is configured in one place,
+[lib/legal.js](../lib/legal.js) `REGISTERED_ADDRESS`. A new
+`VISITOR_ADDRESS = null` (exposed as `COMPANY.visitorAddress`) is ready for a separate
+visitor address, unused while null. No address was invented. The list of allowed places
+is documented in `content/company.ts` and enforced by
+`content/public-claims.test.ts` ("appears only in the allowed files").
+
+### Round 3 legal-draft edits (for lawyer review)
+
+1. **Terms, what this website is for:** "Before we pass your profile to a recruiting
+   agent, and before you pay anything, … we tell you in writing the name and registration
+   number… We pass your profile on only after that, and only with your agreement."
+2. **Terms, using the website as a candidate:** the authorisation to share applies only
+   "once we have told you in writing which registered recruiting agent handles a role and
+   you have agreed".
+3. **Terms, the hiring process:** "…document preparation, written disclosure of the
+   recruiting agent and, with your agreement, referral to that agent."
+4. **Privacy, how we use it:** referral "after telling you in writing which registered
+   recruiting agent handles a role, and with your agreement".
+5. **Privacy, grounds (consent):** "…after telling you in writing which agent, and only
+   with your agreement."
+6. **Privacy, who we share with (registered recruiting agents):** "we first tell you in
+   writing which recruiting agent… handles the role, and its registration number. Only
+   then, and only with your agreement, do we share your profile and supporting
+   documents…"
+
+### Round 3 deviations
+
+15. **The licence notice on /about comes from the company-facts band.** /about already
+    shows that band, so a second copy in the page body would have repeated it. /employers
+    gets it the same way.
+16. **The footer now shows the registered office**, which it didn't before. The brief
+    allows the footer "(compact)". This keeps the Organization structured data
+    (`address` on every page) consistent with what every page shows, rather than
+    dropping the address from structured data.
+17. **The Shipping & Delivery Policy keeps the operator's name** through the shared
+    LegalPage header. It's a policy page that payment platforms read; removing the
+    operator from one policy page would be inconsistent.
+18. **/contact links to /verify for the legal name, registered office and GSTIN** instead
+    of repeating them. Every contact detail stays (phone, WhatsApp, both emails, the
+    form). The registered office is still visible on that page, in its footer.
+19. **The new notice's wording is the brief's, verbatim:** "…given to you in writing
+    before you pay." Elsewhere the copy says "before we pass on your profile, and before
+    you pay anything". The notice is accurate (both are true) but shorter.
+
+### Round 3 open questions (lawyer or CA)
+
+17. **MCA business activity.** The company's registered activity on the MCA record is
+    "Activities of travel agents and tour operators". /verify shows it as a fact. The
+    actual business is counselling, document preparation and referral. Ask the CA whether
+    the activity code should be updated, and the lawyer whether showing it creates any
+    confusion.
+18. **Registered office in the footer on every page.** It's needed for consistency with
+    the Organization structured data. If the client prefers it only on /verify, the
+    alternative is to drop `address` from the structured data. Decide with whoever owns
+    SEO.
+19. **A visitor address.** If the client wants a separate address for visitors, set
+    `VISITOR_ADDRESS` in `lib/legal.js` from a confirmed address. Where it should then
+    appear (contact page, Google Business Profile) is a business decision.
+20. **Consent in two stages.** The consent box now agrees to keeping documents only, and
+    sharing needs a later agreement. The lawyer should confirm how that second agreement
+    is recorded (written, email or WhatsApp reply) so it can be proved later. See
+    `docs/DISPUTE_CONTROLS.md` §1 and §7.
+21. **Operational fit.** Staff must now get the candidate's agreement after the
+    disclosure and before referral, for every referral. Confirm the business can do this
+    every time. The site now promises it.
+
+### Catalogue strings changed in round 3
+
+| Key | Before (round 2) | After |
+|---|---|---|
+| `home.process.lead` | Go Gulf helps with the first five steps, and tells you in writing who your recruiting agent is before you pay anything. The agent handles the rest, with the employer and the authorities. | Go Gulf helps with the first five steps. Before your profile goes to a recruiting agent, or you pay anything, we tell you in writing who the agent is. The agent then handles the rest, with the employer and the authorities. |
+| `home.process.s4` | title: Referral / body: With your agreement, we pass your profile to a registered recruiting agent we work with. | title: Written disclosure / body: Before we pass on your profile, and before you pay anything, we give you in writing the agent's name and registration number, who is responsible for what, and any Go Gulf fee. |
+| `home.process.s5` | title: Written disclosure / body: Before you pay anything, we give you in writing the agent's name and registration number, who is responsible for what, and any Go Gulf fee. | title: Referral, with your agreement / body: We pass your profile on only after you have the agent's details in writing and have agreed. |
+| `home.jobs.lead` | Each job has its own page with the place, the details and how to apply. Applications are passed to the registered recruiting agent handling the job. | Each job has its own page with the place, the details and how to apply. Applications go to the registered recruiting agent handling the job, once you have its details in writing and have agreed. |
+| `partners.disclosure` | We work with registered recruiting agents. Before you pay anything, we give you in writing the agent's name, registration number, and who is responsible for what. | We work with registered recruiting agents. Before we pass on your profile, and before you pay anything, we give you in writing the agent's name, registration number, and who is responsible for what. |
+| `verifyPage.payments.r5` | Before you pay anything, you get the recruiting agent's name and registration number in writing. You can check them on the official list of active recruiting agents. | Before your profile goes to a recruiting agent, and before you pay anything, you get the agent's name and registration number in writing. You can check them on the official list of active recruiting agents. |
+| `candidatesPage.inWriting.lead` | Before you pay anything, make sure you have these in writing. If you do not, do not pay. | Make sure you have the first three in writing before your profile is passed on or you pay anything. If you do not, do not pay. |
+| `candidatesPage.inWriting.i4` | A receipt from the agent for its service charge. | A receipt from the agent for every payment of its service charge. |
+| `candidatesPage.faq.a4` | You get a confirmation email with a reference number, and our team contacts you. If your profile suits a role, and you agree, we pass it to the registered recruiting agent handling that role. | You get a confirmation email with a reference number, and our team contacts you. If your profile suits a role, we first tell you in writing which registered recruiting agent handles it, with its registration number. We pass your profile on only after that, and only if you agree. |
+| `candidatesPage.faq.a8` | Yes. Before you pay anything, we give you in writing the agent's name and registration number, and who is responsible for what. We do not list the agents we work with on this website. | Yes. Before we pass on your profile, and before you pay anything, we give you in writing the agent's name and registration number, and who is responsible for what. We do not list the agents we work with on this website. |
+| `servicesPage.inquiry.inWriting` | Before you pay anything, we give you in writing the recruiting agent's name and registration number, and who is responsible for what. | Before we pass on your details, and before you pay anything, we give you in writing the recruiting agent's name and registration number, and who is responsible for what. |
+| `jobsPage.lead` | Read what each job involves, then apply online. Applying is free. Applications are passed to the registered recruiting agent handling the job. | Read what each job involves, then apply online. Applying is free. Applications go to the registered recruiting agent handling the job, once you have its details in writing and have agreed. |
+| `jobsPage.step2` | We review it and, with your agreement, pass it to the registered recruiting agent handling the job. | We review it, tell you in writing which registered recruiting agent handles the job, and pass it on only if you agree. |
+| `jobs.applyStep2` | If your profile suits the role, we pass it to the registered recruiting agent handling it. | If your profile suits the role, we tell you in writing which registered recruiting agent handles it, and pass it on only if you agree. |
+| `apply.lead` | Fill in your details and attach your CV and a copy of your passport. You get a confirmation email with a reference number. If your profile suits the role, we pass your application to the registered recruiting agent handling it. | Fill in your details and attach your CV and a copy of your passport. You get a confirmation email with a reference number. If your profile suits the role, we tell you in writing which registered recruiting agent handles it before passing your application on. |
+| `apply.receipt.next` | Our team reviews your application. If it suits the role, we pass it to the registered recruiting agent handling it. You will hear from us or from the agent about the next step. | Our team reviews your application. If it suits the role, we tell you in writing which registered recruiting agent handles it, and pass your application on only if you agree. |
+| `apply.aside.next2` | If your profile suits the role, we pass it to the registered recruiting agent handling it. | If your profile suits the role, we tell you in writing which registered recruiting agent handles it, and pass it on only if you agree. |
+| `apply.aside.privacy` | Your documents go to private storage, not email. We share them with the registered recruiting agent handling your application, and through it with the employer. You get the agent's name in writing before you pay anything — see our <privacy>Privacy policy</privacy>. | Your documents go to private storage, not email. We share them with a registered recruiting agent only after you have its name and registration number in writing and have agreed, and through it with the employer — see our <privacy>Privacy policy</privacy>. |
+| `forms.consent.application` | I agree that Go Gulf may keep my details and documents, including my CV and passport copy, and share them with a registered recruiting agent for my job applications. Go Gulf will give me the agent's name and registration number in writing before I pay anything. | I agree that Go Gulf may keep my details and documents, including my CV and passport copy, for my job applications. Before sharing them with a registered recruiting agent, Go Gulf will give me the agent's name and registration number in writing and ask for my agreement. |
+| `forms.consent.enquiry` | I agree that Go Gulf may use these details to answer my enquiry, and share them with a registered recruiting agent where my enquiry needs it. Go Gulf will give me the agent's name and registration number in writing before I pay anything. | I agree that Go Gulf may use these details to answer my enquiry. Before sharing them with a registered recruiting agent, Go Gulf will give me the agent's name and registration number in writing and ask for my agreement. |
+| `companyFacts.heading` | A registered company you can look up | A company you can look up |
+| `companyFacts.lead` | Go Gulf is a brand of a company registered in India. You can check each of these yourself, without asking us. | Go Gulf is a brand of a company incorporated in India. You can check each of these yourself, without asking us. |
+| `companyFacts.notLicence` | *(new)* | Company registration is not a recruiting licence. Your recruiting agent's registration number is given to you in writing before you pay. |
+| `candidatesPage.safety.check3` | Go Gulf is a brand of a registered company: look up its CIN on the Ministry of Corporate Affairs website. Check a recruiting agent on the official list of active recruiting agents. | Go Gulf is a brand of a company incorporated in India: look up its CIN on the Ministry of Corporate Affairs website. That is a company record, not a recruiting licence. Check a recruiting agent on the official list of active recruiting agents. |
+| `footer.rights` | © {year} {legalName}. All rights reserved. | © {year} {brand}. All rights reserved. |
+| `footer.record.office` | *(new)* | Registered office |
+| `contactPage.aside.office` | Registered office | Company details |
+| `contactPage.aside.officeBody` | *(new)* | Our legal name, registered office, CIN and GSTIN are on <verify>Verify Go Gulf</verify>. |
+| `contactPage.aside.label` | Contact details and registered office | Contact details and company details |
+
+---
+
+
+## 0. Round 2: partners hidden, identity disclosed in writing
 
 **Client decision:** recruiting-agent (RA) names, registration numbers and logos do
 **not** appear on the public site. Instead, every candidate is given the agent's name,
