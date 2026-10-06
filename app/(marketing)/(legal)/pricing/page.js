@@ -181,6 +181,8 @@ const SECTIONS = [
           charge for recruitment, as that Act and its rules allow. That charge belongs to the
           agent: <strong>the agent collects it and gives you a receipt for it</strong>. It is not
           paid to us, it is not part of any {LEGAL_ENTITY.brand} fee, and we do not set it.
+          Before you pay it, we give you in writing the agent&apos;s name and registration
+          number.
         </p>
         <p>
           If anyone asks you to pay a recruiting agent&apos;s charge without the agent&apos;s

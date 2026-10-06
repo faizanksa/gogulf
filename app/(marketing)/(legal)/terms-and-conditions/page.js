@@ -77,9 +77,16 @@ const SECTIONS = [
           We are <strong>not registered as a recruiting agent</strong> under the Emigration Act,
           1983. We counsel candidates, help them prepare their profile and documents, and refer
           them to recruiting agents registered under that Act; we introduce employers&apos;
-          requirements to those agents. The registered recruiting agent runs the recruitment —
-          shortlisting, interviews, offers, visa processing and emigration formalities — and the
-          employer named in your employment contract is your employer.
+          requirements to those agents. The registered recruiting agent, not us, is the party
+          that recruits you: it runs the recruitment — shortlisting, interviews, offers, visa
+          processing and emigration formalities. The employer named in your employment contract
+          is your employer, and whether you are selected, issued a visa or able to join depends on
+          that employer and on the authorities concerned.
+        </p>
+        <p>
+          <strong>Before you pay anything</strong> in connection with a role, we tell you in
+          writing the name and registration number of the recruiting agent handling it, and who
+          is responsible for what. Do not pay anyone until you have that in writing.
         </p>
       </>
     ),
@@ -415,7 +422,8 @@ const SECTIONS = [
           attestation charges, medical examination fees, insurance and air fares — are payable to or
           through the relevant provider and are not our service fee. A registered recruiting
           agent&apos;s statutory service charge is collected by that agent, which gives you a
-          receipt for it; it is not paid to us and is not our fee. Taxes, including GST, apply as
+          receipt for it; it is not paid to us and is not our fee. We tell you the agent&apos;s
+          name and registration number in writing before you pay it. Taxes, including GST, apply as
           required by law.
         </p>
         <p>
