@@ -99,13 +99,13 @@ export const PAGES: PageEntry[] = validate(
     },
     {
       id: "about", path: "/about", title: "About Go Gulf",
-      description: "Who runs Go Gulf: Faizan Chaudhary Gulf Travels Private Limited, a company registered in India with its office in Lucknow, Uttar Pradesh.",
+      description: "Who runs Go Gulf: Faizan Chaudhary Gulf Travels Private Limited, a private limited company incorporated in India, with its registered office in Lucknow.",
       breadcrumb: "About", updatedOn: "2026-10-06", index: true, sitemap: { changeFrequency: "monthly", priority: 0.6 },
       localizable: true,
     },
     {
       id: "contact", path: "/contact", title: "Contact Go Gulf",
-      description: "Phone, WhatsApp and email for job seekers and employers, and the registered office of Faizan Chaudhary Gulf Travels Private Limited in Lucknow.",
+      description: "Phone, WhatsApp and email for Go Gulf: one route for job seekers and one for employers, with a contact form that reaches the right team.",
       breadcrumb: "Contact", updatedOn: "2026-10-06", index: true, sitemap: { changeFrequency: "monthly", priority: 0.5 },
       localizable: true,
     },

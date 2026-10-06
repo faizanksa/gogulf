@@ -15,7 +15,6 @@ import { whatsappLink } from "@/content/channels";
 import { COMPANY } from "@/content/company";
 import { SERVICES } from "@/content/services";
 import { formatDate } from "@/lib/i18n/format";
-import { DEFAULT, LOCALES } from "@/lib/i18n/locales";
 import { hrefIn, serviceText } from "@/lib/i18n/pages";
 import { getTranslator, localizedPageMetadata, requireAvailable } from "@/lib/i18n/server";
 import type { MessageKey } from "@/lib/i18n/translator";
@@ -69,7 +68,6 @@ export default async function HomePage() {
   const cardText = jobCardText(t);
   const whatsapp = whatsappLink(t("home.whatsappGreeting"));
   const opensWhatsApp = t("common.opensWhatsApp");
-  const englishText = locale === DEFAULT ? undefined : LOCALES[DEFAULT].tag;
 
   return (
     <>
@@ -131,10 +129,6 @@ export default async function HomePage() {
                 </dd>
               </div>
               <div>
-                <dt>{t("companyFacts.company")}</dt>
-                <dd lang={englishText}>{COMPANY.legalName}</dd>
-              </div>
-              <div>
                 <dt>{t("companyFacts.incorporated")}</dt>
                 <dd>
                   <time dateTime={COMPANY.incorporationISO}>{formatDate(COMPANY.incorporationISO, locale)}</time>
@@ -149,6 +143,7 @@ export default async function HomePage() {
                 <dd>{t("companyFacts.feesValue")}</dd>
               </div>
             </dl>
+            <p className={styles.recordNote}>{t("companyFacts.notLicence")}</p>
           </aside>
         </div>
       </section>

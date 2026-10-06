@@ -135,7 +135,7 @@ describe("partner block rendering", () => {
 
   it("states the written-disclosure promise", () => {
     expect(text.disclosure).toBe(
-      "We work with registered recruiting agents. Before you pay anything, we give you in writing the agent's name, registration number, and who is responsible for what.",
+      "We work with registered recruiting agents. Before we pass on your profile, and before you pay anything, we give you in writing the agent's name, registration number, and who is responsible for what.",
     );
   });
 
@@ -145,7 +145,7 @@ describe("partner block rendering", () => {
       expect(html, leak).not.toContain(leak);
     }
     expect(html).not.toContain("<ul");
-    expect(html).toContain("Before you pay anything, we give you in writing the agent&#x27;s name, registration number, and who is responsible for what.");
+    expect(html).toContain("Before we pass on your profile, and before you pay anything, we give you in writing the agent&#x27;s name, registration number, and who is responsible for what.");
     expect(html).toContain("Check any agent on the official list.");
   });
 

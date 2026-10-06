@@ -124,7 +124,7 @@ describe("translator", () => {
     expect(en("forms.contact.sentNoCopy")).toBe(
       "Message received — our team will contact you. We could not email you a copy, but your message did reach us.",
     );
-    expect(en("footer.rights", { year: "2026", legalName: "X Pvt Ltd" })).toBe("© 2026 X Pvt Ltd. All rights reserved.");
+    expect(en("footer.rights", { year: "2026", brand: "Go Gulf" })).toBe("© 2026 Go Gulf. All rights reserved.");
     expect(en("jobs.metaTitle", { title: "Site Supervisor", where: "Saudi Arabia" })).toBe("Site Supervisor in Saudi Arabia");
   });
 

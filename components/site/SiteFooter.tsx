@@ -94,12 +94,16 @@ export async function SiteFooter() {
                   <LtrText>{COMPANY.gstin}</LtrText>
                 </dd>
               </div>
+              <div>
+                <dt>{t("footer.record.office")}</dt>
+                <dd lang={englishText}>{COMPANY.addressLines.join(", ")}</dd>
+              </div>
             </dl>
           </div>
         </section>
 
         <div className={styles.bottom}>
-          <p>{t("footer.rights", { year, legalName: COMPANY.legalName })}</p>
+          <p>{t("footer.rights", { year, brand: COMPANY.brand })}</p>
           <a href="https://mail.google.com/a/gogulf.co/" target="_blank" rel="noopener noreferrer">
             {t("footer.staffWebmail")}
             <span className="visually-hidden"> {t("common.opensInNewTab")}</span>

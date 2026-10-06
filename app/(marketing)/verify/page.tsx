@@ -82,6 +82,9 @@ export default async function VerifyPage() {
               <SectionHeading id="company-heading" title={t("verifyPage.company.heading")} lead={t("verifyPage.company.body", { legalName: COMPANY.legalName })} />
               <FactList items={facts} />
               <p className={styles.note}>{t("verifyPage.company.registration")}</p>
+              <p className={styles.note}>
+                <strong>{t("companyFacts.notLicence")}</strong>
+              </p>
               <p className={styles.links}>
                 <a href={MCA_URL} target="_blank" rel="noopener noreferrer">
                   {t("verifyPage.company.mca")}

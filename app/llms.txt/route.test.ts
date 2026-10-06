@@ -35,7 +35,7 @@ describe("llms.txt", () => {
     const text = await llms("hidden");
     for (const leak of ["Test Agent", "TEST-RA-0001", "Mumbai"]) expect(text, leak).not.toContain(leak);
     expect(text).toContain("Go Gulf does not publish the names of the recruiting agents it works with.");
-    expect(text).toContain("Before a candidate pays anything, Go Gulf gives them in writing the agent's name, registration number, and who is responsible for what.");
+    expect(text).toContain("Before passing a candidate's profile to a recruiting agent, and before the candidate pays anything, Go Gulf gives them in writing the agent's name, registration number, and who is responsible for what; the profile is passed on only with the candidate's agreement.");
     expect(text).toContain("Go Gulf is not registered as a recruiting agent.");
   });
 

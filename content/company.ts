@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ADDRESS_LINES, LEGAL_ENTITY, REGISTERED_ADDRESS } from "@/lib/legal";
+import { ADDRESS_LINES, LEGAL_ENTITY, REGISTERED_ADDRESS, VISITOR_ADDRESS } from "@/lib/legal";
 import { validate } from "./schema";
 
 /**
@@ -28,6 +28,16 @@ export const COMPANY = {
   gstin: LEGAL_ENTITY.gstin,
   address: REGISTERED_ADDRESS,
   addressLines: ADDRESS_LINES,
+  /**
+   * WHERE THE LEGAL NAME AND REGISTERED OFFICE MAY APPEAR (client decision, 6 Oct 2026):
+   * the footer (once, compact), /verify, /about, the policy pages that identify the
+   * contracting party, email footers, and the Organization structured data / llms.txt that
+   * describe the same company. Nowhere else: the brand is the face of the site.
+   * content/public-claims.test.ts enforces the list. The address itself is configured in
+   * lib/legal.js REGISTERED_ADDRESS.
+   */
+  /** Optional separate address for visitors (lib/legal.js VISITOR_ADDRESS); unused while null. */
+  visitorAddress: VISITOR_ADDRESS,
   website: "www.gogulf.co",
   /** Replaced "Go Gulf. Get Hired." (6 Oct 2026): Go Gulf does not hire or place anyone. Pending client approval. */
   tagline: "Go Gulf. Go prepared.",

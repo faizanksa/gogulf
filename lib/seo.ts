@@ -26,7 +26,7 @@ export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.gogulf
 export const SITE_NAME = "Go Gulf";
 export const SITE_TAGLINE = COMPANY.tagline;
 export const DEFAULT_DESCRIPTION =
-  "Go Gulf, a brand of Faizan Chaudhary Gulf Travels Private Limited in Lucknow, lists Gulf jobs, counsels job seekers from India, helps prepare their documents and refers them to registered recruiting agents.";
+  "Go Gulf, based in Lucknow, lists Gulf jobs, counsels job seekers from India, helps prepare their documents and refers them to registered recruiting agents.";
 export const LOGO_PATH = "/brand/logo-512.png";
 
 /** Contact details in the shape older components read; derived from content/channels.ts. */
@@ -61,7 +61,7 @@ interface MetadataInput {
  * the alt text and size in step with the `alt` and `size` those files export.
  */
 const SHARE_IMAGE = {
-  alt: `${SITE_NAME} — a brand of ${COMPANY.legalName}, Lucknow, India`,
+  alt: "Go Gulf — counselling and referral for Gulf jobs from India, Lucknow",
   width: 1200,
   height: 630,
 };
