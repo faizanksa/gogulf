@@ -34,7 +34,7 @@ test.describe("desktop header", () => {
     // No Travel section, ever: Go Gulf is not a travel agency (0019).
     await expect(nav.getByRole("link", { name: "Travel" })).toHaveCount(0);
     await expect(nav.getByRole("link", { name: "About" })).toHaveAttribute("aria-current", "page");
-    await expect(page.getByRole("banner").getByRole("link", { name: "Find a job" })).toBeVisible();
+    await expect(page.getByRole("banner").getByRole("link", { name: "Explore Gulf jobs" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Menu" })).toBeHidden();
   });
 });

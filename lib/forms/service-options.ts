@@ -17,24 +17,23 @@
 // 27 Sep 2026: "Air Ticket & Travel Assistance" replaced by "Flight & Joining Support
 // (Selected Candidates)". Go Gulf is not a travel agency: it arranges travel only for
 // candidates it has placed, as part of recruitment. The candidate desk still receives it.
+// 6 Oct 2026 (copy/ra-partner-model): Go Gulf is not a recruiting agent and does not place
+// candidates. It counsels, prepares profiles and documents, and refers candidates to
+// registered recruiting agents (RAs); employers are introduced to those agents. Every
+// option that described sourcing, screening, interviews, visas, medicals, attestation,
+// flights or HR work done by Go Gulf was retired. Routing is unchanged: EMPLOYER_SERVICES
+// still go to the business desk, CANDIDATE_SERVICES to the candidate desk.
 export const EMPLOYER_SERVICES = [
-  "Employer Hiring Solutions",
-  "Bulk Candidate Sourcing",
-  "Recruitment Support",
-  "Candidate Screening",
-  "HR Support",
+  "Introduce a Hiring Requirement",
+  "Hiring Process Guidance",
 ] as const;
 
 export const CANDIDATE_SERVICES = [
+  "Career Counselling",
   "Gulf Job Applications",
-  "Job Matching",
-  "Interview Coordination",
-  "Visa & Documentation Assistance",
-  "Medical Coordination",
-  "Attestation & Embassy Formalities",
-  "Immigration Support",
-  "Flight & Joining Support (Selected Candidates)",
-  "Pre-Departure Orientation",
+  "Profile & CV Preparation",
+  "Document Preparation",
+  "Referral to a Registered Recruiting Agent",
 ] as const;
 // 28 Sep 2026: "Post-Joining Support" removed — a leftover of the pre-redesign form that no
 // form has offered since; the server now accepts only what a form can actually send.

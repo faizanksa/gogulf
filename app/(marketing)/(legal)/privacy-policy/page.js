@@ -114,10 +114,10 @@ const SECTIONS = [
 
         <h3>Information from employers and partners</h3>
         <p>
-          During a live hiring process, an employer, a partner working with us on the requirement, a
-          medical centre or a visa processing agent may share information about your application
-          with us — for example interview feedback, a shortlisting or selection decision, medical
-          fitness status, or visa or document processing status.
+          During a live hiring process, the registered recruiting agent we referred you to, or an
+          employer, may share information about your application with us — for example interview
+          feedback, a shortlisting or selection decision, or the status of your documents or
+          visa.
         </p>
       </>
     ),
@@ -144,17 +144,18 @@ const SECTIONS = [
           </li>
           <li>
             <strong>Application information</strong> — the roles and countries you applied for,
-            shortlisting and interview records, employer feedback, offer status, and joining or
-            deployment status.
+            the recruiting agent we referred you to, and, where that agent or the employer tells
+            us, your shortlisting, interview, offer and joining status.
           </li>
           <li>
-            <strong>Documentation and mobilisation information</strong> — information needed for
-            visa, attestation, MOFA and embassy formalities, emigration clearance where applicable,
-            and travel and ticketing arrangements.
+            <strong>Documentation information</strong> — the documents you ask us to help you
+            prepare, such as certificates and experience letters. Visa, attestation, emigration and
+            travel information is handled by the recruiting agent; we hold it only where you or the
+            agent share it with us.
           </li>
           <li>
             <strong>Health-related information</strong> — where a role requires a pre-employment
-            medical examination, we may handle the fact of your medical appointment and your
+            medical examination, we may be told the fact of your medical appointment and your
             fitness result. We do not seek detailed medical records beyond what the employer or the
             destination country requires.
           </li>
@@ -197,21 +198,20 @@ const SECTIONS = [
         <ul>
           <li>respond to your inquiry, message or call-back request;</li>
           <li>
-            register you as a candidate, assess your profile against live vacancies, and shortlist
-            you for roles you may be suitable for;
+            register you as a candidate, counsel you about roles you may be suitable for, and help
+            you prepare your profile and documents;
           </li>
           <li>
-            share your profile with employers, and partners working with us on the requirement, for the purpose
-            of a specific hiring process (see section 8);
+            with your agreement, refer your profile and documents to a registered recruiting agent
+            and, through it, to employers, for a specific hiring process (see section 8);
           </li>
-          <li>coordinate screening, interviews, employer feedback and selection outcomes;</li>
           <li>
-            support the documentation stage — visa, attestation, MOFA and embassy formalities,
-            medical coordination, immigration and travel arrangements — where you have engaged us
-            for those services;
+            keep track of what the recruiting agent and the employer tell us about your
+            application;
           </li>
+          <li>help you prepare your documents, where you have asked us to;</li>
           <li>keep you updated on the progress of your application or requirement;</li>
-          <li>provide post-joining support and respond to any issue you raise afterwards;</li>
+          <li>respond to any question or issue you raise, including after a hiring process;</li>
           <li>
             handle an employer or business requirement, prepare proposals and manage the commercial
             relationship;
@@ -248,7 +248,8 @@ const SECTIONS = [
           <li>
             <strong>Your consent.</strong> When you submit a form, upload a document, or send us
             your CV, you are asking us to act on it — for example to consider you for a role and to
-            put your profile in front of employers. You can withdraw that consent at any time (see
+            refer your profile to a registered recruiting agent and to employers. Our forms ask you
+            to confirm this with a consent box. You can withdraw that consent at any time (see
             section 17).
           </li>
           <li>
@@ -282,27 +283,30 @@ const SECTIONS = [
     body: (
       <>
         <p>
-          An application cannot progress unless your profile reaches an employer, so sharing is part of
-          the service you are asking us for. We share only what is needed, only with the categories
+          An application cannot progress unless your profile reaches a registered recruiting agent
+          and an employer, so sharing is part of the service you are asking us for. We share only what is needed, only with the categories
           below, and only for the purposes described.
         </p>
         <ul>
           <li>
-            <strong>Employers and their authorised representatives.</strong> Where you apply for a
-            role or ask us to represent you, we share your profile and supporting documents with
-            the employer concerned and with the people at that employer handling the hiring. Once
-            an employer receives your information, that employer handles it under its own policies
-            and the law of its country.
+            <strong>Registered recruiting agents.</strong> Where you apply for a role or ask us to
+            refer you, we share your profile and supporting documents — including your CV and
+            passport copy — with the recruiting agent, registered under the Emigration Act, 1983,
+            that handles the role. The agent uses them to run the recruitment, shares them with
+            employers and authorities as the process requires, and handles them under its own
+            privacy terms and the law. Our current partners are listed on our{" "}
+            <Link href="/verify#partners">Verify page</Link>.
           </li>
           <li>
-            <strong>Sourcing partners</strong> who are working with us on a
-            specific requirement.
+            <strong>Employers and their authorised representatives.</strong> Your profile and
+            supporting documents reach the employer concerned, through the recruiting agent or
+            directly from us. Once an employer receives your information, that employer handles it
+            under its own policies and the law of its country.
           </li>
           <li>
             <strong>Service providers acting on our instructions</strong> — the technology
-            providers listed in section 10, and, where you have engaged us for those services,
-            medical centres, attestation and visa processing agents, travel and ticketing agents,
-            and professional advisers such as accountants and lawyers.
+            providers listed in section 10, and professional advisers such as accountants and
+            lawyers.
           </li>
           <li>
             <strong>Government, embassy, immigration and regulatory bodies</strong> — see section
@@ -328,10 +332,11 @@ const SECTIONS = [
     body: (
       <>
         <p>
-          Overseas employment is a regulated process. Where you have engaged us for visa,
-          documentation, medical or immigration support, we submit or present the information and
-          documents that the relevant body requires. Depending on the role and destination country,
-          this can include embassies and consulates of Gulf countries, ministries of foreign affairs
+          Overseas employment is a regulated process. Visa, medical, attestation and emigration
+          steps are handled by the registered recruiting agent, which submits the information and
+          documents that the relevant body requires; we do not submit visa or emigration
+          applications ourselves. Depending on the role and destination country, those bodies can
+          include embassies and consulates of Gulf countries, ministries of foreign affairs
           and attestation authorities (including MOFA), approved medical examination centres,
           immigration and emigration authorities in India and in the destination country, and
           airlines or travel providers for ticketing.
@@ -524,7 +529,8 @@ const SECTIONS = [
             (see section 17).
           </li>
           <li>
-            <strong>Records of a completed placement</strong> are kept for longer, because they may
+            <strong>Records of an application that led to employment</strong> are kept for
+            longer, because they may
             be needed to answer a query from you, the employer or an authority, or to defend a
             claim.
           </li>

@@ -6,7 +6,11 @@ import { validate } from "./schema";
  * The service catalogue, with the business's one-line descriptions (carried over from
  * the pre-redesign /services page). On 12 Sep 2026 the names and summaries that implied
  * a registered or licensed recruiting agency were reworded neutrally — the company holds
- * no such registration (content/company.ts CLAIMS); the services themselves are unchanged. `inquiryOption` ties each
+ * no such registration (content/company.ts CLAIMS). On 6 Oct 2026 the catalogue was rebuilt
+ * around what Go Gulf actually does: counselling, profile and document preparation, and
+ * referral to registered recruiting agents, who run interviews, offers and visa processing.
+ * No service may describe Go Gulf sourcing, selecting, interviewing, or arranging visas,
+ * medicals, attestation or travel (content/content.test.ts). `inquiryOption` ties each
  * entry to the exact option name the inquiry form sends, so the server routes it to
  * the right desk. The 2C Services page renders from this.
  */
@@ -26,20 +30,13 @@ export type Service = z.infer<typeof service>;
 export const SERVICES: Service[] = validate(
   z.array(service),
   [
-    { id: "job-applications", name: "Gulf job applications", audience: "job-seekers", summary: "Help finding Gulf openings that suit you, and applying for them.", inquiryOption: "Gulf Job Applications" },
-    { id: "job-matching", name: "Job matching", audience: "job-seekers", summary: "Matching your profile to the Gulf openings we list.", inquiryOption: "Job Matching" },
-    { id: "interview-coordination", name: "Interview Coordination", audience: "job-seekers", summary: "Scheduling and coordinating candidate–employer interviews.", inquiryOption: "Interview Coordination" },
-    { id: "visa-documentation", name: "Visa & Documentation", audience: "job-seekers", summary: "Guidance and processing support for the paperwork a job needs.", inquiryOption: "Visa & Documentation Assistance" },
-    { id: "medical-coordination", name: "Medical Coordination", audience: "job-seekers", summary: "Scheduling and coordination of pre-employment medical exams.", inquiryOption: "Medical Coordination" },
-    { id: "attestation-embassy", name: "Attestation & embassy formalities", audience: "job-seekers", summary: "Help arranging document attestation, including MOFA attestation, and embassy formalities.", inquiryOption: "Attestation & Embassy Formalities" },
-    { id: "immigration-support", name: "Immigration Support", audience: "job-seekers", summary: "Guidance on the immigration paperwork a Gulf job needs, up to departure.", inquiryOption: "Immigration Support" },
-    { id: "flight-joining-support", name: "Flight & Joining Support for Selected Candidates", audience: "job-seekers", summary: "Only for candidates selected by an employer through Go Gulf: we arrange your flight and your journey to join the job. We do not book flights or travel for anyone else.", inquiryOption: "Flight & Joining Support (Selected Candidates)" },
-    { id: "pre-departure", name: "Pre-Departure Orientation", audience: "job-seekers", summary: "Briefing candidates on what to expect before they fly.", inquiryOption: "Pre-Departure Orientation" },
-    { id: "employer-hiring", name: "Employer Hiring Solutions", audience: "employers", summary: "Hiring support for companies sourcing talent for Gulf roles.", inquiryOption: "Employer Hiring Solutions" },
-    { id: "bulk-sourcing", name: "Bulk candidate sourcing", audience: "employers", summary: "Sourcing candidates at volume for construction, industrial and facility projects.", inquiryOption: "Bulk Candidate Sourcing" },
-    { id: "recruitment-support", name: "Recruitment support", audience: "employers", summary: "Sourcing, screening and interview coordination handled for you, so your team stays focused on operations.", inquiryOption: "Recruitment Support" },
-    { id: "candidate-screening", name: "Candidate Screening", audience: "employers", summary: "Checking and shortlisting candidates against your requirements.", inquiryOption: "Candidate Screening" },
-    { id: "hr-support", name: "HR support", audience: "employers", summary: "Ongoing HR assistance for employers and the people they hire.", inquiryOption: "HR Support" },
+    { id: "counselling", name: "Career counselling", audience: "job-seekers", summary: "A conversation about the work you do, the Gulf roles and countries that may suit you, and how the process works.", inquiryOption: "Career Counselling" },
+    { id: "job-applications", name: "Gulf job applications", audience: "job-seekers", summary: "Help choosing the openings we list and applying for them. Your application goes to the registered recruiting agent handling the job.", inquiryOption: "Gulf Job Applications" },
+    { id: "profile-preparation", name: "Profile and CV preparation", audience: "job-seekers", summary: "Help preparing a clear CV and profile that a recruiting agent and an employer can read quickly.", inquiryOption: "Profile & CV Preparation" },
+    { id: "document-preparation", name: "Document preparation", audience: "job-seekers", summary: "Help putting your passport copy, certificates and experience letters in order before your profile is referred.", inquiryOption: "Document Preparation" },
+    { id: "ra-referral", name: "Referral to a registered recruiting agent", audience: "job-seekers", summary: "With your agreement, an introduction to a registered recruiting agent we work with, who handles interviews, offers, visa processing and emigration formalities.", inquiryOption: "Referral to a Registered Recruiting Agent" },
+    { id: "employer-introduction", name: "Introducing your requirement", audience: "employers", summary: "We pass your hiring requirement to registered recruiting agents we work with. The agent you engage handles sourcing, selection and visa processing, on its own terms.", inquiryOption: "Introduce a Hiring Requirement" },
+    { id: "hiring-guidance", name: "Hiring process guidance", audience: "employers", summary: "Plain answers on how hiring from India works: the recruiting agent's role, emigration clearance and the documents involved.", inquiryOption: "Hiring Process Guidance" },
   ],
   "content/services.ts",
 );

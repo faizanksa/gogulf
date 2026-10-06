@@ -17,15 +17,16 @@ import { pageLocales, pageText } from "@/lib/i18n/pages";
  * Its type is plain Organization. EmploymentAgency was dropped (12 Sep 2026): the
  * company is not registered or licensed as a recruiting agent, and a schema type is a
  * claim like any other. TravelAgency is never used: Go Gulf is not a travel agency
- * (27 Sep 2026) — it arranges travel only for candidates it places — whatever the
- * company's registered activity reads.
+ * (27 Sep 2026), whatever the company's registered activity reads. Since 6 Oct 2026 (D13)
+ * it does not place candidates or arrange their visas or travel either: it counsels,
+ * prepares profiles and documents, and refers candidates to registered recruiting agents.
  */
 
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.gogulf.co").replace(/\/+$/, "");
 export const SITE_NAME = "Go Gulf";
 export const SITE_TAGLINE = COMPANY.tagline;
 export const DEFAULT_DESCRIPTION =
-  "Go Gulf, a brand of Faizan Chaudhary Gulf Travels Private Limited in Lucknow, lists Gulf job openings and takes enquiries from job seekers and employers.";
+  "Go Gulf, a brand of Faizan Chaudhary Gulf Travels Private Limited in Lucknow, lists Gulf jobs, counsels job seekers from India, helps prepare their documents and refers them to registered recruiting agents.";
 export const LOGO_PATH = "/brand/logo-512.png";
 
 /** Contact details in the shape older components read; derived from content/channels.ts. */

@@ -40,10 +40,11 @@ const POINTS: { title: MessageKey; body: MessageKey }[] = [
 
 /**
  * The employer page (2C-2): a business-to-business page with its own journey —
- * requirement → enquiry → Go Gulf responds → recruitment — kept apart from the
- * job-seeker one. It builds trust through process and plain terms, not through claims
- * (no candidate-pool sizes, sectors or verified-employer networks: the claims register
- * has not cleared them). The requirement form goes to the business desk.
+ * requirement → Go Gulf introduces it to registered recruiting agents → the agent the
+ * employer engages runs the hiring (D13) — kept apart from the job-seeker one. It builds
+ * trust through process and plain terms, not through claims (no candidate-pool sizes,
+ * sectors or verified-employer networks, and no promise that a requirement will be
+ * filled). The requirement form goes to the business desk.
  */
 export default async function EmployersPage() {
   const locale = await requireAvailable(PATH);
@@ -138,7 +139,7 @@ export default async function EmployersPage() {
                   </dd>
                 </div>
               </dl>
-              <p className={styles.deskNote}>{t("employersPage.working.p3")}</p>
+              <p className={styles.deskNote}>{t("employersPage.form.noPromise")}</p>
             </aside>
           </div>
         </Container>

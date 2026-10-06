@@ -43,10 +43,25 @@ const withoutComments = (source: string) => source.replace(/\/\*[\s\S]*?\*\//g, 
 // reads as it renders.
 const read = (path: string) => withoutComments(readFileSync(path, "utf8")).replace(/\s+/g, " ");
 
-/** Wording that claims or implies recruiting-agent status, or a claim the register has not cleared. */
+/**
+ * Wording that claims or implies recruiting-agent status, direct placement, or a claim the
+ * register has not cleared.
+ *
+ * Since 6 Oct 2026 (D13) the site DESCRIBES registered recruiting agents — the partners Go
+ * Gulf refers candidates to — so the phrase "recruiting agent" and the official eMigrate
+ * link are allowed. What stays forbidden is any wording that makes Go Gulf itself a
+ * registered, licensed or authorised agent, or that has Go Gulf placing, selecting or
+ * hiring people, or arranging their visas, offers or travel.
+ */
 const FORBIDDEN: RegExp[] = [
-  /recruit(ment|ing)[\s-]+agen(t|cy|cies)/i,
-  /(registered|licen[cs]ed)\s+(overseas\s+)?(recruit|manpower|placement|employment)/i,
+  /recruitment[\s-]+agenc(y|ies)/i,
+  /\b(go gulf|we|our company|the company)\s+(is|are)\s+(an?\s+)?(registered|licen[cs]ed|authori[sz]ed|approved)\b/i,
+  /\b(our|go gulf'?s)\s+(RA|recruiting|recruitment|emigration)[\s-]+(licen[cs]e|registration)/i,
+  /\b(we|go gulf)\s+(place|places|deploy|deploys|recruit|recruits|select|selects|hire|hires|shortlist|shortlists)\b/i,
+  /\b(we|go gulf)\s+(arrange|arranges|process|processes|book|books|issue|issues)\s+(your\s+|the\s+)?(visas?|flights?|travel|tickets?|offers?)\b/i,
+  /get hired|hire from india|bulk\s+(candidate\s+)?sourcing/i,
+  /licen[cs]ed\s+(overseas\s+)?(recruit|manpower|placement|employment)/i,
+  /registered\s+(overseas\s+)?(manpower|placement|employment)/i,
   /recruit(ment|ing)\s+licen[cs]e/i,
   /\bRA\s+licen[cs]e/i,
   /emigration\s+licen[cs]e/i,
@@ -65,7 +80,7 @@ const FORBIDDEN: RegExp[] = [
   /\bwithin\s+\d+\s*(hours?|days?|business days?|working days?)/i,
   /(employer|partner)s?\s+network|network\s+of\s+(verified\s+|trusted\s+)?employers/i,
   /(?<!not\s|never\s|no\s)guarantee[ds]?\s+(you\s+)?(a\s+)?(job|jobs|employment|visa|placement|selection|joining)\b/i,
-  /eMigrate|Protector\s+(General\s+)?of\s+Emigrants/i,
+  /Protector\s+(General\s+)?of\s+Emigrants/i,
   /authori[sz]ed\s+recruit/i,
   /\bsince\s+(19|20)\d{2}\b/i,
 ];
@@ -94,6 +109,14 @@ describe("public copy", () => {
   it("never shows the registered office's care-of line", () => {
     const hits = PUBLIC_SOURCES.filter((path) => /Asha\s+Yadav|\bC\/o\b/i.test(read(path)));
     expect(hits).toEqual([]);
+  });
+
+  it("says plainly where it describes recruiting agents that Go Gulf is not one (D13)", () => {
+    const en = read("messages/en.json");
+    expect(en).toMatch(/"lead": "Go Gulf is not registered as a recruiting agent\./);
+    expect(en).toMatch(/"q7": "Is Go Gulf a recruiting agent\?", "a7": "No\. Go Gulf is not registered as a recruiting agent/);
+    expect(read("app/(marketing)/(legal)/terms-and-conditions/page.js")).toMatch(/We are <strong>not registered as a recruiting agent<\/strong>/);
+    expect(read("app/llms.txt/route.ts")).toMatch(/Go Gulf is not registered as a recruiting agent\./);
   });
 });
 

@@ -75,6 +75,14 @@ export const phoneField = z
  */
 export const honeypot = z.string().max(200).optional();
 
+/**
+ * Consent to handle and share what was sent (6 Oct 2026, D13): candidates are referred to
+ * registered recruiting agents, so every public form ends with a required checkbox. Only
+ * the literal `true` is accepted. It is recorded in the notification email; there is no
+ * database column for it yet (schema changes were out of scope).
+ */
+export const consent = z.literal(true, { error: m("forms.validation.consentRequired") });
+
 // ---------------------------------------------------------------------------
 // Contact
 // ---------------------------------------------------------------------------
@@ -91,6 +99,7 @@ export const contactSchema = z.object({
   message: requiredText(5000, "forms.validation.messageRequired"),
   page_source: optionalText(80),
   website: honeypot,
+  consent,
 });
 
 export type ContactInput = z.infer<typeof contactSchema>;
@@ -121,6 +130,7 @@ export const serviceInquirySchema = z.object({
   message: optionalText(5000),
   page_source: optionalText(80),
   website: honeypot,
+  consent,
 });
 
 export type ServiceInquiryInput = z.infer<typeof serviceInquirySchema>;
@@ -146,6 +156,7 @@ export const jobApplicationSchema = z.object({
   submission_id: z.string().uuid().optional(),
   page_source: optionalText(80),
   website: honeypot,
+  consent,
 });
 
 export type JobApplicationInput = z.infer<typeof jobApplicationSchema>;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, type FormEvent } from "react";
+import { ConsentField } from "@/components/form/ConsentField";
 import { Input, Textarea } from "@/components/form/Controls";
 import { ErrorSummary } from "@/components/form/ErrorSummary";
 import { Field } from "@/components/form/Field";
@@ -26,7 +27,7 @@ import styles from "./forms.module.css";
  * through Resend.
  */
 
-const IDS: Record<string, string> = { from_name: "c_name", reply_to: "c_email", phone: "c_phone", message: "c_message" };
+const IDS: Record<string, string> = { from_name: "c_name", reply_to: "c_email", phone: "c_phone", message: "c_message", consent: "c_consent" };
 
 export function ContactForm({ copy }: { copy: ContactFormCopy }) {
   const formRef = useRef<HTMLFormElement>(null);
@@ -40,6 +41,7 @@ export function ContactForm({ copy }: { copy: ContactFormCopy }) {
     from_name: () => copy.errors.nameMissing,
     reply_to: (el: { validity: ValidityState }) => (el.validity.valueMissing ? copy.errors.emailMissing : copy.errors.emailInvalid),
     message: () => copy.errors.messageMissing,
+    consent: () => copy.consent.missing,
   };
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -67,6 +69,7 @@ export function ContactForm({ copy }: { copy: ContactFormCopy }) {
         message: value("message"),
         page_source: "Contact Page",
         website: value("website"),
+        consent: (form.elements.namedItem("consent") as HTMLInputElement).checked,
       },
       { locale: copy.locale, messages: { offline: copy.outcome.offline, unexpected: copy.outcome.unexpected } },
     );
@@ -106,6 +109,7 @@ export function ContactForm({ copy }: { copy: ContactFormCopy }) {
       <Field id={IDS.message!} label={copy.labels.message} text={copy.field} error={errorFor("message")}>
         <Textarea name="message" required rows={5} maxLength={5000} />
       </Field>
+      <ConsentField id={IDS.consent!} text={copy.consent} field={copy.field} error={errorFor("consent")} />
 
       <div>
         <Button type="submit" loading={sending}>

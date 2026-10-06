@@ -1,5 +1,11 @@
 # Company details presentation — staging review
 
+**Production promotion, 5 October 2026:** the user subsequently authorized merging
+and pushing this footer update to `main`. Only staging commit `537e62e` is included;
+the unrelated CRM lifecycle/`0025` work remains on staging. The legal-review issue
+below remains open; deployment authorization does not establish legal compliance.
+The staging implementation and validation record follows unchanged.
+
 **5 October 2026.** Branch: `staging`. Review URL: <https://staging.gogulf.co>.
 This is a presentation change for staging only; it is not production approval.
 

@@ -98,7 +98,7 @@ test("the root does not scroll smoothly", async ({ page }) => {
 });
 
 test.describe("following a link", () => {
-  const findAJob = (page: Page) => page.getByRole("banner").getByRole("link", { name: "Find a job" });
+  const findAJob = (page: Page) => page.getByRole("banner").getByRole("link", { name: "Explore Gulf jobs" });
 
   for (const [where, fraction] of [
     ["the top", 0],

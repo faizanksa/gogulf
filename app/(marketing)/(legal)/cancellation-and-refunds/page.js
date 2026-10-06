@@ -23,13 +23,14 @@ const SECTIONS = [
         </p>
         <p>
           It applies to service fees you pay to us, whether you engage us as a candidate or as an
-          employer or client company. Where an employer engagement has its own written cancellation,
-          replacement or refund terms, those terms govern that engagement and this policy fills the
-          gaps.
+          employer or client company. Where an employer engagement has its own written cancellation
+          or refund terms, those terms govern that engagement and this policy fills the gaps.
         </p>
         <p>
           It does not apply to your salary, benefits or any payment arising under an employment
-          contract with an employer — those are between you and that employer. It should be read
+          contract with an employer — those are between you and that employer. Nor does it apply
+          to a registered recruiting agent&apos;s service charge, which is paid to that agent and
+          refunded, where due, by that agent under its own terms and the law. It should be read
           together with our <Link href="/terms-and-conditions">Terms &amp; Conditions</Link> and our{" "}
           <Link href="/pricing">Pricing &amp; Fees</Link> page.
         </p>
@@ -42,16 +43,13 @@ const SECTIONS = [
     body: (
       <>
         <p>
-          We provide professional support services — sourcing, screening,
-          interview coordination, documentation and attestation support, medical and visa
-          coordination, travel coordination and post-joining support. We do not sell goods.
+          We provide professional support services — counselling, profile and document
+          preparation, and referral to registered recruiting agents. We do not sell goods.
         </p>
         <p>
           These services are performed in stages over time, and much of the work is done before an
-          outcome is known. That matters for refunds: once a stage has genuinely been performed, or
-          a payment has been made onward to a third party such as an embassy, an attestation
-          authority, a medical centre or an airline, that part of the cost has already been
-          incurred and cannot simply be reversed.
+          outcome is known. That matters for refunds: once a stage has genuinely been performed,
+          that part of the work has been done and cannot simply be reversed.
         </p>
       </>
     ),
@@ -81,7 +79,8 @@ const SECTIONS = [
         </p>
         <p>
           Statutory, government, embassy, attestation, medical, insurance and travel charges are
-          third-party costs, not our service fee, even where we arrange payment on your behalf.
+          third-party costs, and a recruiting agent&apos;s service charge is the agent&apos;s;
+          neither is our service fee.
           Applicable taxes, including GST, are charged as required by law.
         </p>
       </>
@@ -161,17 +160,17 @@ const SECTIONS = [
         </p>
         <ul>
           <li>
-            work already properly performed — screening, profile preparation, interview
-            coordination, documentation work and similar, up to the point of cancellation;
+            work already properly performed — counselling, profile and document preparation,
+            referral and similar, up to the point of cancellation;
           </li>
           <li>
-            amounts already paid to third parties on your behalf — statutory and government fees,
-            embassy and attestation charges, medical examination fees, insurance premiums and air
-            fares — to the extent those third parties do not refund them to us. Where a third party
-            does refund an amount to us, we pass it on to you;
+            amounts already paid to third parties on your behalf with your written agreement, to
+            the extent those third parties do not refund them to us. Where a third party does
+            refund an amount to us, we pass it on to you;
           </li>
           <li>
-            an outcome decided by someone other than us: an employer choosing another candidate,
+            an outcome decided by someone other than us — an employer, a recruiting agent or an
+            authority: an employer choosing another candidate,
             withdrawing or putting a role on hold; a visa refusal; a medical result of unfit; a
             refusal of emigration clearance or entry. As set out in our{" "}
             <Link href="/terms-and-conditions">Terms &amp; Conditions</Link>, we do not guarantee

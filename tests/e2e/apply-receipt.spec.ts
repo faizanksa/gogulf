@@ -29,12 +29,13 @@ test("a successful application ends on a receipt carrying the reference the serv
   await page.locator("#a_phone").fill("+91 98765 43210");
   await page.locator("#a_cv").setInputFiles({ name: "cv.pdf", mimeType: "application/pdf", buffer: PDF });
   await page.locator("#a_passport").setInputFiles({ name: "passport.png", mimeType: "image/png", buffer: PNG });
+  await page.locator("#a_consent").check();
   await page.locator("main form button[type=submit]").click();
 
   const receipt = page.getByRole("heading", { name: "We have your application" });
   await expect(receipt).toBeVisible();
   expect(uploads).toHaveLength(2);
-  expect(body).toMatchObject({ service_type: "General Application", documents: "CV, Passport", page_source: "Jobs Page", website: "" });
+  expect(body).toMatchObject({ service_type: "General Application", documents: "CV, Passport", page_source: "Jobs Page", website: "", consent: true });
   expect(body.submission_id).toMatch(/^[0-9a-f-]{36}$/);
   await expect(page.getByRole("main")).toContainText(body.submission_id!);
 });
@@ -60,6 +61,7 @@ test("an application to a listed job records the job, and the receipt names its 
   await page.locator("#a_phone").fill("+91 98765 43210");
   await page.locator("#a_cv").setInputFiles({ name: "cv.pdf", mimeType: "application/pdf", buffer: PDF });
   await page.locator("#a_passport").setInputFiles({ name: "passport.png", mimeType: "image/png", buffer: PNG });
+  await page.locator("#a_consent").check();
   await page.locator("main form button[type=submit]").click();
 
   await expect(page.getByRole("heading", { name: "We have your application" })).toBeVisible();

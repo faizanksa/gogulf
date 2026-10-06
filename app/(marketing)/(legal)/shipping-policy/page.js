@@ -40,25 +40,23 @@ const SECTIONS = [
       <>
         <p>
           What you receive from us is work performed by our team,
-          delivered as communications, coordination and documentation support. Depending on the
+          delivered as counselling, communications and help with your documents. Depending on the
           service, that includes:
         </p>
         <ul>
-          <li>registration of your profile and assessment against live vacancies;</li>
-          <li>screening, verification and shortlisting against an employer&apos;s requirement;</li>
-          <li>interview scheduling, coordination and employer feedback;</li>
-          <li>guidance and processing support for documentation and attestation;</li>
-          <li>coordination of MOFA and embassy formalities and of visa processing;</li>
-          <li>coordination of pre-employment medical appointments;</li>
-          <li>immigration guidance and travel and ticketing coordination;</li>
-          <li>pre-departure orientation and post-joining support;</li>
+          <li>counselling about Gulf roles, countries and the hiring process;</li>
+          <li>registration of your profile, and help preparing your CV;</li>
+          <li>help putting your documents in order;</li>
+          <li>with your agreement, referral to a registered recruiting agent;</li>
           <li>
-            for employers: candidate sourcing, including at volume, recruitment support,
-            screening reports, candidate shortlists and hiring coordination.
+            for employers: introducing your requirement to registered recruiting agents, and
+            hiring-process guidance.
           </li>
         </ul>
         <p>
           The full list of services is on our <Link href="/services">Services</Link> page.
+          Interviews, offers, visa processing and emigration formalities are delivered by the
+          registered recruiting agent, under its own terms.
         </p>
       </>
     ),
@@ -80,12 +78,12 @@ const SECTIONS = [
             <Link href="/contact">Contact</Link> page, for updates and coordination;
           </li>
           <li>
-            <strong>Scheduled appointments</strong> — interviews, medical examinations, embassy or
-            attestation appointments and briefings, coordinated by us and attended by you;
+            <strong>Counselling sessions</strong> — by phone, WhatsApp or in person, arranged with
+            you;
           </li>
           <li>
-            <strong>Documents</strong> — shared electronically, or submitted by us on your behalf to
-            the employer, embassy, ministry or authority concerned.
+            <strong>Documents</strong> — shared electronically, and passed, with your agreement, to
+            the registered recruiting agent handling your application.
           </li>
         </ul>
         <p>

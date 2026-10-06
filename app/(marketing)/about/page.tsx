@@ -92,6 +92,9 @@ export default async function AboutPage() {
               </Link>
             </article>
           </div>
+          <p className={styles.role}>
+            {t.rich("aboutPage.what.role", { verify: (chunks) => <Link href={`${href("/verify")}#partners`}>{chunks}</Link> })}
+          </p>
         </Container>
       </Section>
 

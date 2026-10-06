@@ -19,7 +19,7 @@ test.describe("contact form", () => {
 
     const summary = page.getByRole("alert").filter({ hasText: "There is a problem" });
     await expect(summary).toBeFocused();
-    await expect(summary.getByRole("link")).toHaveText(["Enter your full name.", "Enter your email address.", "Enter your message."]);
+    await expect(summary.getByRole("link")).toHaveText(["Enter your full name.", "Enter your email address.", "Enter your message.", "Tick the box to agree before you send."]);
 
     const name = page.getByLabel("Full name");
     await expect(name).toHaveAttribute("aria-invalid", "true");
@@ -59,6 +59,7 @@ test.describe("contact form", () => {
     await page.getByLabel("Email address").fill("test@example.com");
     await page.getByLabel(/Phone or WhatsApp number/).fill("12");
     await page.getByLabel("Message", { exact: true }).fill("Hello");
+    await page.getByRole("checkbox", { name: /I agree that Go Gulf/ }).check();
     await page.getByRole("button", { name: "Send message" }).click();
 
     await expect(page.getByLabel(/Phone or WhatsApp number/)).toHaveAttribute("aria-invalid", "true");
@@ -77,6 +78,7 @@ test.describe("contact form", () => {
     await page.getByLabel("Full name").fill("Test Person");
     await page.getByLabel("Email address").fill("test@example.com");
     await page.getByLabel("Message", { exact: true }).fill("Hello");
+    await page.getByRole("checkbox", { name: /I agree that Go Gulf/ }).check();
     await page.getByRole("button", { name: "Send message" }).click();
 
     const button = page.getByRole("button", { name: "Sending…" });

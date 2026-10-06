@@ -8,7 +8,7 @@ import {
 
 describe("contact schema", () => {
   it("accepts a well-formed submission", () => {
-    const parsed = contactSchema.safeParse({
+    const parsed = contactSchema.safeParse({ consent: true,
       from_name: "  Asha   Kumar ",
       reply_to: "  ASHA@Example.COM ",
       phone: "9936309015",
@@ -24,7 +24,7 @@ describe("contact schema", () => {
   it("gives human-readable messages for missing required fields", () => {
     // Raw Zod type errors ("expected string, received undefined") reach the
     // user, so they must be phrased for a person, not a developer.
-    const parsed = contactSchema.safeParse({});
+    const parsed = contactSchema.safeParse({ consent: true,});
     expect(parsed.success).toBe(false);
     if (!parsed.success) {
       const errors = toFieldErrors(parsed.error);
@@ -35,19 +35,19 @@ describe("contact schema", () => {
   });
 
   it("rejects a malformed email", () => {
-    const parsed = contactSchema.safeParse({
+    const parsed = contactSchema.safeParse({ consent: true,
       from_name: "A", reply_to: "not-an-email", message: "m",
     });
     expect(parsed.success).toBe(false);
   });
 
   it("treats phone as optional but validates it when present", () => {
-    expect(contactSchema.safeParse({ from_name: "A", reply_to: "a@b.co", message: "m" }).success).toBe(true);
-    expect(contactSchema.safeParse({ from_name: "A", reply_to: "a@b.co", message: "m", phone: "123" }).success).toBe(false);
+    expect(contactSchema.safeParse({ consent: true, from_name: "A", reply_to: "a@b.co", message: "m" }).success).toBe(true);
+    expect(contactSchema.safeParse({ consent: true, from_name: "A", reply_to: "a@b.co", message: "m", phone: "123" }).success).toBe(false);
   });
 
   it("caps message length so a huge body cannot be posted", () => {
-    const parsed = contactSchema.safeParse({
+    const parsed = contactSchema.safeParse({ consent: true,
       from_name: "A", reply_to: "a@b.co", message: "x".repeat(6000),
     });
     expect(parsed.success).toBe(false);
@@ -57,7 +57,7 @@ describe("contact schema", () => {
     // Critical: rejecting here would return a 400 naming the `website` field,
     // telling a bot exactly what tripped it. The handler drops it with a 200
     // instead, so rejection is indistinguishable from success.
-    const parsed = contactSchema.safeParse({
+    const parsed = contactSchema.safeParse({ consent: true,
       from_name: "Bot", reply_to: "bot@example.com", message: "spam", website: "http://spam",
     });
     expect(parsed.success).toBe(true);
@@ -67,10 +67,11 @@ describe("contact schema", () => {
 
 describe("service inquiry schema", () => {
   const valid = {
-    service_type: "Job Matching",
+    service_type: "Career Counselling",
     from_name: "Ravi",
     reply_to: "ravi@example.com",
     phone: "+919936309015",
+    consent: true as const,
   };
 
   it("requires service, name, email and phone", () => {
@@ -103,6 +104,7 @@ describe("job application schema", () => {
     reply_to: "imran@example.com",
     phone: "9936309015",
     service_type: "Site Supervisor",
+    consent: true as const,
   };
 
   it("accepts a submission without an upload reference", () => {
@@ -123,4 +125,24 @@ describe("job application schema", () => {
       expect(jobApplicationSchema.safeParse({ ...valid, phone }).success, phone).toBe(true);
     }
   });
+});
+
+describe("consent (D13)", () => {
+  // Every public form ends with a required consent checkbox; the server accepts only true.
+  const forms = [
+    ["contact", contactSchema, { from_name: "A", reply_to: "a@b.co", message: "m" }],
+    ["service inquiry", serviceInquirySchema, { service_type: "Career Counselling", from_name: "A", reply_to: "a@b.co", phone: "+919936309015" }],
+    ["job application", jobApplicationSchema, { from_name: "A", reply_to: "a@b.co", phone: "+919936309015", service_type: "Driver" }],
+  ] as const;
+
+  for (const [name, schema, fields] of forms) {
+    it(`${name}: accepts consent: true and refuses it missing, false or a string`, () => {
+      expect(schema.safeParse({ ...fields, consent: true }).success).toBe(true);
+      for (const consent of [undefined, false, "yes", "true", 1]) {
+        const parsed = schema.safeParse({ ...fields, consent });
+        expect(parsed.success, String(consent)).toBe(false);
+        if (!parsed.success) expect(toFieldErrors(parsed.error)).toHaveProperty("consent");
+      }
+    });
+  }
 });

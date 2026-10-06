@@ -27,7 +27,7 @@ const hasCrLf = (s: string) => /[\r\n]/.test(s);
 
 describe("header injection is neutralised at validation", () => {
   it("strips CR/LF from the contact subject", () => {
-    const parsed = contactSchema.parse({
+    const parsed = contactSchema.parse({ consent: true,
       from_name: ATTACK,
       reply_to: "a@b.co",
       message: "line one\nline two",
@@ -42,11 +42,11 @@ describe("header injection is neutralised at validation", () => {
     // The subject carries the service name. Since 28 Sep 2026 the server accepts only a
     // listed service, so an injected one never reaches an email at all…
     expect(
-      serviceInquirySchema.safeParse({ service_type: ATTACK, from_name: "Ravi", reply_to: "a@b.co", phone: "9936309015" }).success,
+      serviceInquirySchema.safeParse({ consent: true, service_type: ATTACK, from_name: "Ravi", reply_to: "a@b.co", phone: "9936309015" }).success,
     ).toBe(false);
     // …and with a real service, injected text elsewhere still cannot reach the subject.
-    const parsed = serviceInquirySchema.parse({
-      service_type: "Job Matching",
+    const parsed = serviceInquirySchema.parse({ consent: true,
+      service_type: "Career Counselling",
       from_name: ATTACK,
       reply_to: "a@b.co",
       phone: "9936309015",
@@ -55,7 +55,7 @@ describe("header injection is neutralised at validation", () => {
   });
 
   it("strips CR/LF from the job application subject", () => {
-    const parsed = jobApplicationSchema.parse({
+    const parsed = jobApplicationSchema.parse({ consent: true,
       from_name: ATTACK,
       reply_to: "a@b.co",
       phone: "9936309015",
@@ -68,7 +68,7 @@ describe("header injection is neutralised at validation", () => {
   it("rejects a non-string reply_to, so an array cannot become extra recipients", () => {
     // Reply-To is built from this value. An array reaching the provider could
     // widen the recipient set.
-    const parsed = contactSchema.safeParse({
+    const parsed = contactSchema.safeParse({ consent: true,
       from_name: "A",
       reply_to: ["a@b.co", "attacker@evil.example"],
       message: "m",
@@ -77,7 +77,7 @@ describe("header injection is neutralised at validation", () => {
   });
 
   it("rejects an email containing a newline outright", () => {
-    const parsed = contactSchema.safeParse({
+    const parsed = contactSchema.safeParse({ consent: true,
       from_name: "A",
       reply_to: "a@b.co\nBcc: attacker@evil.example",
       message: "m",

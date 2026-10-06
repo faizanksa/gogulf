@@ -2,6 +2,7 @@ import Link from "next/link";
 import { MCA_URL } from "@/components/site/CompanyFacts";
 import { OfficialChannels } from "@/components/site/OfficialChannels";
 import { PageHeader } from "@/components/site/PageHeader";
+import { RaPartners } from "@/components/site/RaPartners";
 import { FactList, type Fact } from "@/components/ui/FactList";
 import { Icon } from "@/components/ui/Icon";
 import { Container, Section } from "@/components/ui/Layout";
@@ -32,8 +33,10 @@ export async function generateMetadata() {
  *
  * Company registration is not recruitment-agency licensing. The page shows what the
  * CIN proves — that the company exists and is registered — and says plainly that it is
- * not a licence for a line of business. There is no licence section: the company holds
- * no recruiting-agent registration (content/company.ts CLAIMS), and none is implied.
+ * not a licence for a line of business. The company holds no recruiting-agent registration
+ * (content/company.ts CLAIMS) and none is implied: the partners section lists the
+ * REGISTERED recruiting agents Go Gulf refers candidates to (content/partners.ts), each
+ * with its own RA number, and says plainly that Go Gulf is not one of them.
  */
 export default async function VerifyPage() {
   const locale = await requireAvailable(PATH);
@@ -98,18 +101,26 @@ export default async function VerifyPage() {
         </Container>
       </Section>
 
-      <Section tone="subtle" labelledBy="payments-heading">
+      <Section id="partners" tone="subtle" labelledBy="partners-heading">
+        <Container>
+          <SectionHeading id="partners-heading" title={t("verifyPage.partners.heading")} lead={t("verifyPage.partners.lead")} />
+          <RaPartners />
+        </Container>
+      </Section>
+
+      <Section labelledBy="payments-heading">
         <Container width="prose">
           <SectionHeading id="payments-heading" title={t("verifyPage.payments.heading")} />
           <ol className={styles.rules}>
             <li>{t.rich("verifyPage.payments.r1", { pricing: (chunks) => <Link href={href("/pricing")}>{chunks}</Link> })}</li>
             <li>{t("verifyPage.payments.r2")}</li>
+            <li>{t("verifyPage.payments.r4")}</li>
             <li>{t.rich("verifyPage.payments.r3", { terms: (chunks) => <Link href={href("/terms-and-conditions")}>{chunks}</Link> })}</li>
           </ol>
         </Container>
       </Section>
 
-      <Section labelledBy="report-heading">
+      <Section tone="subtle" labelledBy="report-heading">
         <Container width="prose">
           <SectionHeading id="report-heading" title={t("verifyPage.report.heading")} />
           <p className={styles.report}>

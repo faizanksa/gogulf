@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, type FormEvent } from "react";
+import { ConsentField, type ConsentText } from "@/components/form/ConsentField";
 import { Input, Select, Textarea } from "@/components/form/Controls";
 import { ErrorSummary } from "@/components/form/ErrorSummary";
 import { Field, type FieldText } from "@/components/form/Field";
@@ -57,11 +58,13 @@ export interface EmployerFormCopy {
   provision: Option[];
   submit: string;
   sending: string;
+  consent: ConsentText;
   errors: { companyMissing: string; countryMissing: string; rolesMissing: string; nameMissing: string; emailMissing: string; emailInvalid: string; phoneMissing: string };
   outcome: { sent: string; sentNoCopy: string; failed: string; offline: string; unexpected: string };
 }
 
 const IDS: Record<string, string> = {
+  consent: "e_consent",
   company: "e_company",
   service_type: "e_service",
   country: "e_country",
@@ -94,6 +97,7 @@ export function EmployerRequirementForm({ copy }: { copy: EmployerFormCopy }) {
     from_name: () => copy.errors.nameMissing,
     reply_to: (el: { validity: ValidityState }) => (el.validity.valueMissing ? copy.errors.emailMissing : copy.errors.emailInvalid),
     phone: () => copy.errors.phoneMissing,
+    consent: () => copy.consent.missing,
   };
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -135,6 +139,7 @@ export function EmployerRequirementForm({ copy }: { copy: EmployerFormCopy }) {
         message: lines.map(([k, v]) => `${k}: ${v}`).join("\n"),
         page_source: "Employers Page",
         website: value("website"),
+        consent: (form.elements.namedItem("consent") as HTMLInputElement).checked,
       },
       { locale: copy.locale, messages: { offline: copy.outcome.offline, unexpected: copy.outcome.unexpected } },
     );
@@ -256,6 +261,7 @@ export function EmployerRequirementForm({ copy }: { copy: EmployerFormCopy }) {
         </div>
       </fieldset>
 
+      <ConsentField id={IDS.consent!} text={copy.consent} field={copy.field} error={errorFor("consent")} />
       <div>
         <Button type="submit" loading={sending}>
           {sending ? copy.sending : copy.submit}

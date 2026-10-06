@@ -135,3 +135,10 @@
   background: var(--color-bg);
   font-weight: var(--weight-semibold);
 }
+
+/* What Go Gulf is not, said once, plainly, under what it does (D13). */
+.role {
+  max-width: 65ch;
+  margin: var(--space-6) 0 0;
+  color: var(--color-text-secondary);
+}
