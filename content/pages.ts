@@ -111,7 +111,7 @@ export const PAGES: PageEntry[] = validate(
     },
     {
       id: "verify", path: "/verify", title: "Verify Go Gulf",
-      description: "How to check you are dealing with Go Gulf: company registration, official contacts, payment rules and our registered recruiting-agent partners.",
+      description: "How to check you are dealing with Go Gulf: company registration, official contacts, payment rules and how we work with registered recruiting agents.",
       breadcrumb: "Verify Go Gulf", updatedOn: "2026-10-06", index: true, sitemap: { changeFrequency: "monthly", priority: 0.5 },
       localizable: true,
     },

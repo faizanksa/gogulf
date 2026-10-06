@@ -68,3 +68,15 @@
   font-size: var(--text-small);
   margin: 0;
 }
+
+/* The written-disclosure promise: the one thing a candidate must remember from this block. */
+.disclosure {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-inline-start: 4px solid var(--color-action);
+  border-radius: var(--radius-card);
+  margin: 0;
+  padding: var(--space-4);
+  font-weight: var(--weight-semibold);
+  max-width: 65ch;
+}

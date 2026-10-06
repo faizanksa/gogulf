@@ -34,9 +34,10 @@ export async function generateMetadata() {
  * Company registration is not recruitment-agency licensing. The page shows what the
  * CIN proves — that the company exists and is registered — and says plainly that it is
  * not a licence for a line of business. The company holds no recruiting-agent registration
- * (content/company.ts CLAIMS) and none is implied: the partners section lists the
- * REGISTERED recruiting agents Go Gulf refers candidates to (content/partners.ts), each
- * with its own RA number, and says plainly that Go Gulf is not one of them.
+ * (content/company.ts CLAIMS) and none is implied: the recruiting-agents section says
+ * plainly that Go Gulf is not one, and that each candidate is given the agent's name and
+ * registration number in writing before paying anything. Partners are not named here
+ * while content/partners.ts PARTNER_DISPLAY is "hidden" (the client's decision).
  */
 export default async function VerifyPage() {
   const locale = await requireAvailable(PATH);
@@ -115,6 +116,7 @@ export default async function VerifyPage() {
             <li>{t.rich("verifyPage.payments.r1", { pricing: (chunks) => <Link href={href("/pricing")}>{chunks}</Link> })}</li>
             <li>{t("verifyPage.payments.r2")}</li>
             <li>{t("verifyPage.payments.r4")}</li>
+            <li>{t("verifyPage.payments.r5")}</li>
             <li>{t.rich("verifyPage.payments.r3", { terms: (chunks) => <Link href={href("/terms-and-conditions")}>{chunks}</Link> })}</li>
           </ol>
         </Container>

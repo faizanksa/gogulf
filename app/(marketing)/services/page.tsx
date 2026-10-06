@@ -111,6 +111,9 @@ export default async function ServicesPage() {
                 {t("servicesPage.inquiry.asideHeading")}
               </h3>
               <p>{t.rich("servicesPage.inquiry.free", { pricing: (chunks) => <Link href={href("/pricing")}>{chunks}</Link> })}</p>
+              <p>
+                {t("servicesPage.inquiry.inWriting")} <Link href={`${href("/candidates")}#in-writing`}>{t("candidatesPage.inWriting.title")}</Link>
+              </p>
               <OfficialChannels />
             </aside>
           </div>

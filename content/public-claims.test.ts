@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ADDRESS_LINES, ADDRESS_ONE_LINE, REGISTERED_ADDRESS } from "@/lib/legal";
 import { organizationJsonLd, postalAddress } from "@/lib/seo";
+import { PARTNERS } from "./partners";
 
 /**
  * Guards for the two corrections of 12 Sep 2026, over everything that renders public text:
@@ -117,6 +118,67 @@ describe("public copy", () => {
     expect(en).toMatch(/"q7": "Is Go Gulf a recruiting agent\?", "a7": "No\. Go Gulf is not registered as a recruiting agent/);
     expect(read("app/(marketing)/(legal)/terms-and-conditions/page.js")).toMatch(/We are <strong>not registered as a recruiting agent<\/strong>/);
     expect(read("app/llms.txt/route.ts")).toMatch(/Go Gulf is not registered as a recruiting agent\./);
+  });
+
+  it("promises a candidate the agent's identity in writing before any payment", () => {
+    const en = read("messages/en.json");
+    expect(en).toContain("Before you pay anything, we give you in writing the agent's name, registration number, and who is responsible for what.");
+    expect(en).toMatch(/"title": "Written disclosure", "body": "Before you pay anything, we give you in writing the agent's name and registration number/);
+    expect(read("app/(marketing)/(legal)/terms-and-conditions/page.js")).toMatch(/Before you pay anything<\/strong> in connection with a role, we tell you in writing the name and registration number/);
+  });
+});
+
+describe("the claims guard itself", () => {
+  const caught = (text: string) => FORBIDDEN.filter((re) => re.test(text)).length > 0;
+
+  // Placement, licence and outcome claims: each must fail the build if it ever appears.
+  it.each([
+    "Go Gulf is a licensed recruiting agent.",
+    "We are registered with the Protector General of Emigrants.",
+    "Go Gulf is authorised to recruit for Saudi Arabia.",
+    "Our RA licence number is on request.",
+    "Go Gulf's recruitment licence",
+    "We place candidates with Gulf employers.",
+    "Go Gulf selects the best candidates.",
+    "We shortlist candidates for the employer.",
+    "We arrange your visa and flights.",
+    "Go Gulf issues the offer letter.",
+    "Go Gulf. Get Hired.",
+    "Hire from India",
+    "Bulk candidate sourcing",
+    "a leading recruitment agency",
+    "licensed manpower supplier",
+    "We guarantee you a job.",
+    "Guaranteed visa",
+  ])("forbids %s", (text) => {
+    expect(caught(text)).toBe(true);
+  });
+
+  // The referral model's own wording must stay writable.
+  it.each([
+    "Go Gulf is not registered as a recruiting agent.",
+    "We refer candidates to registered recruiting agents.",
+    "The recruiting agent processes the visa and the emigration formalities.",
+    "We do not guarantee selection, employment, a visa or a joining date.",
+    "Check any agent on the eMigrate portal.",
+    "Before you pay anything, we give you in writing the agent's name, registration number, and who is responsible for what.",
+  ])("allows %s", (text) => {
+    expect(caught(text)).toBe(false);
+  });
+});
+
+describe("partner details in public output", () => {
+  const isPartnerConfig = (path: string) => /content[\\/]partners\.ts$/.test(path);
+
+  it("reads partners only through publicPartners() / publicPartnerForJob(), which honour the hidden setting", () => {
+    const hits = PUBLIC_SOURCES.filter((path) => !isPartnerConfig(path) && /\b(PARTNERS|publishedPartners|partnerForJob)\b/.test(read(path)));
+    expect(hits).toEqual([]);
+  });
+
+  it("never hard-codes a partner's name, number or website in a public file", () => {
+    const values = PARTNERS.flatMap((p) => [p.name, p.raRegistrationNumber, p.website].filter((v): v is string => Boolean(v)));
+    const leaks = values.flatMap((v) => PUBLIC_SOURCES.filter((path) => !isPartnerConfig(path) && read(path).includes(v)).map((path) => `${path}: ${v}`));
+    expect(leaks).toEqual([]);
   });
 });
 

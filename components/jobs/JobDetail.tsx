@@ -10,7 +10,7 @@ import { LtrText } from "@/components/ui/LtrText";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Stepper } from "@/components/ui/Stepper";
 import { whatsappLink } from "@/content/channels";
-import { partnerForJob } from "@/content/partners";
+import { publicPartnerForJob } from "@/content/partners";
 import { formatDate, formatNumber } from "@/lib/i18n/format";
 import type { AnyLocale } from "@/lib/i18n/locales";
 import { hrefIn, jobText } from "@/lib/i18n/pages";
@@ -57,7 +57,7 @@ export function JobDetail({
   const cardText = jobCardText(t);
   const relatedCards = related.map((j) => jobCardData(j, t, now));
   const date = (iso: string) => <time dateTime={iso}>{formatDate(iso, locale)}</time>;
-  const agent = partnerForJob(job.reference, undefined, now);
+  const agent = publicPartnerForJob(job.reference, undefined, now);
 
   const facts: Fact[] = [
     { key: "salary", label: t("jobs.salary"), value: card.salary ?? t("jobs.salaryNotStated"), mono: Boolean(card.salary) },
@@ -76,8 +76,9 @@ export function JobDetail({
     ...(job.employer
       ? [{ key: "employer", label: t("jobs.employer"), value: job.employer.disclosure === "named" ? job.employer.name : t("jobs.employerConfidential") }]
       : []),
-    // The registered recruiting agent handling the job, only when one is recorded for its
-    // reference in content/partners.ts — never guessed.
+    // The registered recruiting agent handling the job: only when partners are NAMED in
+    // public (content/partners.ts PARTNER_DISPLAY; hidden by the client) and one is recorded
+    // for this reference — never guessed. Hidden, the page keeps only the generic wording.
     ...(agent
       ? [{ key: "agent", label: t("jobs.agent"), value: <Link href={`${href("/verify")}#partners`}>{t("jobs.agentValue", { name: agent.name, number: agent.raRegistrationNumber })}</Link> }]
       : []),

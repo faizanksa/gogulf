@@ -184,3 +184,18 @@ test.describe("employer requirement", () => {
     );
   });
 });
+
+// Partners are not named in public (client decision, content/partners.ts PARTNER_DISPLAY).
+// Every candidate is promised the agent's identity in writing before any payment instead.
+test.describe("recruiting agents, partners hidden", () => {
+  test("verify and the job-seeker hub promise written disclosure and name no agent", async ({ page }) => {
+    for (const path of ["/verify", "/candidates"]) {
+      await page.goto(path);
+      const block = page.locator("#partners");
+      await expect(block, path).toContainText("Before you pay anything, we give you in writing the agent's name, registration number, and who is responsible for what.");
+      await expect(block, path).not.toContainText("RA registration number");
+      await expect(block.getByRole("link", { name: /list of active recruiting agents/ }), path).toHaveAttribute("href", "https://www.mea.gov.in/overseas-employment.htm");
+    }
+    await expect(page.locator("#in-writing")).toContainText("The recruiting agent's name and registration number.");
+  });
+});

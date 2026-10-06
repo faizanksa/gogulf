@@ -13,6 +13,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { VisuallyHidden } from "@/components/ui/VisuallyHidden";
 import { whatsappLink } from "@/content/channels";
 import { pageEntry } from "@/content/pages";
+import { RA_LIST_URL } from "@/content/partners";
 import { hrefIn, pageText } from "@/lib/i18n/pages";
 import { getTranslator, localizedPageMetadata, requireAvailable } from "@/lib/i18n/server";
 import type { MessageKey } from "@/lib/i18n/translator";
@@ -29,6 +30,7 @@ const SECTIONS: { id: string; label: MessageKey }[] = [
   { id: "partners", label: "candidatesPage.nav.partners" },
   { id: "documents", label: "candidatesPage.nav.documents" },
   { id: "fees", label: "candidatesPage.nav.fees" },
+  { id: "in-writing", label: "candidatesPage.nav.inWriting" },
   { id: "safety", label: "candidatesPage.nav.safety" },
   { id: "questions", label: "candidatesPage.nav.questions" },
 ];
@@ -156,6 +158,32 @@ export default async function CandidatesPage() {
               </p>
             </div>
           </div>
+          {/* Only what the client has committed to; anything unconfirmed is an open question
+              in docs/COPY_CHANGES.md, not a line here. */}
+          <div id="in-writing" className={`${styles.panel} ${styles.inWriting}`}>
+            <h3 id="in-writing-heading" className={styles.h3}>
+              {t("candidatesPage.inWriting.title")}
+            </h3>
+            <p>{t("candidatesPage.inWriting.lead")}</p>
+            <ul className={styles.checklist}>
+              {(["candidatesPage.inWriting.i1", "candidatesPage.inWriting.i2", "candidatesPage.inWriting.i3", "candidatesPage.inWriting.i4"] as const).map((key) => (
+                <li key={key}>
+                  <Icon name="check" size={20} />
+                  {t(key)}
+                </li>
+              ))}
+            </ul>
+            <p className={styles.panelNote}>
+              {t.rich("candidatesPage.inWriting.check", {
+                list: (chunks) => (
+                  <a href={RA_LIST_URL} target="_blank" rel="noopener noreferrer">
+                    {chunks}
+                    <VisuallyHidden> {t("common.opensInNewTab")}</VisuallyHidden>
+                  </a>
+                ),
+              })}
+            </p>
+          </div>
         </Container>
       </Section>
 
@@ -196,6 +224,9 @@ export default async function CandidatesPage() {
           <div className={styles.faq}>
             <Disclosure summary={t("candidatesPage.faq.q7")}>
               <p>{t.rich("candidatesPage.faq.a7", { verify: links.partners })}</p>
+            </Disclosure>
+            <Disclosure summary={t("candidatesPage.faq.q8")}>
+              <p>{t("candidatesPage.faq.a8")}</p>
             </Disclosure>
             <Disclosure summary={t("candidatesPage.faq.q1")}>
               <p>{t.rich("candidatesPage.faq.a1", { terms: links.terms })}</p>

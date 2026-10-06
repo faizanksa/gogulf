@@ -32,7 +32,7 @@ export function jobApplicationInternalEmail(input: JobApplicationInput) {
     { label: "Submission ID", value: input.submission_id },
     { label: "Source", value: input.page_source ?? "Jobs Page" },
     // Required by the form and the schema (D13): the applicant agreed to referral.
-    { label: "Consent", value: "Yes: may be shared with registered recruiting agents and employers" },
+    { label: "Consent", value: "Yes: may be shared with a registered recruiting agent; agent to be named to the applicant in writing before any payment" },
   ];
 
   const storageNote = input.submission_id

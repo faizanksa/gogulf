@@ -13,11 +13,18 @@ import type { Translator } from "./translator";
 /**
  * The required consent checkbox's words (components/form/ConsentField.tsx). An application
  * shares documents with registered recruiting agents and employers; an enquiry may be
- * passed to an agent. Both say so before anything is sent (D13).
+ * passed to an agent. Each says so before anything is sent, and a candidate is told the
+ * agent will be named in writing before any payment (D13).
  */
-function consentCopy(t: Translator, kind: "application" | "enquiry") {
+const CONSENT_LABEL = {
+  application: "forms.consent.application",
+  enquiry: "forms.consent.enquiry",
+  employer: "forms.consent.employer",
+} as const;
+
+function consentCopy(t: Translator, kind: keyof typeof CONSENT_LABEL) {
   return {
-    label: t(kind === "application" ? "forms.consent.application" : "forms.consent.enquiry"),
+    label: t(CONSENT_LABEL[kind]),
     policy: t("forms.consent.policy"),
     policyHref: hrefIn("/privacy-policy", t.locale),
     missing: t("forms.consent.missing"),
@@ -242,7 +249,7 @@ export async function employerFormCopy(): Promise<EmployerFormCopy> {
       { value: "Not decided yet", label: t("forms.employer.undecided") },
     ],
     submit: t("forms.employer.submit"),
-    consent: consentCopy(t, "enquiry"),
+    consent: consentCopy(t, "employer"),
     sending: t("forms.sending"),
     errors: {
       companyMissing: t("forms.employer.companyMissing"),

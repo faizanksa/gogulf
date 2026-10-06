@@ -9,10 +9,16 @@ import { isoDate, slug, validate } from "./schema";
  * agents registered under the Emigration Act, 1983. Those agents run interviews, offers,
  * visa processing and the collection of their statutory service charge.
  *
- * This list is what the site publishes about those agents. It starts EMPTY on purpose:
- * the partner list is not final, and nothing here may be invented. While it is empty the
- * site says so plainly ("…being confirmed and will be published here"), and no page shows
- * a placeholder partner.
+ * This list is Go Gulf's INTERNAL record of those agents. It starts EMPTY on purpose: the
+ * partner list is not final, and nothing here may be invented.
+ *
+ * PUBLIC DISPLAY (client decision, 6 Oct 2026): partners are NOT named on the public site.
+ * With PARTNER_DISPLAY = "hidden" (the default) no partner's name, number, city, website or
+ * capacity reaches any public page, structured data, llms.txt or email. The site says
+ * instead that every candidate is given the agent's name, registration number and the
+ * split of responsibilities IN WRITING before paying anything. Set it to "named" only if
+ * the client decides to publish partners; that mode is kept working and tested. Read
+ * partners for public output ONLY through publicPartners() / publicPartnerForJob().
  *
  * HOW TO ADD A PARTNER (only from details the business has confirmed in writing):
  *   1. Check the agent on the official list of active recruiting agents (RA_LIST_URL
@@ -25,12 +31,14 @@ import { isoDate, slug, validate } from "./schema";
  *          raRegistrationNumber: "B-0000/MUM/PER/…", // exactly as registered
  *          validUntil: "2030-12-31",            // optional: registration expiry
  *          website: "https://…",                // optional
+ *          capacity: "1000+",                   // optional: as on the official record
  *          active: true,                        // false hides it without deleting it
  *          jobReferences: ["GG-JOB-2026-0001"], // optional: jobs this agent handles
  *        },
  *   3. Run `npm test` (the schema rejects a malformed entry) and deploy.
- * A partner is shown only while `active` is true AND its `validUntil` (if any) has not
- * passed. To withdraw one, set `active: false`.
+ * A partner counts as published only while `active` is true AND its `validUntil` (if any)
+ * has not passed. To withdraw one, set `active: false`. Whether a published partner is
+ * also NAMED in public is PARTNER_DISPLAY's decision, not the entry's.
  */
 
 /** The official eMigrate portal of the Ministry of External Affairs. */
@@ -51,6 +59,8 @@ const partner = z.object({
   raRegistrationNumber: z.string().trim().min(3).max(80),
   validUntil: isoDate.optional(),
   website: z.string().url().startsWith("https://").optional(),
+  /** The agent's permitted capacity, as written on its registration (e.g. "1000+"). Internal. */
+  capacity: z.string().trim().min(1).max(40).optional(),
   active: z.boolean(),
   /** References of the jobs (GG-JOB-…) whose applications go to this agent. */
   jobReferences: z.array(z.string().trim().toUpperCase().min(3)).default([]),
@@ -76,6 +86,14 @@ export const partnerListSchema = z.array(partner).superRefine((list, ctx) => {
   });
 });
 
+/**
+ * Whether partners are named on the public site. "hidden" by client decision (6 Oct 2026):
+ * the agent is named to each candidate in writing, before any payment, instead.
+ */
+export const partnerDisplaySchema = z.enum(["hidden", "named"]);
+export type PartnerDisplay = z.infer<typeof partnerDisplaySchema>;
+export const PARTNER_DISPLAY: PartnerDisplay = partnerDisplaySchema.parse("hidden");
+
 /** The confirmed partners. EMPTY until the business confirms them — see the steps above. */
 const PARTNER_DATA: z.input<typeof partnerListSchema> = [];
 
@@ -96,4 +114,17 @@ export function publishedPartners(list: RaPartner[] = PARTNERS, now: Date = new 
 export function partnerForJob(reference: string, list: RaPartner[] = PARTNERS, now: Date = new Date()): RaPartner | null {
   const ref = reference.trim().toUpperCase();
   return publishedPartners(list, now).find((p) => p.jobReferences.includes(ref)) ?? null;
+}
+
+/**
+ * The partners PUBLIC output may name: none while partners are hidden, the published ones
+ * when named. Every page, llms.txt and the job facts go through this — never PARTNERS.
+ */
+export function publicPartners(list: RaPartner[] = PARTNERS, now: Date = new Date(), display: PartnerDisplay = PARTNER_DISPLAY): RaPartner[] {
+  return display === "named" ? publishedPartners(list, now) : [];
+}
+
+/** The agent a job's page may name: never while partners are hidden. */
+export function publicPartnerForJob(reference: string, list: RaPartner[] = PARTNERS, now: Date = new Date(), display: PartnerDisplay = PARTNER_DISPLAY): RaPartner | null {
+  return display === "named" ? partnerForJob(reference, list, now) : null;
 }
