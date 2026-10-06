@@ -152,7 +152,7 @@ test.describe("application form", () => {
       "Attach a copy of your passport.",
       "Tick the box to agree before you send.",
     ]);
-    await expect(page.getByLabel("CV or resume")).toHaveAttribute("aria-invalid", "true");
+    await expect(page.getByLabel("CV or resume", { exact: true })).toHaveAttribute("aria-invalid", "true");
 
     const { violations } = await new AxeBuilder({ page }).include("#apply-form").withTags(WCAG).analyze();
     expect(violations.filter((v) => v.impact === "serious" || v.impact === "critical")).toEqual([]);
@@ -168,8 +168,8 @@ test.describe("application form", () => {
     await page.getByLabel("Full name").fill("Test Person");
     await page.getByLabel(/Phone or WhatsApp number/).fill("+91 90000 00000");
     await page.getByLabel("Email address").fill("test@example.com");
-    await page.getByLabel("CV or resume").setInputFiles({ name: "cv.pdf", mimeType: "application/pdf", buffer: Buffer.alloc(9 * 1024 * 1024) });
-    await page.getByLabel("Passport copy").setInputFiles({ name: "passport.jpg", mimeType: "image/jpeg", buffer: Buffer.alloc(1024) });
+    await page.getByLabel("CV or resume", { exact: true }).setInputFiles({ name: "cv.pdf", mimeType: "application/pdf", buffer: Buffer.alloc(9 * 1024 * 1024) });
+    await page.getByLabel("Passport copy", { exact: true }).setInputFiles({ name: "passport.jpg", mimeType: "image/jpeg", buffer: Buffer.alloc(1024) });
     await page.getByRole("button", { name: "Submit application" }).click();
 
     await expect(page.getByRole("alert").filter({ hasText: "There is a problem" })).toContainText("cv.pdf is larger than 8 MB");

@@ -76,7 +76,7 @@ test.describe("mobile menu", () => {
 
   test("keeps the header's primary action visible and every target at least 44px", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("banner").getByRole("link", { name: "Find a job" })).toBeVisible();
+    await expect(page.getByRole("banner").getByRole("link", { name: "Explore Gulf jobs" })).toBeVisible();
     const button = page.getByRole("button", { name: "Menu" });
     expect((await button.boundingBox())!.height).toBeGreaterThanOrEqual(44);
     await button.click();
